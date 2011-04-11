@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+	
+	<!-- Configure Validation Manager - validation entry point -->
+	<bean id="validationManager" class="org.springjutsu.validation.ValidationManager"/>
+	
+	<!-- On bind exception, render previous view -->
+	<bean id="validationFailureRedirector" class="org.springjutsu.validation.mvc.AnnotatedErrorViewValidationFailureRedirector"/>
+	
+	<!-- Validation Rules Container finds and stores parsed validation rules for use by Validation Manager -->
+	<bean id="validationRulesContainer" class="org.springjutsu.validation.rules.ValidationRulesContainer"/>
+	
+	<!-- Rule Executor Container finds and stores custom rule executors -->
+	<bean id="ruleExecutorContainer" class="org.springjutsu.validation.executors.RuleExecutorContainer"/>
+	
+	<!-- On success, go to specified default view. -->
+	<bean id="defaultViewRedirector" class="org.springjutsu.validation.mvc.AnnotatedDefaultViewSettingHandlerInterceptor"/>
+	
+	<!-- Discovers controller methods for the current request -->
+	<bean id="controllerMethodNegotiator" class="org.springjutsu.validation.mvc.ControllerMethodNegotiator"/>
+		
+</beans>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	<!-- HANDLER MAPPING RULES -->
+	
+	<!-- Maps requests to @Controllers based on @RequestMapping("path") annotation values
+		 If no annotation-based path mapping is found, Spring MVC sends a 404 response and logs a pageNotFound warning. -->
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+		<property name="order" value="2" />
+		<property name="interceptors">
+			<array>
+				<ref bean="defaultViewRedirector"/>
+			</array>
+		</property>
+	</bean>
+	
+	<!-- REGISTERED HANDLER TYPES -->
+
+	<!-- Enables annotated @Controllers; responsible for invoking an annotated POJO @Controller when one is mapped. -->
+
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+		<!-- Configures Spring MVC DataBinder instances globally -->
+		<property name="webBindingInitializer" ref="webBindingInitializer"/>
+	</bean>
+	
+	<bean id="webBindingInitializer" 
+		class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+		<property name="validator" ref="validationManager" />
+	</bean>
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<context:component-scan base-package="org.springjutsu.examples"/>
+	
+	<!-- this bean with the well known name generates view names for us -->
+    <bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator"/>
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" name="viewResolver">
+		<property name="prefix" value="/WEB-INF/views/" />
+		<property name="suffix" value=".jsp" />
+	</bean>	
+	
+	<!-- Include messages used by applicaiton -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+	<property name="basenames">
+		<list>
+			<value>WEB-INF/messages/field-labels</value>
+			<value>WEB-INF/messages/validation-error-messages</value>
+		</list>
+	</property>
+</bean>
+	
+	
+</beans>
