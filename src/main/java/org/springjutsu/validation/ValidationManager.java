@@ -74,6 +74,16 @@ public class ValidationManager extends CustomValidatorBean  {
 	protected static Log log = LogFactory.getLog(ValidationManager.class);
 	
 	/**
+	 * Configurable message code prefix for discovering error messages.
+	 */
+	private String errorMessagePrefix = "errors.";
+	
+	/**
+	 * Configurable message code prefix for discovering field labels. 
+	 */
+	private String fieldLabelPrefix = "";
+	
+	/**
 	 * Holds the validation rules which have been 
 	 * parsed from the XML rule sets.
 	 * @see ValidationRulesContainer
@@ -81,7 +91,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	 */
 	@Autowired
 	protected ValidationRulesContainer rulesContainer;
-	
+
 	/**
 	 * Holds the implementations of the validation
 	 * rule executors.
@@ -413,7 +423,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	protected void logError(ValidationRule rule, Object rootModel, Errors errors) {
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
-                errorMessageKey = "springvalidation.errors." + rule.getType();
+                errorMessageKey = errorMessagePrefix + rule.getType();
         }
         String errorMessagePath = rule.getErrorPath();
         if (errorMessagePath == null || errorMessagePath.isEmpty()) {
@@ -523,7 +533,7 @@ public class ValidationManager extends CustomValidatorBean  {
 			parent = rootModel;
 		}
 		
-		return StringUtils.uncapitalize(parent.getClass().getSimpleName()) + "." + fieldPath;		
+		return fieldLabelPrefix + StringUtils.uncapitalize(parent.getClass().getSimpleName()) + "." + fieldPath;		
 	}
 	
 	/**
@@ -563,6 +573,22 @@ public class ValidationManager extends CustomValidatorBean  {
 			newPath = newPath.substring(1);
 		}
 		return newPath;
+	}
+	
+	protected String getErrorMessagePrefix() {
+		return errorMessagePrefix;
+	}
+
+	public void setErrorMessagePrefix(String errorMessagePrefix) {
+		this.errorMessagePrefix = errorMessagePrefix == null ? "" : errorMessagePrefix;
+	}
+
+	protected String getFieldLabelPrefix() {
+		return fieldLabelPrefix;
+	}
+
+	public void setFieldLabelPrefix(String fieldLabelPrefix) {
+		this.fieldLabelPrefix = fieldLabelPrefix == null ? "" : fieldLabelPrefix;
 	}
 	
 }

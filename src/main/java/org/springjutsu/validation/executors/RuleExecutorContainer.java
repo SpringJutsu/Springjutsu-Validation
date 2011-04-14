@@ -17,6 +17,7 @@
 package org.springjutsu.validation.executors;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -50,6 +51,11 @@ public class RuleExecutorContainer {
 	protected Map<String, RuleExecutor> ruleExecutors = new HashMap<String, RuleExecutor>();
 	
 	/**
+	 * A list of rule executors registered as beans by @see{}
+	 */
+	protected List<RuleExecutorBeanRegistrant> beanRegistrants;
+	
+	/**
 	 * Can configure this to false if user doesn't want the default executors. 
 	 */
 	protected boolean addDefaultRuleExecutors = true;
@@ -76,6 +82,12 @@ public class RuleExecutorContainer {
 			RuleExecutor ruleExecutor = (RuleExecutor) ruleExecutorBeans.get(springName);
 			String ruleName = ruleExecutor.getClass().getAnnotation(ConfiguredRuleExecutor.class).name();
 			setCustomRuleExecutor(ruleName, ruleExecutor);
+		}
+		if (beanRegistrants != null) {
+			for (RuleExecutorBeanRegistrant registrant : beanRegistrants) {
+				setCustomRuleExecutor(registrant.ruleName, 
+						(RuleExecutor) beanFactory.getBean(registrant.beanName));
+			}
 		}
 	}
 
@@ -140,5 +152,27 @@ public class RuleExecutorContainer {
 	 */
 	public void setAddDefaultRuleExecutors(boolean addDefaultRuleExecutors) {
 		this.addDefaultRuleExecutors = addDefaultRuleExecutors;
+	}
+	
+	/**
+	 * Hook by which @see{ValidationConfigurationParser} registers XML defined rule executors
+	 * @param registrants @see{ValidationConfigurationParser} RuleExecutorBeanRegistrants to register.
+	 */
+	public void setRuleExecutorBeanRegistrants(List<RuleExecutorBeanRegistrant> registrants) {
+		this.beanRegistrants = registrants;
+	}
+	
+	/**
+	 * Used by @see{ValidationConfigurationParser} to register executors wired in the XML config.
+	 * Or at least until I figure out the "correct" way...
+	 * @author Clark Duplichien
+	 */
+	public static class RuleExecutorBeanRegistrant {
+		public String beanName;
+		public String ruleName;
+		public RuleExecutorBeanRegistrant(String beanName, String ruleName) {
+			this.beanName = beanName;
+			this.ruleName = ruleName;
+		}
 	}
 }

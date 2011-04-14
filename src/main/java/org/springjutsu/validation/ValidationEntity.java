@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springjutsu.validation.namespace.ValidationDefinitionParser;
+import org.springjutsu.validation.namespace.ValidationEntityDefinitionParser;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 
@@ -40,7 +40,7 @@ import org.springjutsu.validation.rules.ValidationRulesContainer;
  * @author Taylor Wicksell
  *
  *@see ValidationRule
- *@see ValidationDefinitionParser
+ *@see ValidationEntityDefinitionParser
  *@see ValidationRulesContainer
  */
 public class ValidationEntity {

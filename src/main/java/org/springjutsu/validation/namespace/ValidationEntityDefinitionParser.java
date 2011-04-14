@@ -22,8 +22,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
+import org.springframework.beans.factory.xml.BeanDefinitionParser;
+import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.xml.DomUtils;
 import org.springjutsu.validation.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
@@ -37,29 +42,17 @@ import org.w3c.dom.NodeList;
  * @author Taylor Wicksell
  *
  */
-public class ValidationDefinitionParser extends AbstractSingleBeanDefinitionParser {
+public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 
-	/**
-	 * Namespace name
-	 */
-	private static final String NAMESPACE = "http://www.springjutsu.org/schema/validation";
-	
-	/**
-	 * Bean class is @link{ValidationEntity}
-	 */
-	@Override
-	protected Class<ValidationEntity> getBeanClass(Element element) {
-		return ValidationEntity.class;
-	}
-	
 	/**
 	 * Do actual parsing.
 	 * Since rules may be nested, delegate to {@link #parseNestedRules(Element, Class)}
 	 * where necessary.
 	 */
-	@Override
-	protected void doParse(Element entityNode, BeanDefinitionBuilder builder) 
-	{
+	public BeanDefinition parse(Element entityNode, ParserContext parserContext) {
+		
+		RootBeanDefinition entityDefinition = new RootBeanDefinition(ValidationEntity.class);
+		
 		String className = entityNode.getAttribute("class");
 		Class<?> modelClass;
 		try {
@@ -68,13 +61,13 @@ public class ValidationDefinitionParser extends AbstractSingleBeanDefinitionPars
 			throw new ValidationParseException("Class " + className + " does not exist as a model class.");
 		}
 		
-		Element modelValidationRuleNode = (Element) entityNode.getElementsByTagNameNS(NAMESPACE, "model-validation").item(0);
+		Element modelValidationRuleNode = (Element) entityNode.getElementsByTagName("model-validation").item(0);
 		List<ValidationRule> modelValidationRules = parseNestedRules(modelValidationRuleNode, modelClass);
 		
 		Map<String, List<ValidationRule>> contextValidationRules = new HashMap<String, List<ValidationRule>>();
-		Element contextValidationRuleNode = (Element) entityNode.getElementsByTagNameNS(NAMESPACE, "context-validation").item(0);
+		Element contextValidationRuleNode = (Element) entityNode.getElementsByTagName("context-validation").item(0);
 		if (contextValidationRuleNode != null) {
-			NodeList forms = contextValidationRuleNode.getElementsByTagNameNS(NAMESPACE, "form");
+			NodeList forms = contextValidationRuleNode.getElementsByTagName("form");
 			for (int formNbr = 0; formNbr < forms.getLength(); formNbr++) {
 				Element formNode = (Element) forms.item(formNbr);
 				String formPaths = formNode.getAttribute("path");
@@ -93,11 +86,12 @@ public class ValidationDefinitionParser extends AbstractSingleBeanDefinitionPars
 			}
 		}
 		
-		builder.addPropertyValue("modelValidationRules", modelValidationRules);
-		builder.addPropertyValue("contextValidationRules", contextValidationRules);
-		builder.addPropertyValue("validationClass", modelClass);
-		
-		return;
+		entityDefinition.getPropertyValues().add("modelValidationRules", modelValidationRules);
+		entityDefinition.getPropertyValues().add("contextValidationRules", contextValidationRules);
+		entityDefinition.getPropertyValues().add("validationClass", modelClass);
+		String entityName = parserContext.getReaderContext().registerWithGeneratedName(entityDefinition);
+		parserContext.registerComponent(new BeanComponentDefinition(entityDefinition, entityName));
+		return null;
 	}
 	
 	/**

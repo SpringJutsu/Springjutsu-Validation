@@ -21,13 +21,14 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 /**
  * Handles the Validation namespace!
  * @see NamespaceHandlerSupport
- * @see ValidationDefinitionParser
+ * @see ValidationEntityDefinitionParser
  * @author Clark Duplichien
  * @author Taylor Wicksell
  */
 public class ValidationNamespaceHandler extends NamespaceHandlerSupport{
 
 	public void init() {
-		registerBeanDefinitionParser("entity", new ValidationDefinitionParser());
+		registerBeanDefinitionParser("entity", new ValidationEntityDefinitionParser());
+		registerBeanDefinitionParser("configuration", new ValidationConfigurationDefinitionParser());
 	}
 }
