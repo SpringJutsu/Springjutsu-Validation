@@ -24,7 +24,7 @@ import org.w3c.dom.NodeList;
  * @author Clark Duplichien
  */
 public class ValidationConfigurationDefinitionParser implements BeanDefinitionParser {
-
+	
 	/**
 	 * Do actual parsing.
 	 */
@@ -38,7 +38,7 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			BeanDefinitionBuilder.genericBeanDefinition(ValidationRulesContainer.class);
 		
 		// Parse message configuration...
-		Element messageConfig = (Element) configNode.getElementsByTagName("message-config").item(0);
+		Element messageConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "message-config").item(0);
 		if (messageConfig != null) {
 			validationManagerBuilder.addPropertyValue("errorMessagePrefix", 
 					messageConfig.getAttribute("errorMessagePrefix"));
@@ -47,13 +47,13 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		}
 		
 		// Parse rules configuration...
-		Element rulesConfig = (Element) configNode.getElementsByTagName("rules-config").item(0);
+		Element rulesConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "rules-config").item(0);
 		if (rulesConfig != null) {
 			boolean addDefaultRules = Boolean.valueOf(rulesConfig.getAttribute("addDefaultRuleExecutors"));
 			ruleExecutorContainerBuilder.addPropertyValue("addDefaultRuleExecutors", addDefaultRules);
 			
 			List<RuleExecutorBeanRegistrant> ruleExecutors = new ArrayList<RuleExecutorBeanRegistrant>();
-			NodeList ruleExecutorNodes = rulesConfig.getElementsByTagName("rule-executor");
+			NodeList ruleExecutorNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "rule-executor");
 			for (int executorNbr = 0; executorNbr < ruleExecutorNodes.getLength(); executorNbr++) {
 				Element ruleExecutorNode = (Element) ruleExecutorNodes.item(executorNbr);
 				BeanDefinitionBuilder executorBuilder = BeanDefinitionBuilder

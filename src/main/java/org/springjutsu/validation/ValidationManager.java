@@ -575,7 +575,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		return newPath;
 	}
 	
-	protected String getErrorMessagePrefix() {
+	public String getErrorMessagePrefix() {
 		return errorMessagePrefix;
 	}
 
@@ -583,7 +583,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		this.errorMessagePrefix = errorMessagePrefix == null ? "" : errorMessagePrefix;
 	}
 
-	protected String getFieldLabelPrefix() {
+	public String getFieldLabelPrefix() {
 		return fieldLabelPrefix;
 	}
 

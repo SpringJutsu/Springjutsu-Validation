@@ -61,13 +61,16 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			throw new ValidationParseException("Class " + className + " does not exist as a model class.");
 		}
 		
-		Element modelValidationRuleNode = (Element) entityNode.getElementsByTagName("model-validation").item(0);
+		Element modelValidationRuleNode = (Element) 
+			entityNode.getElementsByTagNameNS(entityNode.getNamespaceURI(), "model-validation").item(0);
 		List<ValidationRule> modelValidationRules = parseNestedRules(modelValidationRuleNode, modelClass);
 		
 		Map<String, List<ValidationRule>> contextValidationRules = new HashMap<String, List<ValidationRule>>();
-		Element contextValidationRuleNode = (Element) entityNode.getElementsByTagName("context-validation").item(0);
+		Element contextValidationRuleNode = (Element) 
+			entityNode.getElementsByTagNameNS(entityNode.getNamespaceURI(), "context-validation").item(0);
 		if (contextValidationRuleNode != null) {
-			NodeList forms = contextValidationRuleNode.getElementsByTagName("form");
+			NodeList forms = contextValidationRuleNode.getElementsByTagNameNS(
+					contextValidationRuleNode.getNamespaceURI(), "form");
 			for (int formNbr = 0; formNbr < forms.getLength(); formNbr++) {
 				Element formNode = (Element) forms.item(formNbr);
 				String formPaths = formNode.getAttribute("path");

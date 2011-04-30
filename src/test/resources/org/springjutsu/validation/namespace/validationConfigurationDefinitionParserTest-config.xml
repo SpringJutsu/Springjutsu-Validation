@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd"
+	xmlns:validation="http://www.springjutsu.org/schema/validation">
+
+	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
+	<validation:configuration validatorName="testValidationManagerName">
+		<validation:message-config 
+			errorMessagePrefix="testErrorsPrefix." 
+			fieldLabelPrefix="testFieldLabelPrefix."/>
+		<validation:rules-config addDefaultRuleExecutors="false">
+			<validation:rule-executor name="test" 
+				class="org.springjutsu.validation.namespace.ValidationConfigurationDefinitionParserTest.TestBeanPropertyRuleExecutor"/>
+		</validation:rules-config>
+	</validation:configuration>
+	
+	<!-- Include messages used by application -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>WEB-INF/messages/field-labels</value>
+				<value>WEB-INF/messages/validation-error-messages</value>
+			</list>
+		</property>
+	</bean>	
+	
+</beans>
