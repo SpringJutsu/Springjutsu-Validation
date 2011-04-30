@@ -32,6 +32,7 @@ import java.lang.annotation.Target;
  * by by some property named "foo" from the model and view object. 
  * If a single controller method handles multiple request paths, the success view can
  * be wired dependent on the path by specifying "someInputPath=someSuccessPath", in an array.
+ * As of 0.6.1, the "someInputPath" path string may contain * and ** ant path strings.
  * Requires that AnnotatedDefaultViewSettingHandlerInterceptor be a wired bean.
  * @author Clark Duplichien
  *

@@ -88,12 +88,16 @@ public class ValidationEntity {
 	 * @param rule The rule to add. 
 	 */
 	public void addContextValidationRule(String path, ValidationRule rule) {
+		if (!contextValidationRules.containsKey(path)) {
+			contextValidationRules.put(path, new ArrayList<ValidationRule>());
+		}
 		this.contextValidationRules.get(path).add(rule);
 	}
 	
 	/**
 	 * Return the context rules for the given string path.
 	 * Replace any REST variable wildcards with wildcard regex.
+	 * Replace ant path wildcards with wildcard regexes as well.
 	 * Iterate through possible form names to find the first match.
 	 * @param form String representing form to get rules for.
 	 * @return List of validation rules specific to the form.
@@ -101,7 +105,10 @@ public class ValidationEntity {
 	public List<ValidationRule> getContextValidationRules(String form) {
 		List<ValidationRule> formRules = new ArrayList<ValidationRule>();
 		for (String formName : contextValidationRules.keySet()) {
-			String formPattern = formName.replaceAll("\\{[^\\}]*}", "[^/]+");
+			String formPattern = 
+				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
+				.replaceAll("\\*\\*/?", "(*/?)+")
+				.replace("*", "[^/]+");
 			if (form.matches(formPattern)) {
 				log.debug("Loading rules for form: " + form + ", matched validation rules @ " + formName);
 				formRules.addAll(contextValidationRules.get(formName));
@@ -136,8 +143,11 @@ public class ValidationEntity {
 	/**
 	 * @param contextValidationRules the contextValidationRules to set
 	 */
-	public void addContextValidationRules(String state, List<ValidationRule> contextValidationRuleList) {
-		this.contextValidationRules.put(state, contextValidationRuleList);
+	public void addContextValidationRules(String path, List<ValidationRule> contextValidationRuleList) {
+		if (!contextValidationRules.containsKey(path)) {
+			contextValidationRules.put(path, new ArrayList<ValidationRule>());
+		}
+		this.contextValidationRules.get(path).addAll(contextValidationRuleList);
 	}
 
 	/**

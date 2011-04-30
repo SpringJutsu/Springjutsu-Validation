@@ -253,7 +253,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * Just cleans up a Servlet path URL for rule resolving by
 	 * the rules container.
 	 * Restful URL paths may be used, with \{variable} path support.
-	 * This is handled further down by the ruleContainer, however.
+	 * As of 0.6.1, ant paths like * and ** may also be used. 
 	 */
 	protected List<ValidationRule> getMVCContextRules(Object model) {
 		String requestString = RequestUtils.removeLeadingAndTrailingSlashes(

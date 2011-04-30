@@ -16,8 +16,6 @@
 
 package org.springjutsu.validation.util;
 
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,18 +125,26 @@ public class RequestUtils {
 		String requestBestMatchingPattern = 
 			(String) request.getAttribute("org.springframework.web.servlet.HandlerMapping.bestMatchingPattern");
 		String preferredPath = requestBestMatchingPattern != null ? 
-				requestBestMatchingPattern.replaceAll(PATH_VAR_PATTERN, "VAR") : null;
+				requestBestMatchingPattern
+				.replaceAll(PATH_VAR_PATTERN, "VAR") : null;
 		for (String candidate : candidateViewNames) {
 			if (!candidate.contains("=") && bestMatch == null) {
 				bestMatch = candidate;
 			} else if (preferredPath != null && candidate.contains("=")) {
-				String candidatePath = candidate.substring(0, candidate.indexOf("=")).replaceAll(PATH_VAR_PATTERN, "VAR");
-				if (controllerPaths == null && candidatePath.equals(preferredPath)) {
+				String candidatePath = candidate.substring(0, candidate.indexOf("="))
+				.replaceAll(PATH_VAR_PATTERN, "VAR")
+				.replaceAll("\\*\\*/?", "(*/?)+")
+				.replace("*", "[^/]+");
+				if (controllerPaths == null && preferredPath.matches(candidatePath)) {
 					return candidate.substring(candidate.indexOf("=") + 1);
 				} else if (controllerPaths != null) {
 					for (String controllerPath : controllerPaths) {
-						String testPath = (controllerPath + "/" + candidatePath).replace("//", "/");
-						if (testPath.equals(preferredPath)) {
+						String controllerPathRegex = 
+							controllerPath
+							.replaceAll("\\*\\*/?", "(*/?)+")
+							.replace("*", "[^/]+");
+						String testPath = ( controllerPathRegex + "/" + candidatePath).replace("//", "/");
+						if (preferredPath.matches(testPath)) {
 							return candidate.substring(candidate.indexOf("=") + 1);
 						}
 					}
