@@ -121,7 +121,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 		for (Element rule : validationRuleNodes) {
 			String path = rule.getAttribute("path");
 			if (path != null && path.length() > 0 
-					&& !path.startsWith("${") 
+					&& !path.contains("${") 
 					&& !pathExists(modelClass, path)) {
 				throw new ValidationParseException("Path \"" + path 
 						+ "\" does not exist on class " + modelClass.getCanonicalName());

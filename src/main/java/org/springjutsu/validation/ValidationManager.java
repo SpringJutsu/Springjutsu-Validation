@@ -19,6 +19,8 @@ package org.springjutsu.validation;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -361,7 +363,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (expression == null || expression.isEmpty()) {
 			return null;
 		}
-		if (isEL(expression)) {
+		if (hasEL(expression)) {
 			result = resolveSPEL(expression, model);
 		} else {
 			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(model);
@@ -385,7 +387,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (expression == null || expression.isEmpty()) {
 			return null;
 		}
-		if (isEL(expression)) {
+		if (hasEL(expression)) {
 			result = resolveSPEL(expression, model);
 		} else {
 			result = expression;
@@ -466,7 +468,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		// if there is no path, return.
 		if (rulePath == null || rulePath.length() < 1) {
 			return rulePath;
-		} else if (isEL(rulePath)) {
+		} else if (hasEL(rulePath)) {
 			// If the path is actually an expression language statement
 			// Need to check if it resolves to a path on the model.
 			// trim off EL denotation #{}
@@ -540,8 +542,8 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param expression A string expression
 	 * @return returns true if the expression string is EL.
 	 */
-	protected boolean isEL(String expression) {
-		return expression.matches("\\$\\{.+\\}");
+	protected boolean hasEL(String expression) {
+		return expression.matches(".*\\$\\{.+\\}.*");
 	}
 	
 	/**
@@ -555,9 +557,27 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param model The model on which the EL-described field MAY lie.
 	 * @return The object described by the EL expression.
 	 */
-	protected Object resolveSPEL(String el, Object model) {
-		String elString = el.substring(2, el.length() - 1) + "?: null";
-		return spelResolver.get().resolveSpel(elString);
+	protected Object resolveSPEL(String elContaining, Object model) {
+		// if the whole thing is a single EL string, try to get the object.
+		if (elContaining.matches("\\$\\{(.(?!\\$\\{))+\\}")) {
+			String resolvableElString = 
+				elContaining.substring(2, elContaining.length() - 1) + "?: null";
+			Object elResult = spelResolver.get().resolveSpel(resolvableElString);
+			return elResult;
+		} else {
+			// otherwise, do string value substitution to build a value.
+			String elResolvable = elContaining;
+			Matcher matcher = Pattern.compile("\\$\\{(.(?!\\$\\{))+\\}").matcher(elResolvable);
+			while (matcher.find()) {
+				String elString = matcher.group();
+				String resolvableElString = elString.substring(2, elString.length() - 1) + "?: null";
+				Object elResult = spelResolver.get().resolveSpel(resolvableElString);
+				String resolvedElString = elResult != null ? String.valueOf(elResult) : "";
+				elResolvable = elResolvable.replace(elString, resolvedElString);
+				matcher.reset(elResolvable);
+			}
+			return elResolvable;
+		}
 	}
 	
 	/**
