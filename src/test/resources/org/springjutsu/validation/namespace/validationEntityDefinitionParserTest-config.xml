@@ -16,6 +16,13 @@
 		</validation:rules-config>
 	</validation:configuration>
 	
+	<validation:entity class="org.springjutsu.validation.namespace.ValidationEntityDefinitionParserTest$TestEntity">
+		<validation:model-validation>
+			<!-- Test Bug #9 - Parsing rules on an uninstatiable class. -->
+			<validation:rule path="colorTest.color" type="alphanumeric"/>
+		</validation:model-validation>
+	</validation:entity>
+	
 	<!-- Include messages used by application -->
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basenames">

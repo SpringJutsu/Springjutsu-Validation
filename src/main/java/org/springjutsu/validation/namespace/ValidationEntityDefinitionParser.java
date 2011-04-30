@@ -16,11 +16,13 @@
 
 package org.springjutsu.validation.namespace;
 
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
@@ -120,7 +122,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			String path = rule.getAttribute("path");
 			if (path != null && path.length() > 0 
 					&& !path.startsWith("${") 
-					&& !new BeanWrapperImpl(modelClass).isReadableProperty(path)) {
+					&& !pathExists(modelClass, path)) {
 				throw new ValidationParseException("Path \"" + path 
 						+ "\" does not exist on class " + modelClass.getCanonicalName());
 			}
@@ -136,6 +138,27 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			validationRules.add(validationRule);
 		}
 		return validationRules;
+	}
+	
+	public boolean pathExists(Class clazz, String path) {
+        if (path.contains(".")) {
+                Class intermediateClass = clazz;
+                String[] pathTokens = path.split("\\.");
+                for (String token : pathTokens) {
+                        PropertyDescriptor descriptor =
+                                BeanUtils.getPropertyDescriptor(intermediateClass, token);
+                        if (descriptor == null) {
+                                return false;
+                        } else {
+                                intermediateClass = descriptor.getPropertyType();
+                        }
+                }
+        } else {
+                if (!new BeanWrapperImpl(clazz).isReadableProperty(path)) {
+                        return false;
+                }
+        }
+        return true;
 	}
 	
 	/**

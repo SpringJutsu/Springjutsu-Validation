@@ -59,6 +59,14 @@ public class ValidationConfigurationDefinitionParserTest {
 	}
 	
 	/**
+	 * Ensure a rules container has been registered.
+	 */
+	@Test
+	public void testValidationRuleContainerPresent() {
+		assertNotNull(rulesContainer);
+	}
+	
+	/**
 	 * Ensure a rule executor container has been registered.
 	 */
 	@Test
