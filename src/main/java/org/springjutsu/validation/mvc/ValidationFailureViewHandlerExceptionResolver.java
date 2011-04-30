@@ -29,10 +29,8 @@ import org.springjutsu.validation.util.RequestUtils;
 /**
  * Handles the implementation of the @link{ValidationFailureView} annotation.
  * @author Clark Duplichien
- *
- * TODO: File a jira ticket / find a hook that requires less reflection.
  */
-public class AnnotatedErrorViewValidationFailureRedirector implements HandlerExceptionResolver {
+public class ValidationFailureViewHandlerExceptionResolver implements HandlerExceptionResolver {
 
 	/**
 	 * Used to discover the most recently called

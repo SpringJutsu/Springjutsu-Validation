@@ -44,7 +44,7 @@
 			<xsd:sequence>
 				<xsd:element ref="rule-executor" minOccurs="0" maxOccurs="unbounded"/>
 			</xsd:sequence>
-			<xsd:attribute name="addDefaultRuleExecutorss" type="xsd:boolean" use="optional" default="true">
+			<xsd:attribute name="addDefaultRuleExecutors" type="xsd:boolean" use="optional" default="true">
 				<xsd:annotation>
 					<xsd:documentation>
 						Indicates whether or not the default rule executors 

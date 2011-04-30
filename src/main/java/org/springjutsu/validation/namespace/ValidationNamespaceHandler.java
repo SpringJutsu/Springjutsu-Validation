@@ -30,5 +30,6 @@ public class ValidationNamespaceHandler extends NamespaceHandlerSupport{
 	public void init() {
 		registerBeanDefinitionParser("entity", new ValidationEntityDefinitionParser());
 		registerBeanDefinitionParser("configuration", new ValidationConfigurationDefinitionParser());
+		registerBeanDefinitionParser("mvc-annotations", new ValidationMVCAnnotationsDefinitionParser());
 	}
 }

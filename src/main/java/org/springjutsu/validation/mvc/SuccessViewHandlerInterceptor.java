@@ -16,22 +16,27 @@
 
 package org.springjutsu.validation.mvc;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.servlet.HandlerAdapter;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.handler.AbstractHandlerMapping;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping;
 import org.springjutsu.validation.mvc.annotations.SuccessView;
 import org.springjutsu.validation.util.RequestUtils;
 
 /**
  * Handles the implementation of the @link{SuccessView} annotation.
+ * Self-registering bean that places itself at the end of the interceptor
+ * chain on a handler adapter.
  * @author Clark Duplichien
  *
- * TODO: convert this into a ModelAndViewResolver to reduce reflection.
  */
-public class AnnotatedDefaultViewSettingHandlerInterceptor extends HandlerInterceptorAdapter {
+public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 	
 	/**
 	 * Used to discover the most recently called

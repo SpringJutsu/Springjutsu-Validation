@@ -68,7 +68,6 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		// Register them beans.
 		registerInfrastructureBean(configNode, context, validationRulesContainerBuilder);
 		registerInfrastructureBean(configNode, context, ruleExecutorContainerBuilder);
-		//registerInfrastructureBean(configNode, context, validationManagerBuilder);
 		context.registerBeanComponent(new BeanComponentDefinition(
 			validationManagerBuilder.getBeanDefinition(), configNode.getAttribute("validatorName")));
 		
@@ -81,12 +80,6 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		BeanDefinition definition = componentBuilder.getBeanDefinition();
 		String entityName = context.getReaderContext().registerWithGeneratedName(definition);
 		context.registerComponent(new BeanComponentDefinition(definition, entityName));
-		/*
-		String beanName = context.getReaderContext().generateBeanName(componentBuilder.getRawBeanDefinition());
-		componentBuilder.getRawBeanDefinition().setSource(context.extractSource(element));
-		componentBuilder.getRawBeanDefinition().setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-		context.registerBeanComponent(new BeanComponentDefinition(componentBuilder.getBeanDefinition(), beanName));
-		*/
 		return entityName;
 	}
 
