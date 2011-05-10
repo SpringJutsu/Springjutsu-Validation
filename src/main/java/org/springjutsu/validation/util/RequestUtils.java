@@ -16,6 +16,7 @@
 
 package org.springjutsu.validation.util;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -162,8 +163,24 @@ public class RequestUtils {
 	 * @return the controller request paths.
 	 */
 	public static String[] getControllerRequestPaths(Object handler) {
-		RequestMapping requestMapping = handler.getClass().getAnnotation(RequestMapping.class);
+		RequestMapping requestMapping = (RequestMapping) findHandlerAnnotation(handler, RequestMapping.class);
 		return requestMapping == null ? null : requestMapping.value();
+	}
+	
+	/**
+	 * Find an annotation on the possibly proxied handler.
+	 * @param handler The handler / controller
+	 * @param annotationClass The annotation to find.
+	 * @return The annotation, or null if not present.
+	 */
+	@SuppressWarnings("unchecked")
+	public static Annotation findHandlerAnnotation(Object handler, Class annotationClass) {
+		Class controllerClass = handler.getClass();
+		while (controllerClass.getAnnotation(annotationClass) == null 
+				&& controllerClass.getSuperclass() != null) {
+			controllerClass = controllerClass.getSuperclass();
+		}
+		return controllerClass.getAnnotation(annotationClass);		
 	}
 	
 	/**

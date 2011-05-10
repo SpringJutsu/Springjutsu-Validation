@@ -58,13 +58,14 @@ public class ControllerMethodNegotiator {
 			return null;
 		}
 
-		//TODO: make this handle proxied objects better
 		Object methodResolver = methodResolverCache.get(handler.getClass().getSuperclass());
+		Class<?> handlerClass = handler.getClass();
+		while (methodResolverCache.get(handlerClass) == null && handlerClass.getSuperclass() != null) {
+			handlerClass = handlerClass.getSuperclass();
+		}
+		methodResolver = methodResolverCache.get(handlerClass);
 		if (methodResolver == null) {
-			methodResolver = methodResolverCache.get(handler.getClass());
-			if (methodResolver == null) {
-				return null;
-			}
+			return null;
 		}
 		Method method = getMethod(methodResolver, request);
 		return method;		
