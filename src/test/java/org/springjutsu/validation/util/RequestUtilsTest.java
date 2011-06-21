@@ -1,8 +1,12 @@
 package org.springjutsu.validation.util;
 
+import java.util.regex.PatternSyntaxException;
+
 import javax.servlet.http.HttpServletRequest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -151,5 +155,22 @@ public class RequestUtilsTest {
 		String matchingRestPath = RequestUtils.findMatchingRestPath(candidateViewNames, controllerPaths, request);
 		assertEquals("/success/view", matchingRestPath);
 	}
+	
+	@Test
+    public void testRegexPatternBreakingControllerPathPath() {
+        String[] candidateViewNames = new String[]{"any/path/will/do=/success/view"};
+        String[] controllerPaths = new String[]{"{recordId}"};
+        HttpServletRequest request = mockRequestWithPattern("{recordId}/any/path/will/do");
+        try
+        {
+            String matchingRestPath = RequestUtils.findMatchingRestPath(candidateViewNames, controllerPaths, request);
+            assertEquals("/success/view", matchingRestPath);
+        }
+        catch(PatternSyntaxException pse)
+        {
+            fail(pse.getMessage());
+            pse.printStackTrace();
+        }
+    }
 
 }

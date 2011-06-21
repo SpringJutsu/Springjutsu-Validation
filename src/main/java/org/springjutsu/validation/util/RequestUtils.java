@@ -142,6 +142,7 @@ public class RequestUtils {
 					for (String controllerPath : controllerPaths) {
 						String controllerPathRegex = 
 							controllerPath
+							.replaceAll(PATH_VAR_PATTERN, "VAR")
 							.replaceAll("\\*\\*/?", "(*/?)+")
 							.replace("*", "[^/]+");
 						String testPath = ( controllerPathRegex + "/" + candidatePath).replace("//", "/");
