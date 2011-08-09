@@ -3,6 +3,7 @@ package org.springjutsu.validation;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
 
 public class ValidationEntityTest {

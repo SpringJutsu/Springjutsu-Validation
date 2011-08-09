@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springjutsu.org/schema/validation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
+	<configuration validatorName="testValidationManagerName"/>
+	
+	<!-- Test basic illegal recursion: two templates reference one another. -->
+	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<model-validation>
+			<template-ref templateName="illegalRecursionA"/> 
+		</model-validation>
+		<templates>
+			<template name="illegalRecursionA">
+				<template-ref templateName="illegalRecursionB"/>
+			</template>
+			<template name="illegalRecursionB">
+				<template-ref templateName="illegalRecursionA"/>
+			</template>
+		</templates>
+	</entity>
+	
+	<!-- Include messages used by application -->
+	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>
+</beans:beans>

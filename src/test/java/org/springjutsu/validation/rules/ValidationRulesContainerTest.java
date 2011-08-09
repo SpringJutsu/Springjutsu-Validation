@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.ListableBeanFactory;
-import org.springjutsu.validation.ValidationEntity;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationRulesContainerTest {

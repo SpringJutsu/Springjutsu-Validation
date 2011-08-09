@@ -17,13 +17,6 @@
 	</validation:configuration>
 	
 	<!-- Include messages used by application -->
-	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-		<property name="basenames">
-			<list>
-				<value>WEB-INF/messages/field-labels</value>
-				<value>WEB-INF/messages/validation-error-messages</value>
-			</list>
-		</property>
-	</bean>	
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>	
 	
 </beans>

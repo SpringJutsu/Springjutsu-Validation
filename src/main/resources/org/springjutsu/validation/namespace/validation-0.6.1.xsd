@@ -136,6 +136,7 @@
 			<xsd:all>
 				<xsd:element ref="model-validation" minOccurs="0" maxOccurs="1"/>
 				<xsd:element ref="context-validation" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="templates" minOccurs="0" maxOccurs="1"/> 
 			</xsd:all>
 			<xsd:attribute name="class" type="xsd:string" use="required">
 				<xsd:annotation>
@@ -160,12 +161,20 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref="rule" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
 	
 	<xsd:element name="context-validation">
+		<xsd:annotation>
+			<xsd:documentation>
+				Context rules are executed specific to a form.
+				Here the user may define one or more forms each with its own set
+				of context-specific validation rules.
+			</xsd:documentation>
+		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref="form" minOccurs="1" maxOccurs="unbounded"/>
@@ -173,10 +182,58 @@
 		</xsd:complexType>
 	</xsd:element>
 	
+	<xsd:element name="templates">
+		<xsd:annotation>
+			<xsd:documentation>
+				Defines one or more validation templates.
+				Validation templates are analagous to JSR-303 groups, except
+				more powerful. A validation template is a named set of nestable
+				rules and other templates refrences that allows a class member  
+				to be validated according to the rule set. 
+				These validation templates can be applied to a field path
+				on the object being validated.
+				Templates are also nestable within rules, making it possible
+				to perform conditional evaluation of an entire template.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="template" minOccurs="1" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="template">
+		<xsd:annotation>
+			<xsd:documentation>
+				Defines a validation template with the assigned name.
+				This group of rules can be referenced by template-ref in order
+				to apply a set of rules and/or sub templates to a base path.
+				Useful for applying repeated sets of validation rules to a form,
+				for instance a full address or short form address.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+			<xsd:attribute name="name" type="xsd:string" use="required">
+				<xsd:annotation>
+					<xsd:documentation>
+						The globally unique name for this validation template.
+						Referencable as the template-ref name.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	
 	<xsd:element name="form">
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref="rule" minOccurs="1" maxOccurs="unbounded"/>
+				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
 			</xsd:sequence>
 			<xsd:attribute name="path" type="xsd:string" use="required">
 				<xsd:annotation>
@@ -191,13 +248,47 @@
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
+	
+	<xsd:element name="template-ref">
+		<xsd:annotation>
+			<xsd:documentation>
+				References a named validation template.
+				Applies all the rules in the template to the object
+				referenced by the base-path. 
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="basePath" type="xsd:string" use="optional" default="">
+				<xsd:annotation>
+					<xsd:documentation>
+						The field path to the object that will act as
+						the validated object for the rules specified 
+						in the validation template.
+						If not specified, then the current base object
+						serves as the base object for the template.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="templateName" use="required">
+				<xsd:annotation>
+					<xsd:documentation>
+						The name of the validation template whose
+						rules and subtemplates should be applied
+						as validation on the object specified by 
+						the base path.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
 		
 	<xsd:element name="rule">
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
 			</xsd:sequence>
-			<xsd:attribute name="type" use="required">
+			<xsd:attribute name="type" type="xsd:string" use="required">
 				<xsd:annotation>
 					<xsd:documentation>
 						The type of rule you wish to apply.
@@ -217,21 +308,21 @@
 				<xsd:annotation>
 					<xsd:documentation>
 						The path to the field this rule should check.
-						</xsd:documentation>
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="message" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation>
 						The key to a message source entry, which will override the default associated with the rule type.
-						</xsd:documentation>
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="errorPath" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation>
 						The path to the field under which the error is to be logged, which will override the default given by "path".
-						</xsd:documentation>
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>

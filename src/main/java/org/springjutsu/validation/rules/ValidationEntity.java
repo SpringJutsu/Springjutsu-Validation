@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springjutsu.validation;
+package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,8 +24,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springjutsu.validation.namespace.ValidationEntityDefinitionParser;
-import org.springjutsu.validation.rules.ValidationRule;
-import org.springjutsu.validation.rules.ValidationRulesContainer;
 
 /**
  * A cacheable java description of the XML validation rules.
@@ -56,10 +54,27 @@ public class ValidationEntity {
 	private List<ValidationRule> modelValidationRules;
 	
 	/**
+	 * A list of template references to evaluate on the model object.
+	 */
+	private List<ValidationTemplateReference> modelValidationTemplateReferences;
+	
+	/**
 	 * A Map of validation rule lists to execute for 
 	 * a specific form, keyed by some form path. 
 	 */
 	private Map<String, List<ValidationRule>> contextValidationRules;
+	
+	/**
+	 * A Map of tempalte references to execute for a specific
+	 * form, keyed by some form path.	
+	 */
+	private Map<String, List<ValidationTemplateReference>> contextValidationTemplateReferences;
+	
+	/**
+	 * A list of validation templates associated with
+	 * this entity class.
+	 */
+	private List<ValidationTemplate> validationTemplates;
 	
 	/**
 	 * The class this set of rules was entered for.
@@ -71,7 +86,10 @@ public class ValidationEntity {
 	 */
 	public ValidationEntity() {
 		this.modelValidationRules = new ArrayList<ValidationRule>();
+		this.modelValidationTemplateReferences = new ArrayList<ValidationTemplateReference>();
 		this.contextValidationRules = new HashMap<String, List<ValidationRule>>();
+		this.contextValidationTemplateReferences = new HashMap<String, List<ValidationTemplateReference>>();
+		this.validationTemplates = new ArrayList<ValidationTemplate>();
 	}
 	
 	/**
@@ -80,6 +98,14 @@ public class ValidationEntity {
 	 */
 	public void addModelValidationRule(ValidationRule rule) {
 		this.modelValidationRules.add(rule);
+	}
+	
+	/**
+	 * Add a model template reference.
+	 * @param reference The model template reference to add.
+	 */
+	public void addModelValidationTemplateReference(ValidationTemplateReference reference) {
+		this.modelValidationTemplateReferences.add(reference);
 	}
 	
 	/**
@@ -92,6 +118,21 @@ public class ValidationEntity {
 			contextValidationRules.put(path, new ArrayList<ValidationRule>());
 		}
 		this.contextValidationRules.get(path).add(rule);
+	}
+	
+	public void addContextValidationTemplateReference(String path, ValidationTemplateReference reference) {
+		if (!contextValidationTemplateReferences.containsKey(path)) {
+			contextValidationTemplateReferences.put(path, new ArrayList<ValidationTemplateReference>());
+		}
+		this.contextValidationTemplateReferences.get(path).add(reference);
+	}
+	
+	/**
+	 * Adds a validation template
+	 * @param template the tempalte to add.
+	 */
+	public void addValidationTemplate(ValidationTemplate template) {
+		this.validationTemplates.add(template);
 	}
 	
 	/**
@@ -162,6 +203,57 @@ public class ValidationEntity {
 	 */
 	public void setValidationClass(Class validationClass) {
 		this.validationClass = validationClass;
+	}
+
+	/**
+	 * @return the validationTemplates
+	 */
+	public List<ValidationTemplate> getValidationTemplates() {
+		return validationTemplates;
+	}
+
+	/**
+	 * @param validationTemplates the validationTemplates to set
+	 */
+	public void setValidationTemplates(List<ValidationTemplate> validationTemplates) {
+		this.validationTemplates = validationTemplates;
+	}
+
+	/**
+	 * @return the modelValidationTemplateReferences
+	 */
+	public List<ValidationTemplateReference> getModelValidationTemplateReferences() {
+		return modelValidationTemplateReferences;
+	}
+
+	/**
+	 * @param modelValidationTemplateReferences the modelValidationTemplateReferences to set
+	 */
+	public void setModelValidationTemplateReferences(
+			List<ValidationTemplateReference> modelValidationTemplateReferences) {
+		this.modelValidationTemplateReferences = modelValidationTemplateReferences;
+	}
+
+	/**
+	 * @return the contextValidationTemplateReferences
+	 */
+	public Map<String, List<ValidationTemplateReference>> getContextValidationTemplateReferences() {
+		return contextValidationTemplateReferences;
+	}
+
+	/**
+	 * @param contextValidationTemplateReferences the contextValidationTemplateReferences to set
+	 */
+	public void setContextValidationTemplateReferences(
+			Map<String, List<ValidationTemplateReference>> contextValidationTemplateReferences) {
+		this.contextValidationTemplateReferences = contextValidationTemplateReferences;
+	}
+
+	/**
+	 * @return the contextValidationRules
+	 */
+	public Map<String, List<ValidationRule>> getContextValidationRules() {
+		return contextValidationRules;
 	}
 	
 

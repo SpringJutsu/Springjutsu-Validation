@@ -69,6 +69,15 @@ public class ValidationRule {
 	protected List<ValidationRule> rules;
 	
 	/**
+	 * These are any validation template references
+	 * that were nested within the current rule in XML.
+	 * If nested templates exist and this rule passed, the
+	 * nested templates would be run. If nested templates
+	 * exist, an error is not recorded when this rule fails.
+	 */
+	protected List<ValidationTemplateReference> templateReferences;
+	
+	/**
 	 * Default constructor, utilized by @link{ValidationDefinitionParser}
 	 * @param path See path docs.
 	 * @param type See type docs.
@@ -79,6 +88,7 @@ public class ValidationRule {
 		this.type = type;
 		this.value = value;
 		this.rules = new ArrayList<ValidationRule>();
+		this.templateReferences = new ArrayList<ValidationTemplateReference>();
 	}
 	
 	/**
@@ -136,6 +146,14 @@ public class ValidationRule {
 	public void addRule(ValidationRule rule)
 	{
 		this.rules.add(rule);
+	}
+	
+	/**
+	 * Adds a template ref to the nested validation template references.
+	 * @param templateReference The template reference to add.
+	 */
+	public void addTemplateReference(ValidationTemplateReference templateReference) {
+		this.templateReferences.add(templateReference);
 	}
 	
 	/**
@@ -220,6 +238,21 @@ public class ValidationRule {
 	 */
 	public void setErrorPath(String errorPath) {
 		this.errorPath = errorPath;
+	}
+
+	/**
+	 * @return the templateReferences
+	 */
+	public List<ValidationTemplateReference> getTemplateReferences() {
+		return templateReferences;
+	}
+
+	/**
+	 * @param templateReferences the templateReferences to set
+	 */
+	public void setTemplateReferences(
+			List<ValidationTemplateReference> templateReferences) {
+		this.templateReferences = templateReferences;
 	}
 	
 	
