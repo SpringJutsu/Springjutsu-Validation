@@ -77,6 +77,7 @@ public class ValidationConfigurationDefinitionParserTest {
 	/**
 	 * Ensure default rule executors can be suppressed.
 	 */
+	@Test
 	@ExpectedException(IllegalArgumentException.class)
 	public void testRuleExecutorDefaultsSuppressed() {
 		executorContainer.getRuleExecutorByName("alphabetic");
