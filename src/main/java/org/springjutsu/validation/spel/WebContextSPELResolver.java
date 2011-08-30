@@ -42,12 +42,12 @@ public class WebContextSPELResolver {
 	 * Evaluation context which will contain 
 	 * request handler implementation-specific scopes.
 	 */
-	NamedScopeEvaluationContext scopedContext;
+	protected NamedScopeEvaluationContext scopedContext;
 	
 	/**
 	 * Expression parser used to parse expressions.
 	 */
-	ExpressionParser expressionParser;
+	protected ExpressionParser expressionParser;
 	
 	/**
 	 * Initialize evaluation context and expression parser.
@@ -62,12 +62,12 @@ public class WebContextSPELResolver {
 	}
 	
 	/**
-	 * The useful part. Evaluates a SPEL expression within the
-	 * current web context.
+	 * Evaluates a SPEL expression within the
+	 * current web context, returning the result.
 	 * @param spel String SPEL expression
 	 * @return result of evaluated SPEL expression.
 	 */
-	public Object resolveSpel(String spel) {
+	public Object getBySpel(String spel) {
 		try {
 			return expressionParser.parseExpression(spel).getValue(scopedContext);
 			// TODO: pretty sure we can get around this expensive catch with an always-null property accessor.
@@ -78,6 +78,16 @@ public class WebContextSPELResolver {
 				throw see;
 			}
 		}
+	}
+	
+	/**
+	 * Sets some object to the location specified by 
+	 * a spel expression.
+	 * @param spel String SPEL expression
+	 * @param object some object to set at SPEL-specified location.
+	 */
+	public void setBySpel(String spel, Object object) {
+		expressionParser.parseExpression(spel).setValue(scopedContext, object);		
 	}
 	
 	/**

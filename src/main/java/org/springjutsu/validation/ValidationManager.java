@@ -562,7 +562,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (elContaining.matches("\\$\\{(.(?!\\$\\{))+\\}")) {
 			String resolvableElString = 
 				elContaining.substring(2, elContaining.length() - 1) + "?: null";
-			Object elResult = spelResolver.get().resolveSpel(resolvableElString);
+			Object elResult = spelResolver.get().getBySpel(resolvableElString);
 			return elResult;
 		} else {
 			// otherwise, do string value substitution to build a value.
@@ -571,7 +571,7 @@ public class ValidationManager extends CustomValidatorBean  {
 			while (matcher.find()) {
 				String elString = matcher.group();
 				String resolvableElString = elString.substring(2, elString.length() - 1) + "?: null";
-				Object elResult = spelResolver.get().resolveSpel(resolvableElString);
+				Object elResult = spelResolver.get().getBySpel(resolvableElString);
 				String resolvedElString = elResult != null ? String.valueOf(elResult) : "";
 				elResolvable = elResolvable.replace(elString, resolvedElString);
 				matcher.reset(elResolvable);
