@@ -26,7 +26,6 @@ import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.execution.RequestContextHolder;
 import org.springframework.webflow.expression.spel.BeanFactoryPropertyAccessor;
 import org.springframework.webflow.expression.spel.FlowVariablePropertyAccessor;
-import org.springframework.webflow.expression.spel.MapAdaptablePropertyAccessor;
 import org.springframework.webflow.expression.spel.MessageSourcePropertyAccessor;
 import org.springframework.webflow.test.MockRequestContext;
 import org.springjutsu.validation.util.RequestUtils;
@@ -136,7 +135,9 @@ public class WebContextSPELResolver {
 		if (RequestUtils.isWebflowRequest()) {
 			scopedContext.addContext("requestScope", requestContext.getRequestScope());
 			scopedContext.addContext("flashScope", requestContext.getFlashScope());
-			scopedContext.addContext("viewScope", requestContext.getViewScope());
+			if (requestContext.inViewState()) {
+				scopedContext.addContext("viewScope", requestContext.getViewScope());
+			}
 			scopedContext.addContext("flowScope", requestContext.getFlowScope());
 			scopedContext.addContext("conversationScope", requestContext.getConversationScope());
 		}
