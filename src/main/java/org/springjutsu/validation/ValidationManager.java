@@ -18,6 +18,8 @@ package org.springjutsu.validation;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -159,25 +161,55 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * 	in order to prevent unneeded or infinite recursion
 	 */
 	protected void validateModelRules(Object model, Errors errors, List<Object> checkedModels) {
-		
-		if (model == null || checkedModels.contains(model)) {
+		if (model == null) {
 			return;
-		} else {
-			checkedModels.add(model);
 		}
 		
-		List<ValidationRule> modelRules = rulesContainer.getModelRules(model.getClass());
+		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(model);
+		Object validateMe = null;
+		String beanPath = appendPath(errors.getNestedPath(), "");
+		
+		// get sub bean to validate
+		if (beanPath.isEmpty()) {
+			validateMe = model;
+		} else {
+			validateMe = beanWrapper.getPropertyValue(beanPath);
+		}
+		
+		// Infinite recursion check
+		if (validateMe == null || checkedModels.contains(validateMe.hashCode())) {
+			return;
+		} else {
+			checkedModels.add(validateMe.hashCode());
+		}
+		
+		List<ValidationRule> modelRules = rulesContainer.getModelRules(validateMe.getClass());
 		callModelRules(model, errors, modelRules);
 		 
 		// Get fields for subbeans and iterate
-		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(model);
-		PropertyDescriptor[] propertyDescriptors = beanWrapper.getPropertyDescriptors(); 
+		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
+		PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors(); 
 		for (PropertyDescriptor property : propertyDescriptors) {
 			if (rulesContainer.supportsClass(property.getPropertyType())) {
-				Object subBean = beanWrapper.getPropertyValue(property.getName());
 				errors.pushNestedPath(property.getName());
-				validateModelRules(subBean, errors, checkedModels);
+				validateModelRules(model, errors, checkedModels);
 				errors.popNestedPath();
+			} else if (List.class.isAssignableFrom(property.getPropertyType()) || property.getPropertyType().isArray()) {
+				Object potentialList = subBeanWrapper.getPropertyValue(property.getName());
+				List list = (List) (property.getPropertyType().isArray() 
+						&& potentialList  != null ? Arrays.asList(potentialList) 
+					: potentialList);
+				
+				if (list == null || list.isEmpty()) {
+					continue;
+				} 
+				
+				for (int i = 0; i < list.size(); i++) {
+					Object item = list.get(i);
+					errors.pushNestedPath(property.getName() + "[" + i + "]");
+					validateModelRules(model, errors, checkedModels);
+					errors.popNestedPath();
+				}
 			}
 		}
 	}
@@ -427,10 +459,7 @@ public class ValidationManager extends CustomValidatorBean  {
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
                 errorMessageKey = errorMessagePrefix + rule.getType();
         }
-        String errorMessagePath = rule.getErrorPath();
-        if (errorMessagePath == null || errorMessagePath.isEmpty()) {
-                errorMessagePath = rule.getPath();
-        }
+        
 		String defaultError =  rule.getPath() + " " + rule.getType();
 		String modelMessageKey = getMessageResolver(rootModel, rule.getPath(), true);
         String ruleArg = getMessageResolver(rootModel, rule.getValue(), false);
@@ -439,6 +468,15 @@ public class ValidationManager extends CustomValidatorBean  {
 			new DefaultMessageSourceResolvable(new String[] {modelMessageKey}, modelMessageKey);
 		MessageSourceResolvable argumentMessageResolvable = 
 			new DefaultMessageSourceResolvable(new String[] {ruleArg}, ruleArg);
+		
+		// get the local path to error, in case errors object is on nested path.
+		String errorMessagePath = rule.getErrorPath();
+        if (errorMessagePath == null || errorMessagePath.isEmpty()) {
+                errorMessagePath = rule.getPath();
+        }
+		if (!errors.getNestedPath().isEmpty() && errorMessagePath.startsWith(errors.getNestedPath())) {
+			errorMessagePath = appendPath(errorMessagePath.substring(errors.getNestedPath().length()), "");
+		}
 		
 		errors.rejectValue(errorMessagePath, errorMessageKey, 
 				new Object[] {modelMessageResolvable, argumentMessageResolvable}, defaultError);
@@ -588,9 +626,12 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @return A combined path.
 	 */
 	protected String appendPath(String path, String suffix) {
-		String newPath = path + "." + suffix;
+		String newPath = path + (path.endsWith(".") ? "" : ".") + suffix;
 		if (newPath.startsWith(".")) {
 			newPath = newPath.substring(1);
+		}
+		if (newPath.endsWith(".")) {
+			newPath = newPath.substring(0, newPath.length() - 1);
 		}
 		return newPath;
 	}

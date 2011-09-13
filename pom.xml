@@ -53,7 +53,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
 				<executions>
 					<execution>
 						<goals>
@@ -197,6 +196,7 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
+	
 	<properties>
 		<spring.version>3.0.3.RELEASE</spring.version>
 		<org.slf4j-version>1.5.10</org.slf4j-version>
