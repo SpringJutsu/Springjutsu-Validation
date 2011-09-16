@@ -236,7 +236,7 @@ public class ValidationManager extends CustomValidatorBean  {
 			// if this field is not on the page we're checking,
 			// or the field already has errors, skip it.		
 
-			if (!RequestUtils.getRequest().getParameterMap().containsKey(fullPath)
+			if (!fullPath.isEmpty() && !RequestUtils.getRequest().getParameterMap().containsKey(fullPath)
 				|| errors.hasFieldErrors(rule.getPath())) {
 				continue;
 			}
@@ -393,7 +393,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	protected Object getContextModel(Object model, String expression) {
 		Object result = null;
 		if (expression == null || expression.isEmpty()) {
-			return null;
+			return model;
 		}
 		if (hasEL(expression)) {
 			result = resolveSPEL(expression, model);
