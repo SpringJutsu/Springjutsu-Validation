@@ -176,11 +176,12 @@ public class ValidationManager extends CustomValidatorBean  {
 			validateMe = beanWrapper.getPropertyValue(beanPath);
 		}
 		
+		//TODO: Refactor and re-enable recursion check
 		// Infinite recursion check
-		if (validateMe == null || checkedModels.contains(validateMe.hashCode())) {
+		if (validateMe == null) {
 			return;
-		} else {
-			checkedModels.add(validateMe.hashCode());
+//		} else {
+//			checkedModels.add(validateMe.hashCode());
 		}
 		
 		List<ValidationRule> modelRules = rulesContainer.getModelRules(validateMe.getClass());
@@ -202,10 +203,11 @@ public class ValidationManager extends CustomValidatorBean  {
 				
 				if (list == null || list.isEmpty()) {
 					continue;
-				} 
+				} else if (list.get(0) == null || !supports(list.get(0).getClass())) {
+					continue;
+				}
 				
 				for (int i = 0; i < list.size(); i++) {
-					Object item = list.get(i);
 					errors.pushNestedPath(property.getName() + "[" + i + "]");
 					validateModelRules(model, errors, checkedModels);
 					errors.popNestedPath();
@@ -234,9 +236,18 @@ public class ValidationManager extends CustomValidatorBean  {
 			String fullPath = appendPath(errors.getNestedPath(), rule.getPath());
 			
 			// if this field is not on the page we're checking,
-			// or the field already has errors, skip it.		
+			// or the field already has errors, skip it.	
+			//TODO: refactor this out into another method or provider class that can be made configurable
+			boolean containedInRequestParams = false;
+			for (Object key : RequestUtils.getRequest().getParameterMap().keySet())
+			{
+				if (key instanceof String && (key.equals(fullPath) || ((String)key).replaceAll("\\(.*\\)", "").equals(fullPath)))
+				{
+					containedInRequestParams = true;
+				}
+			}
 
-			if (!fullPath.isEmpty() && !RequestUtils.getRequest().getParameterMap().containsKey(fullPath)
+			if (!fullPath.isEmpty() && !containedInRequestParams
 				|| errors.hasFieldErrors(rule.getPath())) {
 				continue;
 			}
