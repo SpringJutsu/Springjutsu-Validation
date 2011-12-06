@@ -38,12 +38,6 @@ public class ValidationTemplatesParsingTest {
 	}
 	
 	/** TODO */
-	@Test
-	public void testIllegalModelRuleTemplates() {
-	
-	}
-	
-	/** TODO */
 	/*
 	@Test
 	public void testTemplateClassMismatch() {

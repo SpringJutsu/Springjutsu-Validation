@@ -162,7 +162,6 @@
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
