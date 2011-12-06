@@ -239,7 +239,7 @@ public class ValidationManager extends CustomValidatorBean  {
 			// or the field already has errors, skip it.	
 			//TODO: refactor this out into another method or provider class that can be made configurable
 			boolean containedInRequestParams = false;
-			for (Object key : RequestUtils.getRequest().getParameterMap().keySet())
+			for (Object key : RequestUtils.getRequestParameters().keySet())
 			{
 				if (key instanceof String && (key.equals(fullPath) || ((String)key).replaceAll("\\(.*\\)", "").equals(fullPath)))
 				{

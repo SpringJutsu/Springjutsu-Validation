@@ -47,8 +47,23 @@ public class RequestUtils {
 	 * @return the current thread-bound HttpServletRequest
 	 */
 	public static HttpServletRequest getRequest() {
-		RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
-		return ((ServletRequestAttributes) attributes).getRequest();
+		HttpServletRequest request = null;
+		if (isWebflowRequest()) {
+			request = (HttpServletRequest) org.springframework.webflow.execution.RequestContextHolder
+				.getRequestContext().getExternalContext().getNativeRequest();
+		} else {
+			RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
+			request = ((ServletRequestAttributes) attributes).getRequest(); 
+		}
+		return request;
+	}
+	
+	public static Map getRequestParameters() {
+		if (isWebflowRequest()) {
+			return org.springframework.webflow.execution.RequestContextHolder.getRequestContext().getRequestParameters().asMap();
+		} else {
+			return ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getParameterMap();
+		}
 	}
 	
 	/**

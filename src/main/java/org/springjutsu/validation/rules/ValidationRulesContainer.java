@@ -19,8 +19,10 @@ package org.springjutsu.validation.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -59,6 +61,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		if (validationEntityMap == null) {
 			initValidationEntityMap();
 			unwrapTemplateReferences();
+			initRuleInheritance();
 		}
 		return validationEntityMap.get(clazz);
 	}
@@ -77,6 +80,34 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			.getBeansOfType(ValidationEntity.class).values();
 		for (ValidationEntity validationEntity : validationEntities) {
 			validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
+		}
+	}
+	
+	/**
+	 * Copy model rules from parent classes into child classes.
+	 */
+	protected void initRuleInheritance() {
+		Set<Class> inheritanceChecked = new HashSet<Class>();
+		for (ValidationEntity entity : validationEntityMap.values()) {
+			
+			Stack<Class> classStack = new Stack<Class>();
+			classStack.push(entity.getValidationClass());
+			for (Class clazz = entity.getValidationClass().getSuperclass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
+				classStack.push(clazz);
+			}
+			
+			List<ValidationRule> inheritableModelRules = new ArrayList<ValidationRule>();			
+			while (!classStack.isEmpty()) {
+				Class clazz = classStack.pop();
+				if (supportsClass(clazz) && !inheritanceChecked.contains(clazz)) {
+					for (ValidationRule rule : inheritableModelRules) {
+						validationEntityMap.get(clazz).addModelValidationRule(rule);
+					}
+					inheritableModelRules.clear();
+					inheritableModelRules.addAll(validationEntityMap.get(clazz).getModelValidationRules());
+				}
+				inheritanceChecked.add(clazz);
+			}
 		}
 	}
 	
