@@ -11,17 +11,19 @@
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
-	<!-- Activate autowire -->
-	<context:annotation-config />
-	
-	<!-- Test basic illegal recursion: two templates reference one another. -->
+	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<model-validation>
-			<template-ref templateName="basicTemplate"/> 
-		</model-validation>
+		<context-validation>
+			<form path="mockFlow:mockState">
+				<template-ref basePath="address" templateName="unitedStatesAddress"/>
+			</form>
+		</context-validation>
+	</entity>
+	
+	<entity class="org.springjutsu.validation.test.entities.Address">
 		<templates>
-			<template name="basicTemplate">
-				<rule path="firstName" type="alphabetic"/>
+			<template name="unitedStatesAddress">
+				<rule path="zipCode" type="exactLength" value="5"/>
 			</template>
 		</templates>
 	</entity>

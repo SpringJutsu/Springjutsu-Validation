@@ -12,24 +12,29 @@
 	<!-- Detect complex illegal recursion through nested rules, 
 		and multiple template references. -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<model-validation>
-			<rule path="favoriteColor" type="notEmpty">
-				<template-ref templateName="illegalRecursionA"/>
+		<context-validation>
+			<form path="mockFlow:mockState">
+				<rule path="favoriteColor" type="notEmpty">
+				<template-ref basePath="address" templateName="illegalRecursionA"/>
 			</rule>
-		</model-validation>
+			</form>
+		</context-validation>
+	</entity>
+	
+	<entity class="org.springjutsu.validation.test.entities.Address">
 		<templates>
 			<template name="illegalRecursionA">
-				<rule path="firstName" type="notEmpty">
+				<rule path="zipCode" type="notEmpty">
 					<template-ref templateName="illegalRecursionB"/>
 				</rule>
 			</template>
 			<template name="illegalRecursionB">
-				<rule path="lastName" type="notEmpty">
+				<rule path="lineOne" type="notEmpty">
 					<template-ref templateName="illegalRecursionC"/>
 				</rule>
 			</template>
 			<template name="illegalRecursionC">
-				<rule path="emailAddress" type="notEmpty">
+				<rule path="lineTwo" type="notEmpty">
 					<template-ref templateName="illegalRecursionA"/>
 				</rule>
 			</template>

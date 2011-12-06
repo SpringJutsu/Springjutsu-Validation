@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springjutsu.validation.executors.impl.AlphabeticRuleExecutor;
 import org.springjutsu.validation.executors.impl.AlphanumericRuleExecutor;
 import org.springjutsu.validation.executors.impl.EmailRuleExecutor;
+import org.springjutsu.validation.executors.impl.ExactLengthRuleExecutor;
 import org.springjutsu.validation.executors.impl.MatchesRuleExecutor;
 import org.springjutsu.validation.executors.impl.MaxLengthRuleExecutor;
 import org.springjutsu.validation.executors.impl.MinLengthRuleExecutor;
@@ -140,6 +141,7 @@ public class RuleExecutorContainer {
 		setCustomRuleExecutor("email", new EmailRuleExecutor());
 		setCustomRuleExecutor("maxLength", new MaxLengthRuleExecutor());
 		setCustomRuleExecutor("minLength", new MinLengthRuleExecutor());
+		setCustomRuleExecutor("exactLength", new ExactLengthRuleExecutor());
 		setCustomRuleExecutor("numeric", new NumericRuleExecutor());
 		setCustomRuleExecutor("required", new RequiredRuleExecutor());
 		setCustomRuleExecutor("notEmpty", new RequiredRuleExecutor());

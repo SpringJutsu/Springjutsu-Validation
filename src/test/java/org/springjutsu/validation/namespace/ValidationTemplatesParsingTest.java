@@ -1,20 +1,11 @@
 package org.springjutsu.validation.namespace;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
-import org.springframework.webflow.core.collection.LocalParameterMap;
-import org.springframework.webflow.execution.RequestContextHolder;
-import org.springframework.webflow.test.MockRequestContext;
-import org.springjutsu.validation.ValidationManager;
 import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
+import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.springjutsu.validation.test.entities.Customer;
 
@@ -23,21 +14,11 @@ public class ValidationTemplatesParsingTest {
 	private static final String xmlDirectory = 
 		"org/springjutsu/validation/namespace/";
 	
-	protected void triggerValidationParse(ApplicationContext context) 
+	protected ValidationEntity triggerValidationParse(ApplicationContext context) 
 		throws CircularValidationTemplateReferenceException {
 		ValidationRulesContainer rulesContainer = 
 			context.getBean(ValidationRulesContainer.class);
-		rulesContainer.getValidationEntity(Customer.class);
-	}
-	
-	protected Errors triggerValidationRun(ApplicationContext context, Object target, Map<String, String> requestData) {
-		ValidationManager manager = 
-			context.getBean(ValidationManager.class);
-		MockRequestContext requestContext = new MockRequestContext(new LocalParameterMap(requestData));
-		RequestContextHolder.setRequestContext(requestContext);
-		Errors errors = new BeanPropertyBindingResult(target, "target");
-		manager.validate(target, errors);
-		return errors;
+		return rulesContainer.getValidationEntity(Customer.class);
 	}
 	
 	@Test(expected=CircularValidationTemplateReferenceException.class)
@@ -58,18 +39,44 @@ public class ValidationTemplatesParsingTest {
 	
 	/** TODO */
 	@Test
-	public void testSimpleTemplateUse() {
+	public void testIllegalModelRuleTemplates() {
+	
+	}
+	
+	/** TODO */
+	/*
+	@Test
+	public void testTemplateClassMismatch() {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + "validationTemplates-wrongClassForTemplate-config.xml"});
+		triggerValidationParse(context);
+	}
+	*/
+	
+	@Test
+	public void testUnwrapSimpleTemplateUse() {
 		ApplicationContext context =
 		    new ClassPathXmlApplicationContext(new String[] {
 		    	xmlDirectory + "validationTemplates-simpleTemplateUse-config.xml"});
-		triggerValidationParse(context);
-		Customer target = new Customer();
-		Map<String, String> requestData = new HashMap<String, String>();
-		requestData.put("firstName", "1234567");
-		target.setFirstName("1234567");
-		Errors errors = triggerValidationRun(context, target, requestData);
-		Assert.assertEquals(1, errors.getErrorCount());
-		Assert.assertEquals(1, errors.getFieldErrorCount("firstName"));
+		ValidationEntity entity = triggerValidationParse(context);
+		Assert.assertEquals(1, entity.getContextValidationRules("mockFlow:mockState").size());
+		Assert.assertEquals("address.zipCode", entity.getContextValidationRules("mockFlow:mockState").get(0).getPath());
+	}
+	
+	@Test
+	public void testUnwrapRuleNestedTemplateUse() {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + "validationTemplates-ruleNestedTemplateUse-config.xml"});
+		ValidationEntity entity = triggerValidationParse(context);
+		Assert.assertEquals(1, entity.getContextValidationRules("mockFlow:mockState").size());
+		Assert.assertEquals("firstName", entity.getContextValidationRules("mockFlow:mockState").get(0).getPath());
+		Assert.assertEquals(2, entity.getContextValidationRules("mockFlow:mockState").get(0).getRules().size());
+		Assert.assertEquals("address.zipCode", entity.getContextValidationRules("mockFlow:mockState").get(0).getRules().get(0).getPath());
+		Assert.assertEquals("referredBy.lastName", entity.getContextValidationRules("mockFlow:mockState").get(0).getRules().get(1).getPath());
+		Assert.assertEquals(1, entity.getContextValidationRules("mockFlow:mockState").get(0).getRules().get(1).getRules().size());
+		Assert.assertEquals("referredBy.secondaryAddress.zipCode", entity.getContextValidationRules("mockFlow:mockState").get(0).getRules().get(1).getRules().get(0).getPath());
 	}
 
 }

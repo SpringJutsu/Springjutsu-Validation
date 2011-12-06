@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springjutsu.org/schema/validation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
+	<configuration validatorName="testValidationManagerName"/>
+	
+	<!-- Test basic template unwrapping -->
+	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<context-validation>
+			<form path="mockFlow:mockState">
+				<rule path="firstName" type="notEmpty">
+					<template-ref basePath="address" templateName="unitedStatesAddress"/>
+					<template-ref basePath="referredBy" templateName="secondaryAddressedCustomer"/>
+				</rule>
+			</form>
+		</context-validation>
+		<templates>
+			<template name="secondaryAddressedCustomer">
+				<rule path="lastName" type="notEmpty">
+					<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
+				</rule>
+			</template>
+		</templates>
+	</entity>
+	
+	<entity class="org.springjutsu.validation.test.entities.Address">
+		<templates>
+			<template name="unitedStatesAddress">
+				<rule path="zipCode" type="exactLength" value="5"/>
+			</template>
+		</templates>
+	</entity>
+	
+	<!-- Include messages used by application -->
+	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>
+</beans:beans>

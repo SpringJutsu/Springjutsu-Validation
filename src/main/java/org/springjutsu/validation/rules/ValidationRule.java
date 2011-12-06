@@ -101,7 +101,8 @@ public class ValidationRule {
 		ValidationRule newRule = new ValidationRule(path, this.type, this.value);
 		newRule.setErrorPath(this.errorPath);
 		newRule.setMessage(this.message);
-		newRule.setRules(this.rules);
+		newRule.getRules().addAll(this.rules);
+		newRule.getTemplateReferences().addAll(this.templateReferences);
 		return newRule;
 	}
 	

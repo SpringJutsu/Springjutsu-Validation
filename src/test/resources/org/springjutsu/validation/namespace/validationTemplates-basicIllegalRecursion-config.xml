@@ -11,9 +11,14 @@
 	
 	<!-- Test basic illegal recursion: two templates reference one another. -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<model-validation>
-			<template-ref templateName="illegalRecursionA"/> 
-		</model-validation>
+		<context-validation>
+			<form path="mockFlow:mockState">
+				<template-ref basePath="address" templateName="illegalRecursionA"/>
+			</form>
+		</context-validation>
+	</entity>
+	
+	<entity class="org.springjutsu.validation.test.entities.Address">
 		<templates>
 			<template name="illegalRecursionA">
 				<template-ref templateName="illegalRecursionB"/>

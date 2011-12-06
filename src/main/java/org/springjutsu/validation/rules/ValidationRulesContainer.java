@@ -30,6 +30,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
+import org.springjutsu.validation.exceptions.IllegalTemplateReferenceException;
 
 /**
  * This serves as a container for all parsed validation rules.
@@ -130,42 +131,19 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		
 		// then for each validation entity, unwrap and error check validation templates.
 		for (ValidationEntity entity : validationEntityMap.values()) {
-
-			// unwrap template references hiding in model form rules....
-			List<ValidationRule> unwrappedModelValidationRules = new ArrayList<ValidationRule>();
-			for (ValidationRule modelRule : entity.getModelValidationRules()) {
-				ValidationRule newModelRule = 
-					adaptValidationRuleForTemplateReference(
-						modelRule, new Stack<String>(), "", validationTemplateMap);
-				unwrappedModelValidationRules.add(newModelRule);
-			}
-			entity.setModelValidationRules(unwrappedModelValidationRules);
-			
-			// unwrap template references for model....
-			for (ValidationTemplateReference templateReference : entity.getModelValidationTemplateReferences()) {
-				unwrapTemplateReference(
-						templateReference, entity.getModelValidationRules(), 
-						new Stack<String>(), "", validationTemplateMap);
-			}
 			
 			// unwrap template references for context....
 			for (String formName : entity.getContextValidationTemplateReferences().keySet()) {
 				
 				// unwrap template references hiding in context rules...
-				List<ValidationRule> unwrappedContextRules = new ArrayList<ValidationRule>();
 				for (ValidationRule contextRule : entity.getContextValidationRules().get(formName)) {
-					ValidationRule newContextRule = 
-						adaptValidationRuleForTemplateReference(
-							contextRule, new Stack<String>(), "", validationTemplateMap);
-					unwrappedContextRules.add(newContextRule);
+					unwrapValidationRuleTemplateReferences(contextRule, new Stack<String>(), "", validationTemplateMap);
 				}
-				entity.getContextValidationRules().put(formName, unwrappedContextRules);
 				
 				// unwrap base level template references.
 				for (ValidationTemplateReference templateReference : 
 					entity.getContextValidationTemplateReferences().get(formName)) {
-					unwrapTemplateReference(
-							templateReference, entity.getContextValidationRules().get(formName), 
+					unwrapTemplateReference(templateReference, entity.getContextValidationRules().get(formName), 
 							new Stack<String>(), "", validationTemplateMap);
 				}
 			}
@@ -192,15 +170,16 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		// dump these unwrapped references into the original rule list.
 		for (ValidationTemplateReference subTemplateReference : template.getTemplateReferences()) {
 			unwrapTemplateReference(subTemplateReference, dumpTo, usedNames, 
-				appendPath(baseName, subTemplateReference.getBasePath()), validationTemplateMap);
+				appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
 		}
 		
 		// adapt template rules:
 		// check them for template references
 		// clone with basename subpath.
 		for (ValidationRule rule : template.getRules()) {
-			ValidationRule adaptedRule = 
-				adaptValidationRuleForTemplateReference(rule, usedNames, baseName, validationTemplateMap);
+			ValidationRule adaptedRule = rule.cloneWithPath(appendPath(baseName, templateReference.getBasePath(), rule.getPath()));
+			unwrapValidationRuleTemplateReferences(adaptedRule, usedNames, 
+				appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
 			dumpTo.add(adaptedRule);
 		}
 		
@@ -208,39 +187,34 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		usedNames.pop();	
 	}
 	
-	protected ValidationRule adaptValidationRuleForTemplateReference(ValidationRule rule, 
+	protected void unwrapValidationRuleTemplateReferences(ValidationRule rule, 
 			Stack<String> usedNames, String baseName, Map<String, ValidationTemplate> validationTemplateMap) {
-		
-		// start a new list of adapted rules.
-		List<ValidationRule> adaptedSubRules = new ArrayList<ValidationRule>();
 
-		// dump template references into adapted sub rules.
+		// unwrap template references into sub rules.
 		for (ValidationTemplateReference subTemplateReference : rule.getTemplateReferences()) {
-			unwrapTemplateReference(subTemplateReference, adaptedSubRules, usedNames, 
-					appendPath(baseName, subTemplateReference.getBasePath()), validationTemplateMap);
+			unwrapTemplateReference(subTemplateReference, rule.getRules(), usedNames, baseName, validationTemplateMap);
 		}
 		
-		// adapt sub rules into adapted sub rules.
+		// recursively unwrap any templates within sub rules.
 		if (rule.getRules() != null) {
-			for (ValidationRule subRule : rule.getRules()) {
-				ValidationRule adaptedSubRule = 
-					adaptValidationRuleForTemplateReference(subRule, usedNames, baseName, validationTemplateMap);
-				adaptedSubRules.add(subRule);
+			for (ValidationRule subRule : rule.getRules()) { 
+				unwrapValidationRuleTemplateReferences(subRule, usedNames, baseName, validationTemplateMap);
 			}
 		}
 		
-		// clone with adapted subpath.
-		ValidationRule adaptedRule = rule.cloneWithPath(appendPath(baseName, rule.getPath()));
-		
-		return adaptedRule;
+		// Don't re-evaluate these template references.
+		rule.getTemplateReferences().clear();
 	}
 	
-	protected String appendPath(String path, String subPath) {
-		String appended = path + "." + subPath;
-		if (appended.startsWith(".")) {
-			appended = appended.substring(1);
+	protected String appendPath(String... pathSegments) {
+		String path = pathSegments[0];
+		for (int i = 1; i < pathSegments.length; i++) {
+			path += "." + pathSegments[i];
 		}
-		return appended;
+		if (path.startsWith(".")) {
+			path = path.substring(1);
+		}
+		return path;
 	}
 
 	/**
