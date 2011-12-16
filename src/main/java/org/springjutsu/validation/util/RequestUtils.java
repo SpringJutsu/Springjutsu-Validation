@@ -151,7 +151,7 @@ public class RequestUtils {
 				.replaceAll(PATH_VAR_PATTERN, "VAR")
 				.replaceAll("\\*\\*/?", "(*/?)+")
 				.replace("*", "[^/]+");
-				if (controllerPaths == null && preferredPath.matches(candidatePath)) {
+				if ((controllerPaths == null || candidatePath.startsWith("/"))&& preferredPath.matches(candidatePath)) {
 					return candidate.substring(candidate.indexOf("=") + 1);
 				} else if (controllerPaths != null) {
 					for (String controllerPath : controllerPaths) {
