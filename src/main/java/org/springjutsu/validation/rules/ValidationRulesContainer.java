@@ -93,7 +93,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			
 			Stack<Class> classStack = new Stack<Class>();
 			classStack.push(entity.getValidationClass());
-			for (Class clazz = entity.getValidationClass().getSuperclass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
+			for (Class clazz = entity.getValidationClass().getSuperclass(); clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
 				classStack.push(clazz);
 			}
 			
