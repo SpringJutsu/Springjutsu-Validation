@@ -247,7 +247,7 @@ public class ValidationManager extends CustomValidatorBean  {
 				}
 			}
 
-			if (!fullPath.isEmpty() && !containedInRequestParams
+			if (!rule.isValidateWhenNotInRequest() && !fullPath.isEmpty() && !containedInRequestParams
 				|| errors.hasFieldErrors(rule.getPath())) {
 				continue;
 			}
@@ -488,7 +488,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (!errors.getNestedPath().isEmpty() && errorMessagePath.startsWith(errors.getNestedPath())) {
 			errorMessagePath = appendPath(errorMessagePath.substring(errors.getNestedPath().length()), "");
 		}
-		
+
 		errors.rejectValue(errorMessagePath, errorMessageKey, 
 				new Object[] {modelMessageResolvable, argumentMessageResolvable}, defaultError);
 	}

@@ -166,12 +166,14 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				String value = rule.getAttribute("value");
 				String message = rule.getAttribute("message");
 				String errorPath = rule.getAttribute("errorPath");
+				String validateWhenNotInRequest = rule.getAttribute("validateWhenNotInRequest");
 				ValidationRule validationRule = new ValidationRule(path, type, value);
 				validationRule.setMessage(message);
 				validationRule.setErrorPath(errorPath);
 				ValidationStructure subStructure = parseNestedValidation(rule, modelClass);
 				validationRule.setRules(subStructure.rules);
 				validationRule.setTemplateReferences(subStructure.refs);
+				validationRule.setValidateWhenNotInRequest(Boolean.valueOf(validateWhenNotInRequest));
 				structure.rules.add(validationRule);
 			}
 		}

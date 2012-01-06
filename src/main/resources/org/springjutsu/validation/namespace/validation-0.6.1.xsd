@@ -324,6 +324,13 @@
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name="validateWhenNotInRequest" type="xsd:boolean" use="optional" default="false">
+				<xsd:annotation>
+					<xsd:documentation>
+						Boolean indicator of whether or not this rule should be executed when the provided path is not a part of the request. Defaults to false.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 </xsd:schema>

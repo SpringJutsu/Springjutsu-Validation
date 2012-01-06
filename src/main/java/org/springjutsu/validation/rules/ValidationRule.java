@@ -78,6 +78,13 @@ public class ValidationRule {
 	protected List<ValidationTemplateReference> templateReferences;
 	
 	/**
+	 * Boolean value indicating whether or not rule should
+	 * be executed when the path specified in not found
+	 * in the Request. Defaults to false.
+	 */
+	protected boolean validateWhenNotInRequest = false;
+	
+	/**
 	 * Default constructor, utilized by @link{ValidationDefinitionParser}
 	 * @param path See path docs.
 	 * @param type See type docs.
@@ -255,6 +262,18 @@ public class ValidationRule {
 			List<ValidationTemplateReference> templateReferences) {
 		this.templateReferences = templateReferences;
 	}
-	
-	
+
+	/**
+	 * @return whether or not to validate when path is not in request
+	 */
+	public boolean isValidateWhenNotInRequest() {
+		return validateWhenNotInRequest;
+	}
+
+	/**
+	 * @param set whether or not to validate when path is not in request
+	 */
+	public void setValidateWhenNotInRequest(boolean validateWhenNotInRequest) {
+		this.validateWhenNotInRequest = validateWhenNotInRequest;
+	}	
 }
