@@ -146,6 +146,13 @@ public class ValidationManager extends CustomValidatorBean  {
 			spelResolver.set(null);
 		}
 	}
+	
+	@Override
+	public void validate(Object target, Errors errors,
+			Object... validationHints) {
+		// TODO Support Validation Hints
+			validate(target, errors);
+	}
 
 	/**
 	 * Responsible for testing all XML-defined per-class model rules.
