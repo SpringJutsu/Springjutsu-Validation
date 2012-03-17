@@ -9,8 +9,8 @@
     <description>an XML-driven conditional validation system for Spring Framework</description>
     <url>http://www.springjutsu.org/validation</url>
     <issueManagement>
-    	<system>RedMine</system>
-    	<url>http://bugs.springjutsu.org</url>
+    	<system>github</system>
+    	<url>https://github.com/SpringJutsu/Springjutsu-Validation/issues</url>
     </issueManagement>
 	<licenses>
 		<license>
@@ -20,19 +20,22 @@
 		</license>
 	</licenses>
     <scm>
-    	<url>http://svn.springjutsu.org/validation/</url>
-    	<connection>http://svn.springjutsu.org/validation/</connection>
+    	<url>https://github.com/SpringJutsu/Springjutsu-Validation</url>
+    	<connection>git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
+    	<developerConnection>https://username@github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
     </scm>
     <developers>
     	<developer>
     		<id>twicksell</id>
     		<name>Taylor Wicksell</name>
     		<email>issues@springjutsu.org</email>
+    		<url>https://github.com/gradinko</url>
     	</developer>
     	<developer>
     		<id>cduplichien</id>
     		<name>Clark Duplichien</name>
     		<email>issues@springjutsu.org</email>
+    		<url>https://github.com/cduplichien</url>
     	</developer>
     </developers>
     <organization>
