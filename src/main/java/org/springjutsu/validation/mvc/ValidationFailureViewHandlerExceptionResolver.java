@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindException;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 import org.springjutsu.validation.mvc.annotations.ValidationFailureView;
@@ -32,14 +33,6 @@ import org.springjutsu.validation.util.RequestUtils;
  */
 public class ValidationFailureViewHandlerExceptionResolver implements HandlerExceptionResolver {
 
-	/**
-	 * Used to discover the most recently called
-	 * controller method in order to find the 
-	 * relevant validationFailureView annotation.
-	 */
-	@Autowired
-	private ControllerMethodNegotiator controllerMethodNegotiator;
-	
 	/**
 	 * When a BindException is caught, purportedly because some validation
 	 * using the @link{Valid} annotated validation failed, redirect to the view
@@ -54,14 +47,16 @@ public class ValidationFailureViewHandlerExceptionResolver implements HandlerExc
 			HttpServletResponse response, Object handler, Exception ex) {
 		ModelAndView mav = null;
 		if (ex instanceof BindException) {
-			//handlerAdapter.
-			ValidationFailureView failView = (ValidationFailureView) controllerMethodNegotiator
-				.getAnnotationFromControllerMethod(handler, request, ValidationFailureView.class);
+			if (!(handler instanceof HandlerMethod)) {
+				throw new IllegalArgumentException("Expecting handler to be instance of " + HandlerMethod.class);
+			}
+			ValidationFailureView failView = (ValidationFailureView) ((HandlerMethod) handler)
+				.getMethodAnnotation(ValidationFailureView.class);
 			if (failView == null) {
 				return null;
 			}
 			String[] candidateViewNames = failView.value();
-			String[] controllerPaths = RequestUtils.getControllerRequestPaths(handler);
+			String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
 			String viewName = RequestUtils.findMatchingRestPath(candidateViewNames, controllerPaths, request);
 			if (viewName == null) {
 				return null;
