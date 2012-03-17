@@ -183,12 +183,11 @@ public class ValidationManager extends CustomValidatorBean  {
 			validateMe = beanWrapper.getPropertyValue(beanPath);
 		}
 		
-		//TODO: Refactor and re-enable recursion check
 		// Infinite recursion check
-		if (validateMe == null) {
+		if (validateMe == null || checkedModels.contains(validateMe.hashCode())) {
 			return;
-//		} else {
-//			checkedModels.add(validateMe.hashCode());
+		} else {
+			checkedModels.add(validateMe.hashCode());
 		}
 		
 		List<ValidationRule> modelRules = rulesContainer.getModelRules(validateMe.getClass());
@@ -200,7 +199,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		for (PropertyDescriptor property : propertyDescriptors) {
 			if (rulesContainer.supportsClass(property.getPropertyType())) {
 				errors.pushNestedPath(property.getName());
-				validateModelRules(model, errors, checkedModels);
+				validateModelRules(model, errors, inheritedCheckedModels(checkedModels));
 				errors.popNestedPath();
 			} else if (List.class.isAssignableFrom(property.getPropertyType()) || property.getPropertyType().isArray()) {
 				Object potentialList = subBeanWrapper.getPropertyValue(property.getName());
@@ -216,7 +215,7 @@ public class ValidationManager extends CustomValidatorBean  {
 				
 				for (int i = 0; i < list.size(); i++) {
 					errors.pushNestedPath(property.getName() + "[" + i + "]");
-					validateModelRules(model, errors, checkedModels);
+					validateModelRules(model, errors, inheritedCheckedModels(checkedModels));
 					errors.popNestedPath();
 				}
 			}
@@ -668,6 +667,12 @@ public class ValidationManager extends CustomValidatorBean  {
 
 	public void setFieldLabelPrefix(String fieldLabelPrefix) {
 		this.fieldLabelPrefix = fieldLabelPrefix == null ? "" : fieldLabelPrefix;
+	}
+	
+	protected List<Object> inheritedCheckedModels(List<Object> checkedModels) {
+		List<Object> inheritedCheckedModels = new ArrayList<Object>();
+		inheritedCheckedModels.addAll(checkedModels);
+		return inheritedCheckedModels;
 	}
 	
 }
