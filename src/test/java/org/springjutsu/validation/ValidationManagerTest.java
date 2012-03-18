@@ -41,19 +41,4 @@ public class ValidationManagerTest {
 		assertTrue(validationManager.supports(String.class));
 		assertFalse(validationManager.supports(List.class));
 	}
-
-	@Test
-	public void testValidate() {
-//		validationManager.validate(new TestModel("test"), errors);
-	}
-
-	
-	private class TestModel
-	{
-		private String testString;
-		
-		public TestModel(String testString) {
-			this.testString = testString;
-		}
-	}
 }

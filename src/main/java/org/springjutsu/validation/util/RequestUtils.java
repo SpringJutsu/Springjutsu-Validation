@@ -52,7 +52,7 @@ public class RequestUtils {
 		if (isWebflowRequest()) {
 			request = (HttpServletRequest) org.springframework.webflow.execution.RequestContextHolder
 				.getRequestContext().getExternalContext().getNativeRequest();
-		} else {
+		} else if (RequestContextHolder.getRequestAttributes() != null){
 			RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
 			request = ((ServletRequestAttributes) attributes).getRequest(); 
 		}
