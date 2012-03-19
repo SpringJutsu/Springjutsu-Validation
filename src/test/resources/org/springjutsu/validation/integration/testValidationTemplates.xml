@@ -13,11 +13,25 @@
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
+	<entity class="org.springjutsu.validation.test.entities.Address">
+		<templates>
+			<template name="fullAddress">
+				<rule path="lineOne" type="required"/>
+				<rule path="city" type="required"/>
+			</template>
+			<template name="shortAddress">
+				<rule path="city" type="required"/>
+			</template>
+		</templates>
+	</entity>
+	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<model-validation>
-			<rule path="firstName" type="matches" value="${lastName}" />
-			<rule path="lastName" type="matches" value="test${model.firstName}${foo}" />
-		</model-validation>
+		<context-validation>
+			<form path="/foo/new">
+				<template-ref basePath="address" templateName="fullAddress"/>
+				<template-ref basePath="secondaryAddress" templateName="shortAddress"/>
+			</form>
+		</context-validation>
 	</entity>
 	
 	<!-- Include messages used by application -->

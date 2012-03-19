@@ -16,10 +16,17 @@
 	<entity class="org.springjutsu.validation.test.entities.Customer">
 		<model-validation>
 			<rule path="firstName" type="matches" value="${lastName}" />
-			<rule path="lastName" type="matches" value="test${model.firstName}${foo}" />
+			<rule path="lastName" type="minLength" value="4" />
+			<rule path="emailAddress" type="required" />
 		</model-validation>
 	</entity>
 	
 	<!-- Include messages used by application -->
-	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>
+	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<beans:property name="basenames">
+			<beans:list>
+				<beans:value>classpath:/org/springjutsu/validation/integration/test-messages</beans:value>
+			</beans:list>
+		</beans:property>
+	</beans:bean>
 </beans:beans>
