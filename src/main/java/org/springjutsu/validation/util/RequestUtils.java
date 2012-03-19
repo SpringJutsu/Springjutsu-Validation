@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 
 /**
@@ -51,7 +52,7 @@ public class RequestUtils {
 		if (isWebflowRequest()) {
 			request = (HttpServletRequest) org.springframework.webflow.execution.RequestContextHolder
 				.getRequestContext().getExternalContext().getNativeRequest();
-		} else {
+		} else if (RequestContextHolder.getRequestAttributes() != null){
 			RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
 			request = ((ServletRequestAttributes) attributes).getRequest(); 
 		}
@@ -178,8 +179,8 @@ public class RequestUtils {
 	 * @param handler the handler object
 	 * @return the controller request paths.
 	 */
-	public static String[] getControllerRequestPaths(Object handler) {
-		RequestMapping requestMapping = (RequestMapping) findHandlerAnnotation(handler, RequestMapping.class);
+	public static String[] getControllerRequestPaths(HandlerMethod handler) {
+		RequestMapping requestMapping = (RequestMapping) findHandlerAnnotation(handler.getMethod().getDeclaringClass(), RequestMapping.class);
 		return requestMapping == null ? null : requestMapping.value();
 	}
 	
@@ -190,8 +191,8 @@ public class RequestUtils {
 	 * @return The annotation, or null if not present.
 	 */
 	@SuppressWarnings("unchecked")
-	public static Annotation findHandlerAnnotation(Object handler, Class annotationClass) {
-		Class controllerClass = handler.getClass();
+	public static Annotation findHandlerAnnotation(Class handlerClass, Class annotationClass) {
+		Class controllerClass = handlerClass;
 		while (controllerClass.getAnnotation(annotationClass) == null 
 				&& controllerClass.getSuperclass() != null) {
 			controllerClass = controllerClass.getSuperclass();

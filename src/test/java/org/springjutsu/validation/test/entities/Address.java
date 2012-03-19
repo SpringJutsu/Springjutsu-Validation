@@ -7,6 +7,7 @@ public class Address {
 	private String city;
 	private String state;
 	private String zipCode;
+	private Customer customer;
 	
 	public String getLineOne() {
 		return lineOne;
@@ -37,6 +38,12 @@ public class Address {
 	}
 	public void setZipCode(String zipCode) {
 		this.zipCode = zipCode;
+	}
+	public Customer getCustomer() {
+		return customer;
+	}
+	public void setCustomer(Customer customer) {
+		this.customer = customer;
 	}
 
 }

@@ -19,7 +19,6 @@ package org.springjutsu.validation;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,6 +32,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.core.NamedThreadLocal;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
 import org.springframework.webflow.execution.RequestContextHolder;
@@ -131,6 +131,17 @@ public class ValidationManager extends CustomValidatorBean  {
 	 */
 	private static final ThreadLocal<WebContextSPELResolver> spelResolver = 
 		new NamedThreadLocal<WebContextSPELResolver>("Validation SPEL Resolver");
+	
+	/**
+	 * Hook point to perform validation without a web request.
+	 * Create and return a BindingModel to allow users to 
+	 * manage errors.
+	 */
+	public Errors validate(Object target) {
+		Errors errors = new BeanPropertyBindingResult(target, "validationTarget");
+		validate(target, errors);
+		return errors;
+	}
 	
 	/**
 	 * We perform actual validation in the order
@@ -241,21 +252,24 @@ public class ValidationManager extends CustomValidatorBean  {
 			// get full path to current model
 			String fullPath = appendPath(errors.getNestedPath(), rule.getPath());
 			
+			// For web requests only:
 			// if this field is not on the page we're checking,
 			// or the field already has errors, skip it.	
 			//TODO: refactor this out into another method or provider class that can be made configurable
-			boolean containedInRequestParams = false;
-			for (Object key : RequestUtils.getRequestParameters().keySet())
-			{
-				if (key instanceof String && (key.equals(fullPath) || ((String)key).replaceAll("\\(.*\\)", "").equals(fullPath)))
+			if (RequestUtils.getRequest() != null) {
+				boolean containedInRequestParams = false;
+				for (Object key : RequestUtils.getRequestParameters().keySet())
 				{
-					containedInRequestParams = true;
+					if (key instanceof String && (key.equals(fullPath) || ((String)key).replaceAll("\\(.*\\)", "").equals(fullPath)))
+					{
+						containedInRequestParams = true;
+					}
 				}
-			}
-
-			if (!rule.isValidateWhenNotInRequest() && !fullPath.isEmpty() && !containedInRequestParams
-				|| errors.hasFieldErrors(rule.getPath())) {
-				continue;
+	
+				if (!rule.isValidateWhenNotInRequest() && !fullPath.isEmpty() && !containedInRequestParams
+					|| errors.hasFieldErrors(rule.getPath())) {
+					continue;
+				}
 			}
 			
 			// update rule for full path
@@ -305,12 +319,15 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * the rules container.
 	 * Restful URL paths may be used, with \{variable} path support.
 	 * As of 0.6.1, ant paths like * and ** may also be used. 
+	 * Return no context rules if this is not a web request.
 	 */
 	protected List<ValidationRule> getMVCContextRules(Object model) {
-		String requestString = RequestUtils.removeLeadingAndTrailingSlashes(
-			RequestUtils.getRequest().getServletPath());
-		List<ValidationRule> contextRules = 
+		List<ValidationRule> contextRules = new ArrayList<ValidationRule>();
+		if (RequestUtils.getRequest() != null) {
+			String requestString = RequestUtils.removeLeadingAndTrailingSlashes(
+					RequestUtils.getRequest().getServletPath());
 			rulesContainer.getContextRules(model.getClass(), requestString);
+		}
 		return contextRules;
 	}
 	
@@ -577,20 +594,20 @@ public class ValidationManager extends CustomValidatorBean  {
 			return rulePath;
 		}		
 
-		Object parent = null;
+		Class<?> parentType = null;
 		String fieldPath = null;
 		
 		if (rulePath.contains(".")) {
 			fieldPath = rulePath.substring(rulePath.lastIndexOf(".") + 1);
 			String parentPath = rulePath.substring(0, rulePath.lastIndexOf("."));
 			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(rootModel);
-			parent = beanWrapper.getPropertyValue(parentPath);
+			parentType = beanWrapper.getPropertyType(parentPath);
 		} else {
 			fieldPath = rulePath;
-			parent = rootModel;
+			parentType = rootModel.getClass();
 		}
 		
-		return fieldLabelPrefix + StringUtils.uncapitalize(parent.getClass().getSimpleName()) + "." + fieldPath;		
+		return fieldLabelPrefix + StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;		
 	}
 	
 	/**

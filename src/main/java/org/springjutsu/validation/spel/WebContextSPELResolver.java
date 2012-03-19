@@ -94,13 +94,14 @@ public class WebContextSPELResolver {
 	 * instance, if this is a Web Flow request, or mocks a Web Flow 
 	 * request out of an MVC request, in order to standardize 
 	 * our web-scoped property access.
-	 * @return RequestContext instance
+	 * If neither a MVC or Web Flow request is active, return null.
+	 * @return RequestContext instance or null if no request
 	 */
 	protected RequestContext getOrMockRequestContext() {
-		RequestContext requestContext;	
+		RequestContext requestContext = null;	
 		if (RequestUtils.isWebflowRequest()) {
 			requestContext = RequestContextHolder.getRequestContext();
-		} else {
+		} else if (org.springframework.web.context.request.RequestContextHolder.getRequestAttributes() != null) {
 			requestContext = new MockRequestContext();
 			ServletRequestAttributes requestAttributes = (ServletRequestAttributes) 
 				org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
@@ -132,18 +133,20 @@ public class WebContextSPELResolver {
 	protected void initContexts(Object model) {
 		RequestContext requestContext = getOrMockRequestContext();
 		scopedContext.addContext("model", model);
-		if (RequestUtils.isWebflowRequest()) {
-			scopedContext.addContext("requestScope", requestContext.getRequestScope());
-			scopedContext.addContext("flashScope", requestContext.getFlashScope());
-			if (requestContext.inViewState()) {
-				scopedContext.addContext("viewScope", requestContext.getViewScope());
+		if (requestContext != null) {
+			if (RequestUtils.isWebflowRequest()) {
+				scopedContext.addContext("requestScope", requestContext.getRequestScope());
+				scopedContext.addContext("flashScope", requestContext.getFlashScope());
+				if (requestContext.inViewState()) {
+					scopedContext.addContext("viewScope", requestContext.getViewScope());
+				}
+				scopedContext.addContext("flowScope", requestContext.getFlowScope());
+				scopedContext.addContext("conversationScope", requestContext.getConversationScope());
 			}
-			scopedContext.addContext("flowScope", requestContext.getFlowScope());
-			scopedContext.addContext("conversationScope", requestContext.getConversationScope());
+			scopedContext.addContext("requestParameters", requestContext.getRequestParameters());
+			scopedContext.addContext("requestAttributes", requestContext.getExternalContext().getRequestMap());
+			scopedContext.addContext("session", requestContext.getExternalContext().getSessionMap());
 		}
-		scopedContext.addContext("requestParameters", requestContext.getRequestParameters());
-		scopedContext.addContext("requestAttributes", requestContext.getExternalContext().getRequestMap());
-		scopedContext.addContext("session", requestContext.getExternalContext().getSessionMap());
 	}
 
 }

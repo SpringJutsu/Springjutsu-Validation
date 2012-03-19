@@ -22,7 +22,6 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.web.servlet.handler.MappedInterceptor;
-import org.springjutsu.validation.mvc.ControllerMethodNegotiator;
 import org.springjutsu.validation.mvc.SuccessViewHandlerInterceptor;
 import org.springjutsu.validation.mvc.ValidationFailureViewHandlerExceptionResolver;
 import org.w3c.dom.Element;
@@ -41,8 +40,6 @@ public class ValidationMVCAnnotationsDefinitionParser implements BeanDefinitionP
 	 */
 	public BeanDefinition parse(Element configNode, ParserContext context) {
 		
-		BeanDefinitionBuilder controllerMethodNegotiatorBuilder =
-			BeanDefinitionBuilder.genericBeanDefinition(ControllerMethodNegotiator.class);
 		BeanDefinitionBuilder successViewHandlerBuilder = 
 			BeanDefinitionBuilder.genericBeanDefinition(SuccessViewHandlerInterceptor.class);
 		BeanDefinitionBuilder validationFailureViewHandlerBuilder = 
@@ -51,7 +48,6 @@ public class ValidationMVCAnnotationsDefinitionParser implements BeanDefinitionP
 			BeanDefinitionBuilder.genericBeanDefinition(MappedInterceptor.class);
 		
 		// Register them beans.
-		registerInfrastructureBean(configNode, context, controllerMethodNegotiatorBuilder);
 		registerInfrastructureBean(configNode, context, validationFailureViewHandlerBuilder);
 		String successViewBeanName = 
 			registerInfrastructureBean(configNode, context, successViewHandlerBuilder);

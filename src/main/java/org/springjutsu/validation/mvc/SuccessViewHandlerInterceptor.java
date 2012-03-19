@@ -19,7 +19,7 @@ package org.springjutsu.validation.mvc;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springjutsu.validation.mvc.annotations.SuccessView;
@@ -33,14 +33,6 @@ import org.springjutsu.validation.util.RequestUtils;
  *
  */
 public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
-	
-	/**
-	 * Used to discover the most recently called
-	 * controller method in order to find the 
-	 * relevant successView annotation.
-	 */
-	@Autowired
-	private ControllerMethodNegotiator controllerMethodNegotiator;
 	
 	/**
 	 * Responsible for redirecting to the view defined
@@ -57,16 +49,17 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 			HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) throws Exception {
 		
-		SuccessView successView = (SuccessView)
-			controllerMethodNegotiator.getAnnotationFromControllerMethod(
-				handler, request, SuccessView.class);
+		if (!(handler instanceof HandlerMethod)) {
+			throw new IllegalArgumentException("Expecting handler to be instance of " + HandlerMethod.class);
+		}
+		SuccessView successView = (SuccessView)((HandlerMethod) handler).getMethodAnnotation(SuccessView.class);
 		
 		if (successView == null) {
 			return;
 		}
 				
 		String[] candidateViewNames = successView.value();
-		String[] controllerPaths = RequestUtils.getControllerRequestPaths(handler);
+		String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
 		String viewName = RequestUtils.findMatchingRestPath(candidateViewNames, controllerPaths, request);
 		
 		if (viewName == null) {

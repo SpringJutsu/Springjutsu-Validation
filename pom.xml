@@ -9,8 +9,8 @@
     <description>an XML-driven conditional validation system for Spring Framework</description>
     <url>http://www.springjutsu.org/validation</url>
     <issueManagement>
-    	<system>RedMine</system>
-    	<url>http://bugs.springjutsu.org</url>
+    	<system>github</system>
+    	<url>https://github.com/SpringJutsu/Springjutsu-Validation/issues</url>
     </issueManagement>
 	<licenses>
 		<license>
@@ -20,19 +20,22 @@
 		</license>
 	</licenses>
     <scm>
-    	<url>http://svn.springjutsu.org/validation/</url>
-    	<connection>http://svn.springjutsu.org/validation/</connection>
+    	<url>https://github.com/SpringJutsu/Springjutsu-Validation</url>
+    	<connection>git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
+    	<developerConnection>https://username@github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
     </scm>
     <developers>
     	<developer>
     		<id>twicksell</id>
     		<name>Taylor Wicksell</name>
     		<email>issues@springjutsu.org</email>
+    		<url>https://github.com/gradinko</url>
     	</developer>
     	<developer>
     		<id>cduplichien</id>
     		<name>Clark Duplichien</name>
     		<email>issues@springjutsu.org</email>
+    		<url>https://github.com/cduplichien</url>
     	</developer>
     </developers>
     <organization>
@@ -80,36 +83,15 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>org.springframework.core</artifactId>
-			<version>${spring.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>org.springframework.beans</artifactId>
-			<version>${spring.version}</version>
-			<type>pom</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>${spring.version}</version>
-			<type>pom</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>org.springframework.expression</artifactId>
-			<version>${spring.version}</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
 			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-expression</artifactId>
+			<version>${spring.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -138,31 +120,6 @@
 			<version>1.1.1</version>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.webflow</groupId>
-			<artifactId>spring-binding</artifactId>
-			<version>2.2.1.RELEASE</version>
-			<type>jar</type>
-			<scope>compile</scope>
-			<exclusions>
-				<exclusion>
-					<artifactId>spring-beans</artifactId>
-					<groupId>org.springframework</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>spring-core</artifactId>
-					<groupId>org.springframework</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>spring-context</artifactId>
-					<groupId>org.springframework</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>spring-expression</artifactId>
-					<groupId>org.springframework</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.webflow</groupId>

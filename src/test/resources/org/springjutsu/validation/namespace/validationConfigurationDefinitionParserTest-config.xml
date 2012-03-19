@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
+<beans:beans xmlns="http://www.springjutsu.org/schema/validation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:validation="http://www.springjutsu.org/schema/validation"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-		http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd">
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd">
 
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
-	<validation:configuration validatorName="testValidationManagerName">
-		<validation:message-config 
+	<configuration validatorName="testValidationManagerName">
+		<message-config 
 			errorMessagePrefix="testErrorsPrefix." 
 			fieldLabelPrefix="testFieldLabelPrefix."/>
-		<validation:rules-config addDefaultRuleExecutors="false">
-			<validation:rule-executor name="test" 
+		<rules-config addDefaultRuleExecutors="false">
+			<rule-executor name="test" 
 				class="org.springjutsu.validation.namespace.ValidationConfigurationDefinitionParserTest.TestBeanPropertyRuleExecutor"/>
-		</validation:rules-config>
-	</validation:configuration>
+		</rules-config>
+	</configuration>
 	
 	<!-- Include messages used by application -->
-	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>	
+	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>	
 	
-</beans>
+</beans:beans>
