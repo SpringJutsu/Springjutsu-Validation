@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2010-2011 Duplichien, Wicksell, Springjutsu.org
  *
@@ -47,11 +48,11 @@ public class ValidationFailureViewHandlerExceptionResolver implements HandlerExc
 			HttpServletResponse response, Object handler, Exception ex) {
 		ModelAndView mav = null;
 		if (ex instanceof BindException) {
-			if (!(handler instanceof HandlerMethod)) {
-				throw new IllegalArgumentException("Expecting handler to be instance of " + HandlerMethod.class);
+			ValidationFailureView failView = null; 
+			if (handler instanceof HandlerMethod) {
+				failView = (ValidationFailureView) ((HandlerMethod) handler).getMethodAnnotation(ValidationFailureView.class);
 			}
-			ValidationFailureView failView = (ValidationFailureView) ((HandlerMethod) handler)
-				.getMethodAnnotation(ValidationFailureView.class);
+			
 			if (failView == null) {
 				return null;
 			}

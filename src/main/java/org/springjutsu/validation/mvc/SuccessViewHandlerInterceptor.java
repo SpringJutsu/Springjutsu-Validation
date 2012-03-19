@@ -49,10 +49,10 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 			HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) throws Exception {
 		
-		if (!(handler instanceof HandlerMethod)) {
-			throw new IllegalArgumentException("Expecting handler to be instance of " + HandlerMethod.class);
+		SuccessView successView = null;
+		if (handler instanceof HandlerMethod) {
+			successView = (SuccessView)((HandlerMethod) handler).getMethodAnnotation(SuccessView.class);
 		}
-		SuccessView successView = (SuccessView)((HandlerMethod) handler).getMethodAnnotation(SuccessView.class);
 		
 		if (successView == null) {
 			return;
