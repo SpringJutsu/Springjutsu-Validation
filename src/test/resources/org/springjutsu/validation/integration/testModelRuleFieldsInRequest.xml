@@ -15,8 +15,8 @@
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
 		<model-validation>
-			<rule path="firstName" type="matches" value="${lastName}" />
-			<rule path="lastName" type="matches" value="test${model.firstName}${foo}" />
+			<rule path="firstName" type="minLength" value="5" />
+			<rule path="lastName" type="required" validateWhenNotInRequest="true"/>
 		</model-validation>
 	</entity>
 	

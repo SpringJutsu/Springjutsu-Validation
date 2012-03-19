@@ -14,10 +14,14 @@
 	<configuration validatorName="testValidationManagerName"/>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<model-validation>
-			<rule path="firstName" type="matches" value="${lastName}" />
-			<rule path="lastName" type="matches" value="test${model.firstName}${foo}" />
-		</model-validation>
+		<context-validation>
+			<form path="/foo/new,/**/foo/new,/foo/{id}/edit,/**/foo/{id}/edit,mockFlow:mockState">
+				<rule path="firstName" type="required" />
+			</form>
+			<form path="/foo/new">
+				<rule path="lastName" type="required" />
+			</form>
+		</context-validation>
 	</entity>
 	
 	<!-- Include messages used by application -->

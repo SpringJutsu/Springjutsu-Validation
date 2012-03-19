@@ -80,12 +80,12 @@ public class ValidationManager extends CustomValidatorBean  {
 	/**
 	 * Configurable message code prefix for discovering error messages.
 	 */
-	private String errorMessagePrefix = "errors.";
+	private String errorMessagePrefix = "errors";
 	
 	/**
 	 * Configurable message code prefix for discovering field labels. 
 	 */
-	private String fieldLabelPrefix = "";
+	private String fieldLabelPrefix = null;
 	
 	/**
 	 * Holds the validation rules which have been 
@@ -326,7 +326,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (RequestUtils.getRequest() != null) {
 			String requestString = RequestUtils.removeLeadingAndTrailingSlashes(
 					RequestUtils.getRequest().getServletPath());
-			rulesContainer.getContextRules(model.getClass(), requestString);
+			contextRules = rulesContainer.getContextRules(model.getClass(), requestString);
 		}
 		return contextRules;
 	}
@@ -491,7 +491,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	protected void logError(ValidationRule rule, Object rootModel, Errors errors) {
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
-                errorMessageKey = errorMessagePrefix + rule.getType();
+                errorMessageKey = (errorMessagePrefix != null ? errorMessagePrefix + "." : "") + rule.getType();
         }
         
 		String defaultError =  rule.getPath() + " " + rule.getType();
@@ -607,7 +607,8 @@ public class ValidationManager extends CustomValidatorBean  {
 			parentType = rootModel.getClass();
 		}
 		
-		return fieldLabelPrefix + StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;		
+		return (fieldLabelPrefix != null ? fieldLabelPrefix + "." : "")
+			+ StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;		
 	}
 	
 	/**

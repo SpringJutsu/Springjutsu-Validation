@@ -15,8 +15,7 @@
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
 		<model-validation>
-			<rule path="firstName" type="matches" value="${lastName}" />
-			<rule path="lastName" type="matches" value="test${model.firstName}${foo}" />
+			<rule path="" type="alphabetic" />
 		</model-validation>
 	</entity>
 	
