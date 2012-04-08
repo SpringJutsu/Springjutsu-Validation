@@ -1,41 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans 
-	xmlns="http://www.springframework.org/schema/beans"
+<beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd"
 	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="
-        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:validation="http://www.springjutsu.org/schema/validation">
 
-	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
-	<!-- HANDLER MAPPING RULES -->
-	
-	<!-- Maps requests to @Controllers based on @RequestMapping("path") annotation values
-		 If no annotation-based path mapping is found, Spring MVC sends a 404 response and logs a pageNotFound warning. -->
-	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
-		<property name="order" value="2" />
-		<property name="interceptors">
-			<array>
-				<ref bean="defaultViewRedirector"/>
-			</array>
-		</property>
-	</bean>
-	
-	<!-- REGISTERED HANDLER TYPES -->
+	<!-- Register a validation manager -->
+	<validation:configuration validatorName="springjutsuValidator" />
 
-	<!-- Enables annotated @Controllers; responsible for invoking an annotated POJO @Controller when one is mapped. -->
-
-	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
-		<!-- Configures Spring MVC DataBinder instances globally -->
-		<property name="webBindingInitializer" ref="webBindingInitializer"/>
-	</bean>
+	<!-- Enable @MVC annotation driven controller model referencing our validator -->
+	<mvc:annotation-driven validator="springjutsuValidator"/>
 	
-	<bean id="webBindingInitializer" 
-		class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
-		<property name="validator" ref="validationManager" />
-	</bean>
+	<!-- @SuccessView and @ValidationFailureView support -->
+	<validation:mvc-annotations />
 	
-	<!-- Enables the Spring MVC @Controller programming model -->
+	<!-- Discover beans -->
 	<context:component-scan base-package="org.springjutsu.examples"/>
 	
 	<!-- this bean with the well known name generates view names for us -->
@@ -49,13 +32,12 @@
 	
 	<!-- Include messages used by applicaiton -->
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
-	<property name="basenames">
-		<list>
-			<value>WEB-INF/messages/field-labels</value>
-			<value>WEB-INF/messages/validation-error-messages</value>
-		</list>
-	</property>
-</bean>
-	
+		<property name="basenames">
+			<list>
+				<value>WEB-INF/messages/field-labels</value>
+				<value>WEB-INF/messages/validation-error-messages</value>
+			</list>
+		</property>
+	</bean>
 	
 </beans>

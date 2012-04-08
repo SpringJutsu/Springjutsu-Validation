@@ -16,8 +16,8 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:all>
-				<xsd:element ref="rules-config" minOccurs="0" maxOccurs="1"/>
-				<xsd:element ref="message-config" minOccurs="0" maxOccurs="1"/>
+				<xsd:element name="rules-config" type="rules-config" minOccurs="0" maxOccurs="1"/>
+				<xsd:element name="message-config" type="message-config" minOccurs="0" maxOccurs="1"/>
 			</xsd:all>
 			<xsd:attribute name="validatorName" type="xsd:string" use="optional" default="validationManager">
 				<xsd:annotation>
@@ -33,88 +33,82 @@
 		</xsd:complexType>
 	</xsd:element>
 	
-	<xsd:element name="rules-config">
+	<xsd:complexType name="rules-config">
 		<xsd:annotation>
 			<xsd:documentation>
 				Allows for the registration of one or more custom rule executors,
 				and specification of whether or not default rules should be added.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="rule-executor" minOccurs="0" maxOccurs="unbounded"/>
-			</xsd:sequence>
-			<xsd:attribute name="addDefaultRuleExecutors" type="xsd:boolean" use="optional" default="true">
-				<xsd:annotation>
-					<xsd:documentation>
-						Indicates whether or not the default rule executors 
-						packaged with springjutsu validation should be added
-						to the RuleExecutorContainer instance.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:sequence>
+			<xsd:element name="rule-executor" type="rule-executor" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="addDefaultRuleExecutors" type="xsd:boolean" use="optional" default="true">
+			<xsd:annotation>
+				<xsd:documentation>
+					Indicates whether or not the default rule executors 
+					packaged with springjutsu validation should be added
+					to the RuleExecutorContainer instance.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 
-	<xsd:element name="message-config">
+	<xsd:complexType name="message-config">
 		<xsd:annotation>
 			<xsd:documentation>
 				Configures look up of messages from the spring MessageSource.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attribute name="fieldLabelPrefix" type="xsd:string" use="optional" default="">
-				<xsd:annotation>
-					<xsd:documentation>
-						Indicates a message code prefix for field labels.
-						Default field label message codes are "simpleClassName.fieldName"
-						where simple class name starts with a lower case letter. Providing 
-						a prefix here will generate a message code pattern of 
-						"prefix.simpleClassName.fieldName" where simple class name 
-						still starts with a lower case letter.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="errorMessagePrefix" type="xsd:string" use="optional" default="errors.">
-				<xsd:annotation>
-					<xsd:documentation>
-						Indicates a message code prefix for default failure messages
-						for validation rule executors. Default failure message is 
-						"errors.ruleExecutorName" where ruleExecutorName is the name under
-						which the rule executor was registered. A prefix here will generate
-						a message code pattern of "prefix.ruleExecutorName" following
-						the same conventions.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:attribute name="fieldLabelPrefix" type="xsd:string" use="optional" default="">
+			<xsd:annotation>
+				<xsd:documentation>
+					Indicates a message code prefix for field labels.
+					Default field label message codes are "simpleClassName.fieldName"
+					where simple class name starts with a lower case letter. Providing 
+					a prefix here will generate a message code pattern of 
+					"prefix.simpleClassName.fieldName" where simple class name 
+					still starts with a lower case letter.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="errorMessagePrefix" type="xsd:string" use="optional" default="errors.">
+			<xsd:annotation>
+				<xsd:documentation>
+					Indicates a message code prefix for default failure messages
+					for validation rule executors. Default failure message is 
+					"errors.ruleExecutorName" where ruleExecutorName is the name under
+					which the rule executor was registered. A prefix here will generate
+					a message code pattern of "prefix.ruleExecutorName" following
+					the same conventions.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 	
-	<xsd:element name="rule-executor">
+	<xsd:complexType name="rule-executor">
 		<xsd:annotation>
 			<xsd:documentation>
 				Registers a single rule executor with a given name and implementation.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attribute name="name" use="required">
-				<xsd:annotation>
-					<xsd:documentation>
-						The name of the validation rule executor, will be used when 
-						specifying "type" on a validation rule. Will also be used
-						when looking up the default error message.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="class" type="xsd:string" use="required">
-				<xsd:annotation>
-					<xsd:documentation source="java:java.lang.Class">
-						The implementing class of the rule executor.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:attribute name="name" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					The name of the validation rule executor, will be used when 
+					specifying "type" on a validation rule. Will also be used
+					when looking up the default error message.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="class" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation source="java:java.lang.Class">
+					The implementing class of the rule executor.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 	
 	<xsd:element name="mvc-annotations">
 		<xsd:annotation>
@@ -134,9 +128,9 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:all>
-				<xsd:element ref="model-validation" minOccurs="0" maxOccurs="1"/>
-				<xsd:element ref="context-validation" minOccurs="0" maxOccurs="1"/>
-				<xsd:element ref="templates" minOccurs="0" maxOccurs="1"/> 
+				<xsd:element name="model-validation" type="model-validation" minOccurs="0" maxOccurs="1"/>
+				<xsd:element name="context-validation" type="context-validation" minOccurs="0" maxOccurs="1"/>
+				<xsd:element name="templates" type="templates" minOccurs="0" maxOccurs="1"/> 
 			</xsd:all>
 			<xsd:attribute name="class" type="xsd:string" use="required">
 				<xsd:annotation>
@@ -148,7 +142,7 @@
 		</xsd:complexType>
 	</xsd:element>
 
-	<xsd:element name="model-validation">
+	<xsd:complexType name="model-validation">
 		<xsd:annotation>
 			<xsd:documentation>
 				Model rules are those rules which should always execute if the
@@ -159,14 +153,12 @@
 				the request.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
-			</xsd:sequence>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:sequence>
+			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
 	
-	<xsd:element name="context-validation">
+	<xsd:complexType name="context-validation">
 		<xsd:annotation>
 			<xsd:documentation>
 				Context rules are executed specific to a form.
@@ -174,14 +166,12 @@
 				of context-specific validation rules.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="form" minOccurs="1" maxOccurs="unbounded"/>
-			</xsd:sequence>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:sequence>
+			<xsd:element name="form" type="form" minOccurs="1" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
 	
-	<xsd:element name="templates">
+	<xsd:complexType name="templates">
 		<xsd:annotation>
 			<xsd:documentation>
 				Defines one or more validation templates.
@@ -195,14 +185,12 @@
 				to perform conditional evaluation of an entire template.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="template" minOccurs="1" maxOccurs="unbounded"/>
-			</xsd:sequence>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:sequence>
+			<xsd:element name="template" type="template" minOccurs="1" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
 	
-	<xsd:element name="template">
+	<xsd:complexType name="template">
 		<xsd:annotation>
 			<xsd:documentation>
 				Defines a validation template with the assigned name.
@@ -212,43 +200,39 @@
 				for instance a full address or short form address.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
-			</xsd:sequence>
-			<xsd:attribute name="name" type="xsd:string" use="required">
-				<xsd:annotation>
-					<xsd:documentation>
-						The globally unique name for this validation template.
-						Referencable as the template-ref name.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:sequence>
+			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					The globally unique name for this validation template.
+					Referencable as the template-ref name.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 	
-	<xsd:element name="form">
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
-			</xsd:sequence>
-			<xsd:attribute name="path" type="xsd:string" use="required">
-				<xsd:annotation>
-					<xsd:documentation>
-						A comma-delimited list of URI path suffixes to the validated resource.
-						For Spring MVC, utilize your restful path (which may include wildcards), 
-							e.g. /accounts/new,/accounts/{id}/edit 
-						For Spring Web Flow, use the format &lt;flowId>:&lt;stateName>, 
-						e.g. /accounts/create-account:accountForm,/accounts/edit-account:accountForm
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+	<xsd:complexType name="form">
+		<xsd:sequence>
+			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="path" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					A comma-delimited list of URI path suffixes to the validated resource.
+					For Spring MVC, utilize your restful path (which may include wildcards), 
+						e.g. /accounts/new,/accounts/{id}/edit 
+					For Spring Web Flow, use the format &lt;flowId>:&lt;stateName>, 
+					e.g. /accounts/create-account:accountForm,/accounts/edit-account:accountForm
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 	
-	<xsd:element name="template-ref">
+	<xsd:complexType name="template-ref">
 		<xsd:annotation>
 			<xsd:documentation>
 				References a named validation template.
@@ -256,81 +240,77 @@
 				referenced by the base-path. 
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attribute name="basePath" type="xsd:string" use="optional" default="">
-				<xsd:annotation>
-					<xsd:documentation>
-						The field path to the object that will act as
-						the validated object for the rules specified 
-						in the validation template.
-						If not specified, then the current base object
-						serves as the base object for the template.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="templateName" use="required">
-				<xsd:annotation>
-					<xsd:documentation>
-						The name of the validation template whose
-						rules and subtemplates should be applied
-						as validation on the object specified by 
-						the base path.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+		<xsd:attribute name="basePath" type="xsd:string" use="optional" default="">
+			<xsd:annotation>
+				<xsd:documentation>
+					The field path to the object that will act as
+					the validated object for the rules specified 
+					in the validation template.
+					If not specified, then the current base object
+					serves as the base object for the template.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="templateName" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					The name of the validation template whose
+					rules and subtemplates should be applied
+					as validation on the object specified by 
+					the base path.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 		
-	<xsd:element name="rule">
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref="rule" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element ref="template-ref" minOccurs="0" maxOccurs="unbounded"/>
-			</xsd:sequence>
-			<xsd:attribute name="type" type="xsd:string" use="required">
-				<xsd:annotation>
-					<xsd:documentation>
-						The type of rule you wish to apply.
-						This corresponds to the bean name 
-						of the validation rule to be referenced.
+	<xsd:complexType name="rule">
+		<xsd:sequence>
+			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="type" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					The type of rule you wish to apply.
+					This corresponds to the bean name 
+					of the validation rule to be referenced.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="value" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					The value to be passed to the rule parser.
 					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="value" type="xsd:string" use="optional">
-				<xsd:annotation>
-					<xsd:documentation>
-						The value to be passed to the rule parser.
-						</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="path" type="xsd:string" use="optional">
-				<xsd:annotation>
-					<xsd:documentation>
-						The path to the field this rule should check.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="message" type="xsd:string" use="optional">
-				<xsd:annotation>
-					<xsd:documentation>
-						The key to a message source entry, which will override the default associated with the rule type.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="errorPath" type="xsd:string" use="optional">
-				<xsd:annotation>
-					<xsd:documentation>
-						The path to the field under which the error is to be logged, which will override the default given by "path".
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="validateWhenNotInRequest" type="xsd:boolean" use="optional" default="false">
-				<xsd:annotation>
-					<xsd:documentation>
-						Boolean indicator of whether or not this rule should be executed when the provided path is not a part of the request. Defaults to false.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="path" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					The path to the field this rule should check.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="message" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					The key to a message source entry, which will override the default associated with the rule type.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="errorPath" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					The path to the field under which the error is to be logged, which will override the default given by "path".
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="validateWhenNotInRequest" type="xsd:boolean" use="optional" default="false">
+			<xsd:annotation>
+				<xsd:documentation>
+					Boolean indicator of whether or not this rule should be executed when the provided path is not a part of the request. Defaults to false.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 </xsd:schema>

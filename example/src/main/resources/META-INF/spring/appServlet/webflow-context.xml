@@ -3,15 +3,15 @@
        xmlns:webflow="http://www.springframework.org/schema/webflow-config"
        xsi:schemaLocation="
            http://www.springframework.org/schema/beans
-           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
            http://www.springframework.org/schema/webflow-config
            http://www.springframework.org/schema/webflow-config/spring-webflow-config-2.0.xsd">		
 
     <!-- Flow Registry -->    
     <webflow:flow-registry id="flowRegistry" base-path="/WEB-INF/flows" flow-builder-services="flowBuilderServices">
-    	<webflow:flow-location path="/accounts/account-creation/account-creation.xml" />
-    	<webflow:flow-location path="/accounts/account-detail/account-detail.xml" />
-    	<webflow:flow-location path="/accounts/account-edit/account-edit.xml" />
+    	<webflow:flow-location path="/account-flows/account-creation/account-creation.xml" />
+    	<webflow:flow-location path="/account-flows/account-detail/account-detail.xml" />
+    	<webflow:flow-location path="/account-flows/account-edit/account-edit.xml" />
 	</webflow:flow-registry>
 	
 	<!-- Flow Executor -->

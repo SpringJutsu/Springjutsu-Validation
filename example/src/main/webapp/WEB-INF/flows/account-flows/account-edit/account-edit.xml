@@ -3,14 +3,16 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
 	
-	<var name="account" class="org.springjutsu.examples.entities.Account"/>
+	<input name="username" required="true" />
 	
-	<view-state id="accountForm" model="account" view="/accounts/createForm">
+	<view-state id="accountForm" model="account" view="/accounts/editForm">
+		<on-entry>
+			<evaluate expression="accountController.getAccount(username)" result="flowScope.account"/>
+		</on-entry>
 		<transition on="save" to="view">
 		   	<evaluate expression="accountController.saveAccount(account)"/>
 		</transition>
 	</view-state>
     	
-	<end-state id="view" view="flowRedirect:accounts/account-detail?username=#{flowScope.account.username}" />
-		
+	<end-state id="view" view="flowRedirect:account-flows/account-detail?username=#{flowScope.account.username}" />
 </flow>

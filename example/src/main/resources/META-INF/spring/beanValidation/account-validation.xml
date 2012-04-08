@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans:beans xmlns="http://www.springjutsu.org/schema/validation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:beans="http://www.springframework.org/schema/beans"
-	xsi:schemaLocation="http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation.xsd
-                http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
-
-	<entity class="org.springjutsu.examples.entities.Account" id="accountRules">
+	xsi:schemaLocation="http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd
+                http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+	
+	<entity class="org.springjutsu.examples.entities.Account">
 		<model-validation>
 			<rule path="phoneNumber" type="numeric" />
 			<rule path="phoneNumber" type="minLength" value="10" />
@@ -20,8 +20,8 @@
 			<!-- Shared rules on creation and edit. -->
 			<form path="/accounts/new,
 						/accounts/{id}/edit,
-						/accounts/account-creation:accountForm,
-						/accounts/account-edit:accountForm">
+						/account-flows/account-creation:accountForm,
+						/account-flows/account-edit:accountForm">
 				<rule path="firstName" type="required" />
 				<rule path="lastName" type="required" />
 				<rule path="wantsEmail" type="matches" value="true">
@@ -31,7 +31,7 @@
 			</form>
 			
 			<!-- Require username, password and TOS acceptance on creation only. -->
-			<form path="/accounts/new, /accounts/account-creation:accountForm">
+			<form path="/accounts/new, /account-flows/account-creation:accountForm">
 				<rule path="username" type="required" />
 				<rule path="password" type="required" />
 				<rule path="${acceptTOS}" type="required" message="errors.mustAcceptTOS" errorPath="wantsEmail" />

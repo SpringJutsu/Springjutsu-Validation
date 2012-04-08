@@ -12,6 +12,6 @@
 		<transition on="edit" to="edit"/>
 	</view-state>
     	
-	<end-state id="edit" view="flowRedirect:accounts/account-edit?username=#{flowScope.username}" />
+	<end-state id="edit" view="flowRedirect:account-flows/account-edit?username=#{flowScope.username}" />
 		
 </flow>
