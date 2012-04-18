@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:validation="http://www.springjutsu.org/schema/validation">
+
+	<!-- Register a validation manager -->
+	<validation:configuration validatorName="springjutsuValidator" />
+
+	<!-- Enable @MVC annotation driven controller model referencing our validator -->
+	<mvc:annotation-driven validator="springjutsuValidator"/>
+	
+	<!-- @SuccessView and @ValidationFailureView support -->
+	<validation:mvc-annotations />
+	
+	<!-- Discover beans -->
+	<context:component-scan base-package="org.springjutsu.examples"/>
+	
+	<!-- this bean with the well known name generates view names for us -->
+    <bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator"/>
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" name="viewResolver">
+		<property name="prefix" value="/WEB-INF/views/" />
+		<property name="suffix" value=".jsp" />
+	</bean>	
+	
+	<!-- Include messages used by applicaiton -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>WEB-INF/messages/field-labels</value>
+				<value>WEB-INF/messages/validation-error-messages</value>
+			</list>
+		</property>
+	</bean>
+	
+</beans>
