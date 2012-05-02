@@ -21,8 +21,8 @@
 	</licenses>
     <scm>
     	<url>https://github.com/SpringJutsu/Springjutsu-Validation</url>
-    	<connection>git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
-    	<developerConnection>https://username@github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
+    	<connection>scm:git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
+    	<developerConnection>scm:git://github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
     </scm>
     <developers>
     	<developer>
