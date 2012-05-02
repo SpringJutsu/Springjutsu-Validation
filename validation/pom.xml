@@ -1,8 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
  	<modelVersion>4.0.0</modelVersion>
     <groupId>org.springjutsu</groupId>
     <artifactId>validation</artifactId>
-    <version>0.6.1</version>
+    <version>0.6.1-SNAPSHOT</version>
     <name>validation</name>
     <packaging>jar</packaging>
     <description>an XML-driven conditional validation system for Spring Framework</description>
@@ -20,8 +21,8 @@
 	</licenses>
     <scm>
     	<url>https://github.com/SpringJutsu/Springjutsu-Validation</url>
-    	<connection>scm:git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
-    	<developerConnection>scm:git://github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
+    	<connection>git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
+    	<developerConnection>https://twicksell@github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
     </scm>
     <developers>
     	<developer>
