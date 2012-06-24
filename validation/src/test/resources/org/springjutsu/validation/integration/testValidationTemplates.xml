@@ -4,7 +4,7 @@
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="
-	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.0.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
@@ -14,24 +14,20 @@
 	<configuration validatorName="testValidationManagerName"/>
 	
 	<entity class="org.springjutsu.validation.test.entities.Address">
-		<templates>
-			<template name="fullAddress">
-				<rule path="lineOne" type="required"/>
-				<rule path="city" type="required"/>
-			</template>
-			<template name="shortAddress">
-				<rule path="city" type="required"/>
-			</template>
-		</templates>
+		<template name="fullAddress">
+			<rule path="lineOne" type="required"/>
+			<rule path="city" type="required"/>
+		</template>
+		<template name="shortAddress">
+			<rule path="city" type="required"/>
+		</template>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<context-validation>
-			<form path="/foo/new">
-				<template-ref basePath="address" templateName="fullAddress"/>
-				<template-ref basePath="secondaryAddress" templateName="shortAddress"/>
-			</form>
-		</context-validation>
+		<form path="/foo/new">
+			<template-ref basePath="address" templateName="fullAddress"/>
+			<template-ref basePath="secondaryAddress" templateName="shortAddress"/>
+		</form>
 	</entity>
 	
 	<!-- Include messages used by application -->

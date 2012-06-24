@@ -43,6 +43,8 @@ import org.springjutsu.validation.namespace.ValidationEntityDefinitionParser;
  */
 public class ValidationEntity {
 	
+	private Map<String, List<ValidationRule>> formRuleCache;
+	
 	/**
 	 * Log; for debugging purposes.
 	 */
@@ -51,24 +53,12 @@ public class ValidationEntity {
 	/**
 	 * A list of validation rules to evaluate on the model object.
 	 */
-	private List<ValidationRule> modelValidationRules;
+	private List<ValidationRule> rules;
 	
 	/**
 	 * A list of template references to evaluate on the model object.
 	 */
-	private List<ValidationTemplateReference> modelValidationTemplateReferences;
-	
-	/**
-	 * A Map of validation rule lists to execute for 
-	 * a specific form, keyed by some form path. 
-	 */
-	private Map<String, List<ValidationRule>> contextValidationRules;
-	
-	/**
-	 * A Map of tempalte references to execute for a specific
-	 * form, keyed by some form path.	
-	 */
-	private Map<String, List<ValidationTemplateReference>> contextValidationTemplateReferences;
+	private List<ValidationTemplateReference> templateReferences;
 	
 	/**
 	 * A list of validation templates associated with
@@ -85,46 +75,26 @@ public class ValidationEntity {
 	 * Default constructor. Initializes collections.
 	 */
 	public ValidationEntity() {
-		this.modelValidationRules = new ArrayList<ValidationRule>();
-		this.modelValidationTemplateReferences = new ArrayList<ValidationTemplateReference>();
-		this.contextValidationRules = new HashMap<String, List<ValidationRule>>();
-		this.contextValidationTemplateReferences = new HashMap<String, List<ValidationTemplateReference>>();
+		this.rules = new ArrayList<ValidationRule>();
+		this.templateReferences = new ArrayList<ValidationTemplateReference>();
 		this.validationTemplates = new ArrayList<ValidationTemplate>();
+		this.formRuleCache = new HashMap<String, List<ValidationRule>>();
 	}
 	
 	/**
-	 * Adds a model rule.
+	 * Adds a rule.
 	 * @param rule The model rule to add.
 	 */
-	public void addModelValidationRule(ValidationRule rule) {
-		this.modelValidationRules.add(rule);
+	public void addRule(ValidationRule rule) {
+		this.rules.add(rule);
 	}
 	
 	/**
-	 * Add a model template reference.
-	 * @param reference The model template reference to add.
+	 * Add a template reference.
+	 * @param reference The template reference to add.
 	 */
-	public void addModelValidationTemplateReference(ValidationTemplateReference reference) {
-		this.modelValidationTemplateReferences.add(reference);
-	}
-	
-	/**
-	 * Adds a context rule
-	 * @param path The path which the rule enforces
-	 * @param rule The rule to add. 
-	 */
-	public void addContextValidationRule(String path, ValidationRule rule) {
-		if (!contextValidationRules.containsKey(path)) {
-			contextValidationRules.put(path, new ArrayList<ValidationRule>());
-		}
-		this.contextValidationRules.get(path).add(rule);
-	}
-	
-	public void addContextValidationTemplateReference(String path, ValidationTemplateReference reference) {
-		if (!contextValidationTemplateReferences.containsKey(path)) {
-			contextValidationTemplateReferences.put(path, new ArrayList<ValidationTemplateReference>());
-		}
-		this.contextValidationTemplateReferences.get(path).add(reference);
+	public void addTemplateReference(ValidationTemplateReference reference) {
+		this.templateReferences.add(reference);
 	}
 	
 	/**
@@ -137,58 +107,22 @@ public class ValidationEntity {
 	
 	/**
 	 * Return the context rules for the given string path.
-	 * Replace any REST variable wildcards with wildcard regex.
-	 * Replace ant path wildcards with wildcard regexes as well.
-	 * Iterate through possible form names to find the first match.
+	 * Cache results.
 	 * @param form String representing form to get rules for.
 	 * @return List of validation rules specific to the form.
 	 */
-	public List<ValidationRule> getContextValidationRules(String form) {
-		List<ValidationRule> formRules = new ArrayList<ValidationRule>();
-		for (String formName : contextValidationRules.keySet()) {
-			String formPattern = 
-				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
-				.replaceAll("\\*\\*/?", "(*/?)+")
-				.replace("*", "[^/]+");
-			if (form.matches(formPattern)) {
-				log.debug("Loading rules for form: " + form + ", matched validation rules @ " + formName);
-				formRules.addAll(contextValidationRules.get(formName));
+	public List<ValidationRule> getValidationRules(String form) {
+		if (formRuleCache.containsKey(form)) {
+			return formRuleCache.get(form);
+		}
+		List<ValidationRule> formApplicableRules = new ArrayList<ValidationRule>();
+		for (ValidationRule rule : rules) {
+			if (rule.appliesToForm(form)) {
+				formApplicableRules.add(rule);
 			}
 		}
-		return formRules;
-	}
-	
-	/**
-	 * Get the list of model validation rules which are always
-	 * run for the model class.
-	 * @return List of model validation rules.
-	 */
-	public List<ValidationRule> getModelValidationRules() {
-		return modelValidationRules;
-	}
-
-	/**
-	 * @param modelValidationRules the modelValidationRules to set
-	 */
-	public void setModelValidationRules(List<ValidationRule> modelValidationRules) {
-		this.modelValidationRules = modelValidationRules;
-	}
-
-	/**
-	 * @param contextValidationRules the contextValidationRules to set
-	 */
-	public void setContextValidationRules(Map<String, List<ValidationRule>> contextValidationRules) {
-		this.contextValidationRules = contextValidationRules;
-	}
-	
-	/**
-	 * @param contextValidationRules the contextValidationRules to set
-	 */
-	public void addContextValidationRules(String path, List<ValidationRule> contextValidationRuleList) {
-		if (!contextValidationRules.containsKey(path)) {
-			contextValidationRules.put(path, new ArrayList<ValidationRule>());
-		}
-		this.contextValidationRules.get(path).addAll(contextValidationRuleList);
+		formRuleCache.put(form, formApplicableRules);
+		return formApplicableRules;
 	}
 
 	/**
@@ -201,7 +135,7 @@ public class ValidationEntity {
 	/**
 	 * @param validationClass The class these rules are for.
 	 */
-	public void setValidationClass(Class validationClass) {
+	public void setValidationClass(Class<?> validationClass) {
 		this.validationClass = validationClass;
 	}
 
@@ -220,41 +154,31 @@ public class ValidationEntity {
 	}
 
 	/**
-	 * @return the modelValidationTemplateReferences
+	 * @return the templateReferences
 	 */
-	public List<ValidationTemplateReference> getModelValidationTemplateReferences() {
-		return modelValidationTemplateReferences;
+	public List<ValidationTemplateReference> getTemplateReferences() {
+		return templateReferences;
 	}
 
 	/**
-	 * @param modelValidationTemplateReferences the modelValidationTemplateReferences to set
+	 * @param templateReferences the templateReferences to set
 	 */
-	public void setModelValidationTemplateReferences(
-			List<ValidationTemplateReference> modelValidationTemplateReferences) {
-		this.modelValidationTemplateReferences = modelValidationTemplateReferences;
+	public void setTemplateReferences(
+			List<ValidationTemplateReference> templateReferences) {
+		this.templateReferences = templateReferences;
 	}
 
 	/**
-	 * @return the contextValidationTemplateReferences
+	 * @return all of this entity's validation rules.
 	 */
-	public Map<String, List<ValidationTemplateReference>> getContextValidationTemplateReferences() {
-		return contextValidationTemplateReferences;
-	}
-
-	/**
-	 * @param contextValidationTemplateReferences the contextValidationTemplateReferences to set
-	 */
-	public void setContextValidationTemplateReferences(
-			Map<String, List<ValidationTemplateReference>> contextValidationTemplateReferences) {
-		this.contextValidationTemplateReferences = contextValidationTemplateReferences;
-	}
-
-	/**
-	 * @return the contextValidationRules
-	 */
-	public Map<String, List<ValidationRule>> getContextValidationRules() {
-		return contextValidationRules;
+	public List<ValidationRule> getRules() {
+		return rules;
 	}
 	
-
+	/**
+	 * @param rules the rules to set
+	 */
+	public void setRules(List<ValidationRule> rules) {
+		this.rules = rules;
+	}
 }

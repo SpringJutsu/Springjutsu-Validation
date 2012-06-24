@@ -151,8 +151,15 @@ public class ValidationManager extends CustomValidatorBean  {
 	public void validate(Object model, Errors errors) {
 		spelResolver.set(new WebContextSPELResolver(model));
 		try {
-			validateContextRules(model, errors);
-			validateModelRules(model, errors, new ArrayList<Object>());
+			String currentForm = null;
+			if (RequestUtils.getRequest() != null) {
+				if (RequestUtils.isWebflowRequest()) {
+					currentForm = getWebflowFormName();
+				} else {
+					currentForm = getMVCFormName();
+				}
+			}
+			validateModel(model, errors, new ArrayList<Object>(), currentForm);
 		} finally {
 			spelResolver.set(null);
 		}
@@ -166,7 +173,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 
 	/**
-	 * Responsible for testing all XML-defined per-class model rules.
+	 * Responsible for testing all XML-defined per-class rules.
 	 * We will check recursively: using a BeanWrapper to get a 
 	 * @link(PropertyDescriptor) for each field, and then checking to
 	 * see if any of the fields are supported by validation rules.
@@ -178,7 +185,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param checkedModels A list of model objects we have already validated,
 	 * 	in order to prevent unneeded or infinite recursion
 	 */
-	protected void validateModelRules(Object model, Errors errors, List<Object> checkedModels) {
+	protected void validateModel(Object model, Errors errors, List<Object> checkedModels, String currentForm) {
 		if (model == null) {
 			return;
 		}
@@ -201,8 +208,8 @@ public class ValidationManager extends CustomValidatorBean  {
 			checkedModels.add(validateMe.hashCode());
 		}
 		
-		List<ValidationRule> modelRules = rulesContainer.getModelRules(validateMe.getClass());
-		callModelRules(model, errors, modelRules);
+		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), currentForm);
+		callRules(model, errors, rules);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -210,12 +217,12 @@ public class ValidationManager extends CustomValidatorBean  {
 		for (PropertyDescriptor property : propertyDescriptors) {
 			if (rulesContainer.supportsClass(property.getPropertyType())) {
 				errors.pushNestedPath(property.getName());
-				validateModelRules(model, errors, inheritedCheckedModels(checkedModels));
+				validateModel(model, errors, inheritedCheckedModels(checkedModels), currentForm);
 				errors.popNestedPath();
 			} else if (List.class.isAssignableFrom(property.getPropertyType()) || property.getPropertyType().isArray()) {
 				Object potentialList = subBeanWrapper.getPropertyValue(property.getName());
-				List list = (List) (property.getPropertyType().isArray() 
-						&& potentialList  != null ? Arrays.asList(potentialList) 
+				List<?> list = (List<?>) (property.getPropertyType().isArray() 
+					&& potentialList  != null ? Arrays.asList(potentialList) 
 					: potentialList);
 				
 				if (list == null || list.isEmpty()) {
@@ -226,7 +233,7 @@ public class ValidationManager extends CustomValidatorBean  {
 				
 				for (int i = 0; i < list.size(); i++) {
 					errors.pushNestedPath(property.getName() + "[" + i + "]");
-					validateModelRules(model, errors, inheritedCheckedModels(checkedModels));
+					validateModel(model, errors, inheritedCheckedModels(checkedModels), currentForm);
 					errors.popNestedPath();
 				}
 			}
@@ -243,7 +250,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param modelRules A list of ValidationRules parsed from
 	 *  the &lt;model-rules> section of the validation XML.
 	 */
-	protected void callModelRules(Object model, Errors errors, List<ValidationRule> modelRules) {
+	protected void callRules(Object model, Errors errors, List<ValidationRule> modelRules) {
 		if (modelRules == null) {
 			return;
 		}
@@ -251,26 +258,6 @@ public class ValidationManager extends CustomValidatorBean  {
 			
 			// get full path to current model
 			String fullPath = appendPath(errors.getNestedPath(), rule.getPath());
-			
-			// For web requests only:
-			// if this field is not on the page we're checking,
-			// or the field already has errors, skip it.	
-			//TODO: refactor this out into another method or provider class that can be made configurable
-			if (RequestUtils.getRequest() != null) {
-				boolean containedInRequestParams = false;
-				for (Object key : RequestUtils.getRequestParameters().keySet())
-				{
-					if (key instanceof String && (key.equals(fullPath) || ((String)key).replaceAll("\\(.*\\)", "").equals(fullPath)))
-					{
-						containedInRequestParams = true;
-					}
-				}
-	
-				if (!rule.isValidateWhenNotInRequest() && !fullPath.isEmpty() && !containedInRequestParams
-					|| errors.hasFieldErrors(rule.getPath())) {
-					continue;
-				}
-			}
 			
 			// update rule for full path
 			ValidationRule modelRule = rule.cloneWithPath(fullPath);
@@ -280,7 +267,7 @@ public class ValidationManager extends CustomValidatorBean  {
 				// it is a condition for nested elements.
 				// Call children instead.
 				if (modelRule.hasChildren()) {
-					callModelRules(model, errors, modelRule.getRules());
+					callRules(model, errors, modelRule.getRules());
 				}
 			} else {
 				// If the rule fails and it has children,
@@ -298,37 +285,14 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 	
 	/**
-	 * Responsible for running context rules for the current uri path.
-	 * Fetches context rules from one of two methods depending on
-	 * the request type.
-	 * @see #getWebflowContextRules(Object)
-	 * @see #getMVCContextRules(Object)
-	 * @param model Object to be validated
-	 * @param errors standard errors object for recording errors.
-	 */
-	protected void validateContextRules(Object model, Errors errors) {
-		List<ValidationRule> contextRules = 
-			RequestContextHolder.getRequestContext() != null ?
-			getWebflowContextRules(model) : getMVCContextRules(model);
-		callContextRules(model, errors, contextRules);
-	}
-	
-	/**
-	 * * Looks up context rules for an MVC controller.
 	 * Just cleans up a Servlet path URL for rule resolving by
 	 * the rules container.
 	 * Restful URL paths may be used, with \{variable} path support.
-	 * As of 0.6.1, ant paths like * and ** may also be used. 
-	 * Return no context rules if this is not a web request.
+	 * As of 0.6.1, ant paths like * and ** may also be used.
 	 */
-	protected List<ValidationRule> getMVCContextRules(Object model) {
-		List<ValidationRule> contextRules = new ArrayList<ValidationRule>();
-		if (RequestUtils.getRequest() != null) {
-			String requestString = RequestUtils.removeLeadingAndTrailingSlashes(
-					RequestUtils.getRequest().getServletPath());
-			contextRules = rulesContainer.getContextRules(model.getClass(), requestString);
-		}
-		return contextRules;
+	protected String getMVCFormName() {
+		return RequestUtils.removeLeadingAndTrailingSlashes(
+				RequestUtils.getRequest().getServletPath());
 	}
 	
 	/**
@@ -339,55 +303,14 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * For example /accounts/account-creation:basicInformation
 	 * @return the context rules associated with this identifier.
 	 */
-	protected List<ValidationRule> getWebflowContextRules(Object model) {
+	protected String getWebflowFormName() {
 		StringBuffer flowStateId = new StringBuffer();
 		flowStateId.append(RequestContextHolder.getRequestContext().getCurrentState().getOwner().getId());
 		flowStateId.append(":");
 		flowStateId.append(RequestContextHolder.getRequestContext().getCurrentState().getId());
 		String flowStateIdString = RequestUtils.removeLeadingAndTrailingSlashes(
 				flowStateId.toString());
-		return rulesContainer.getContextRules(model.getClass(), flowStateIdString);
-	}
-	
-	/**
-	 * Responsible for delegating each actual context rule
-	 *  to the appropriate @link{RuleExecutor}.
-	 *  Errors are recorded if no previous error has been
-	 *  recorded for the given path.
-	 * @param model The object being validated
-	 * @param errors Standard errors object to record validation errors.
-	 * @param contextRules A list of ValidationRules parsed from
-	 *  the &lt;context-rules> section of the validation XML.
-	 */
-	protected void callContextRules(Object model, Errors errors, List<ValidationRule> contextRules) {
-		if (contextRules == null || contextRules.isEmpty()) {
-			return;
-		}
-		for (ValidationRule rule : contextRules) {
-			if (errors.hasFieldErrors(rule.getPath())) {
-				continue;
-			}
-			
-			if (passes(rule, model)) {
-				// If the rule passes and it has children,
-				// it is a condition for nested elements.
-				// Call children instead.
-				if (rule.hasChildren()) {
-					callContextRules(model, errors, rule.getRules());
-				}
-			} else {
-				// If the rule fails and it has children,
-				// it is a condition for nested elements.
-				// Skip nested elements.
-				if (rule.hasChildren()) {
-					continue;
-				} else {
-					// If the rule has no children and fails,
-					// perform fail action.
-					logError(rule, model, errors);
-				}
-			}
-		}
+		return flowStateIdString;
 	}
 	
 	/**

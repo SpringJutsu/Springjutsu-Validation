@@ -18,17 +18,13 @@ package org.springjutsu.validation.namespace;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.xml.DomUtils;
@@ -65,61 +61,55 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			throw new ValidationParseException("Class " + className + " does not exist as a model class.");
 		}
 		
-		Element modelValidationRuleNode = (Element) 
-			entityNode.getElementsByTagNameNS(entityNode.getNamespaceURI(), "model-validation").item(0);
-		ValidationStructure modelValidation = parseNestedValidation(modelValidationRuleNode, modelClass);
+		ValidationStructure validationStructure = parseNestedValidation(entityNode, modelClass);
 		
-		Map<String, List<ValidationRule>> contextValidationRules = 
-			new HashMap<String, List<ValidationRule>>();
-		Map<String, List<ValidationTemplateReference>> contextValidationTemplateReferences = 
-			new HashMap<String, List<ValidationTemplateReference>>();
-		
-		Element contextValidationRuleNode = (Element) 
-			entityNode.getElementsByTagNameNS(entityNode.getNamespaceURI(), "context-validation").item(0);
-		if (contextValidationRuleNode != null) {
-			NodeList forms = contextValidationRuleNode.getElementsByTagNameNS(
-					contextValidationRuleNode.getNamespaceURI(), "form");
-			for (int formNbr = 0; formNbr < forms.getLength(); formNbr++) {
-				Element formNode = (Element) forms.item(formNbr);
-				String formPaths = formNode.getAttribute("path");
-				ValidationStructure contextValidation = parseNestedValidation(formNode, modelClass);
-				for (String formPath : formPaths.split(",")) {
-					formPath = formPath.trim();
-					formPath = RequestUtils.removeLeadingAndTrailingSlashes(formPath).trim();
-					if (contextValidationRules.get(formPath) == null) {
-						contextValidationRules.put(formPath, new ArrayList<ValidationRule>());
-					} 
-					if (contextValidationTemplateReferences.get(formPath) == null) {
-						contextValidationTemplateReferences.put(formPath, 
-							new ArrayList<ValidationTemplateReference>());
-					}
-					contextValidationRules.get(formPath).addAll(contextValidation.rules);
-					contextValidationTemplateReferences.get(formPath).addAll(contextValidation.refs);
+		NodeList forms = entityNode.getElementsByTagNameNS(
+				entityNode.getNamespaceURI(), "form");
+		for (int formNbr = 0; formNbr < forms.getLength(); formNbr++) {
+			Element formNode = (Element) forms.item(formNbr);
+			
+			// get form paths.
+			String formPaths = formNode.getAttribute("path");
+			List<String> formConstraints = new ArrayList<String>();
+			for (String formPath : formPaths.split(",")) {
+				String candidateFormPath = formPath.trim();
+				candidateFormPath = RequestUtils.removeLeadingAndTrailingSlashes(candidateFormPath).trim();
+				if (!candidateFormPath.isEmpty()) {
+					formConstraints.add(candidateFormPath);
 				}
 			}
+			
+			// get rules & templates.
+			ValidationStructure formSpecificValidationStructure = parseNestedValidation(formNode, modelClass);
+			
+			// constrain to form paths.
+			for (ValidationRule rule : formSpecificValidationStructure.rules) {
+				rule.setFormConstraints(formConstraints);
+			}
+			for (ValidationTemplateReference templateReference : formSpecificValidationStructure.refs) {
+				templateReference.setFormConstraints(formConstraints);
+			}
+			
+			// Add back to rules.
+			validationStructure.rules.addAll(formSpecificValidationStructure.rules);
+			validationStructure.refs.addAll(formSpecificValidationStructure.refs);
 		}
 		
 		List<ValidationTemplate> templates = new ArrayList<ValidationTemplate>();
-		Element templatesNode = (Element) 
-			entityNode.getElementsByTagNameNS(entityNode.getNamespaceURI(), "templates").item(0);
-		if (templatesNode != null) {
-			NodeList templateNodes = templatesNode.getElementsByTagNameNS(
-					templatesNode.getNamespaceURI(), "template");
-			for (int templateNbr = 0; templateNbr < templateNodes.getLength(); templateNbr++) {
-				Element templateNode = (Element) templateNodes.item(templateNbr);
-				String templateName = templateNode.getAttribute("name");
-				ValidationStructure templateValidation = parseNestedValidation(templateNode, modelClass);
-				ValidationTemplate template = new ValidationTemplate(templateName, modelClass);
-				template.setRules(templateValidation.rules);
-				template.setTemplateReferences(templateValidation.refs);
-				templates.add(template);
-			}			
+		NodeList templateNodes = entityNode.getElementsByTagNameNS(
+				entityNode.getNamespaceURI(), "template");
+		for (int templateNbr = 0; templateNbr < templateNodes.getLength(); templateNbr++) {
+			Element templateNode = (Element) templateNodes.item(templateNbr);
+			String templateName = templateNode.getAttribute("name");
+			ValidationStructure templateValidation = parseNestedValidation(templateNode, modelClass);
+			ValidationTemplate template = new ValidationTemplate(templateName, modelClass);
+			template.setRules(templateValidation.rules);
+			template.setTemplateReferences(templateValidation.refs);
+			templates.add(template);
 		}
 		
-		entityDefinition.getPropertyValues().add("modelValidationRules", modelValidation.rules);
-		entityDefinition.getPropertyValues().add("modelValidationTemplateReferences", modelValidation.refs);
-		entityDefinition.getPropertyValues().add("contextValidationRules", contextValidationRules);
-		entityDefinition.getPropertyValues().add("contextValidationTemplateReferences", contextValidationTemplateReferences);
+		entityDefinition.getPropertyValues().add("rules", validationStructure.rules);
+		entityDefinition.getPropertyValues().add("templateReferences", validationStructure.refs);
 		entityDefinition.getPropertyValues().add("validationTemplates", templates);
 		entityDefinition.getPropertyValues().add("validationClass", modelClass);
 		String entityName = parserContext.getReaderContext().registerWithGeneratedName(entityDefinition);
@@ -166,14 +156,12 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				String value = rule.getAttribute("value");
 				String message = rule.getAttribute("message");
 				String errorPath = rule.getAttribute("errorPath");
-				String validateWhenNotInRequest = rule.getAttribute("validateWhenNotInRequest");
 				ValidationRule validationRule = new ValidationRule(path, type, value);
 				validationRule.setMessage(message);
 				validationRule.setErrorPath(errorPath);
 				ValidationStructure subStructure = parseNestedValidation(rule, modelClass);
 				validationRule.setRules(subStructure.rules);
 				validationRule.setTemplateReferences(subStructure.refs);
-				validationRule.setValidateWhenNotInRequest(Boolean.valueOf(validateWhenNotInRequest));
 				structure.rules.add(validationRule);
 			}
 		}
@@ -202,9 +190,9 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 	 * @param path Path to check
 	 * @return true if path exists.
 	 */
-	public boolean pathExists(Class clazz, String path) {
+	public boolean pathExists(Class<?> clazz, String path) {
         if (path.contains(".")) {
-                Class intermediateClass = clazz;
+                Class<?> intermediateClass = clazz;
                 String[] pathTokens = path.split("\\.");
                 for (String token : pathTokens) {
                         PropertyDescriptor descriptor =
@@ -231,6 +219,8 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 	 */
 	public class ValidationParseException extends RuntimeException {
 		
+		private static final long serialVersionUID = 1L;
+
 		public ValidationParseException() {
 			super();		
 		}

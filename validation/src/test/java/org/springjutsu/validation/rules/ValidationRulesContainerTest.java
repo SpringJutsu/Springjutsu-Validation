@@ -37,14 +37,15 @@ public class ValidationRulesContainerTest {
 	@Before
 	public void setup()
 	{
-		HashMap entities = new HashMap();
+		HashMap<String, ValidationEntity> entities = new HashMap<String, ValidationEntity>();
 		entities.put("mockValidationEntity", validationEntity);
-		ArrayList rules = new ArrayList();
+		ArrayList<ValidationRule> rules = new ArrayList<ValidationRule>();
 		rules.add(validationRule);
 		
 		Mockito.when(validationEntity.getValidationClass()).thenReturn(List.class);
-		Mockito.when(validationEntity.getContextValidationRules("supportedState")).thenReturn(rules);
-		Mockito.when(validationEntity.getModelValidationRules()).thenReturn(rules);
+		Mockito.when(validationEntity.getValidationRules("supportedState")).thenReturn(rules);
+		Mockito.when(validationEntity.getValidationRules(null)).thenReturn(rules);
+		Mockito.when(validationEntity.getRules()).thenReturn(rules);
 
 		Mockito.when(beanFactory.getBeansOfType(ValidationEntity.class)).thenReturn(entities);
 		container.setBeanFactory(beanFactory);
@@ -56,31 +57,31 @@ public class ValidationRulesContainerTest {
 	}
 
 	@Test
-	public void testGetContextRules() {
-		assertNotNull(container.getContextRules(List.class, "supportedState"));
-		assertFalse(container.getContextRules(List.class, "supportedState").isEmpty());
-		assertEquals(validationRule, container.getContextRules(List.class, "supportedState").get(0));
-		assertNotNull(container.getContextRules(List.class, "unSupportedState"));
-		assertTrue(container.getContextRules(List.class, "unSupportedState").isEmpty());
-		assertNotNull(container.getContextRules(String.class, "supportedState"));
-		assertTrue(container.getContextRules(String.class, "supportedState").isEmpty());
-		assertNotNull(container.getContextRules(String.class, "unSupportedState"));
-		assertTrue(container.getContextRules(String.class, "unSupportedState").isEmpty());
+	public void testGetFormSpecificRules() {
+		assertNotNull(container.getRules(List.class, "supportedState"));
+		assertFalse(container.getRules(List.class, "supportedState").isEmpty());
+		assertEquals(validationRule, container.getRules(List.class, "supportedState").get(0));
+		assertNotNull(container.getRules(List.class, "unSupportedState"));
+		assertTrue(container.getRules(List.class, "unSupportedState").isEmpty());
+		assertNotNull(container.getRules(String.class, "supportedState"));
+		assertTrue(container.getRules(String.class, "supportedState").isEmpty());
+		assertNotNull(container.getRules(String.class, "unSupportedState"));
+		assertTrue(container.getRules(String.class, "unSupportedState").isEmpty());
 	}
 
 	@Test
-	public void testGetModelRules() {
-		assertNotNull(container.getModelRules(List.class));
-		assertFalse(container.getModelRules(List.class).isEmpty());
-		assertEquals(validationRule, container.getModelRules(List.class).get(0));
-		assertNotNull(container.getModelRules(String.class));
-		assertTrue(container.getModelRules(String.class).isEmpty());
+	public void testGetBaseRules() {
+		assertNotNull(container.getRules(List.class, null));
+		assertFalse(container.getRules(List.class, null).isEmpty());
+		assertEquals(validationRule, container.getRules(List.class, null).get(0));
+		assertNotNull(container.getRules(String.class, null));
+		assertTrue(container.getRules(String.class, null).isEmpty());
 	}
 
 	@Test
 	public void testHasModelRulesForClass() {
-		assertTrue(container.hasModelRulesForClass(List.class));
-		assertFalse(container.hasModelRulesForClass(String.class));
+		assertTrue(container.hasRulesForClass(List.class));
+		assertFalse(container.hasRulesForClass(String.class));
 	}
 
 	@Test

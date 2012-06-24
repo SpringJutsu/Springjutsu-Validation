@@ -30,7 +30,6 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
-import org.springjutsu.validation.exceptions.IllegalTemplateReferenceException;
 
 /**
  * This serves as a container for all parsed validation rules.
@@ -85,27 +84,27 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	}
 	
 	/**
-	 * Copy model rules from parent classes into child classes.
+	 * Copy rules from parent classes into child classes.
 	 */
 	protected void initRuleInheritance() {
-		Set<Class> inheritanceChecked = new HashSet<Class>();
+		Set<Class<?>> inheritanceChecked = new HashSet<Class<?>>();
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			
-			Stack<Class> classStack = new Stack<Class>();
+			Stack<Class<?>> classStack = new Stack<Class<?>>();
 			classStack.push(entity.getValidationClass());
-			for (Class clazz = entity.getValidationClass().getSuperclass(); clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
+			for (Class<?> clazz = entity.getValidationClass().getSuperclass(); clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
 				classStack.push(clazz);
 			}
 			
-			List<ValidationRule> inheritableModelRules = new ArrayList<ValidationRule>();			
+			List<ValidationRule> inheritableRules = new ArrayList<ValidationRule>();			
 			while (!classStack.isEmpty()) {
-				Class clazz = classStack.pop();
+				Class<?> clazz = classStack.pop();
 				if (supportsClass(clazz) && !inheritanceChecked.contains(clazz)) {
-					for (ValidationRule rule : inheritableModelRules) {
-						validationEntityMap.get(clazz).addModelValidationRule(rule);
+					for (ValidationRule rule : inheritableRules) {
+						validationEntityMap.get(clazz).addRule(rule);
 					}
-					inheritableModelRules.clear();
-					inheritableModelRules.addAll(validationEntityMap.get(clazz).getModelValidationRules());
+					inheritableRules.clear();
+					inheritableRules.addAll(validationEntityMap.get(clazz).getRules());
 				}
 				inheritanceChecked.add(clazz);
 			}
@@ -132,20 +131,15 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		// then for each validation entity, unwrap and error check validation templates.
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			
-			// unwrap template references for context....
-			for (String formName : entity.getContextValidationTemplateReferences().keySet()) {
-				
-				// unwrap template references hiding in context rules...
-				for (ValidationRule contextRule : entity.getContextValidationRules().get(formName)) {
-					unwrapValidationRuleTemplateReferences(contextRule, new Stack<String>(), "", validationTemplateMap);
-				}
-				
-				// unwrap base level template references.
-				for (ValidationTemplateReference templateReference : 
-					entity.getContextValidationTemplateReferences().get(formName)) {
-					unwrapTemplateReference(templateReference, entity.getContextValidationRules().get(formName), 
-							new Stack<String>(), "", validationTemplateMap);
-				}
+			// unwrap template references hiding in rules...
+			for (ValidationRule rule : entity.getRules()) {
+				unwrapValidationRuleTemplateReferences(rule, new Stack<String>(), "", validationTemplateMap);
+			}
+			
+			// unwrap base level template references.
+			for (ValidationTemplateReference templateReference : entity.getTemplateReferences()) {
+				unwrapTemplateReference(templateReference, entity.getRules(), 
+						new Stack<String>(), "", validationTemplateMap);
 			}
 		}
 	}
@@ -169,6 +163,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		// unwrap any template references referenced by this template.
 		// dump these unwrapped references into the original rule list.
 		for (ValidationTemplateReference subTemplateReference : template.getTemplateReferences()) {
+			subTemplateReference.setFormConstraints(templateReference.getFormConstraints());
 			unwrapTemplateReference(subTemplateReference, dumpTo, usedNames, 
 				appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
 		}
@@ -176,15 +171,17 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		// adapt template rules:
 		// check them for template references
 		// clone with basename subpath.
+		// apply form constraints.
 		for (ValidationRule rule : template.getRules()) {
 			ValidationRule adaptedRule = rule.cloneWithPath(appendPath(baseName, templateReference.getBasePath(), rule.getPath()));
+			adaptedRule.setFormConstraints(templateReference.getFormConstraints());
 			unwrapValidationRuleTemplateReferences(adaptedRule, usedNames, 
 				appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
 			dumpTo.add(adaptedRule);
 		}
 		
 		// end illegal recursion check.
-		usedNames.pop();	
+		usedNames.pop();
 	}
 	
 	protected void unwrapValidationRuleTemplateReferences(ValidationRule rule, 
@@ -218,30 +215,16 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	}
 
 	/**
-	 * Retrieves context rules stored for a given class.
+	 * Retrieves rules stored for a given class.
 	 * @param clazz The class to retrieve rules for.
 	 * @param form A string describing the form which the context
 	 *  rules are to apply to.
 	 * @return the list of validation rules applying to the form and class.
 	 */
-	public List<ValidationRule> getContextRules(Class<?> clazz, String form) {
+	public List<ValidationRule> getRules(Class<?> clazz, String form) {
 		ValidationEntity entity = getValidationEntity(clazz);
 		if (entity != null) {
-			return getValidationEntity(clazz).getContextValidationRules(form);
-		} else {
-			return new ArrayList<ValidationRule>();
-		}
-	}
-	
-	/**
-	 * Retrieves model rules for the specified class
-	 * @param clazz The class to retrieve rules for.
-	 * @return A list of model rules for the specified class.
-	 */
-	public List<ValidationRule> getModelRules(Class<?> clazz) {
-		ValidationEntity entity = getValidationEntity(clazz);
-		if (entity != null) {
-			return getValidationEntity(clazz).getModelValidationRules();
+			return getValidationEntity(clazz).getValidationRules(form);
 		} else {
 			return new ArrayList<ValidationRule>();
 		}
@@ -251,11 +234,11 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * @param clazz The class to check rules for
 	 * @return true if there exist model rules for the class.
 	 */
-	public Boolean hasModelRulesForClass(Class<?> clazz) {
+	public Boolean hasRulesForClass(Class<?> clazz) {
 		ValidationEntity entity = getValidationEntity(clazz);
 		return entity != null 
-			&& entity.getModelValidationRules() != null
-			&& !entity.getModelValidationRules().isEmpty();
+			&& entity.getRules() != null
+			&& !entity.getRules().isEmpty();
 	}
 	
 	/**

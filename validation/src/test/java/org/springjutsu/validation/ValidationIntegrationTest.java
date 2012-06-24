@@ -14,6 +14,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.Errors;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.webflow.execution.RequestContext;
+import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockRequestContext;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Company;
@@ -48,8 +50,8 @@ public class ValidationIntegrationTest {
 	}
 	
 	@Test
-	public void testBasicModelRules() {
-		Errors errors = doValidate("testBasicModelRules.xml", new Customer()).errors;
+	public void testBasicRules() {
+		Errors errors = doValidate("testBasicRules.xml", new Customer()).errors;
 		assertEquals(3, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
@@ -57,10 +59,10 @@ public class ValidationIntegrationTest {
 	}
 	
 	@Test
-	public void testNestedModelRules() {
+	public void testNestedRules() {
 		Customer customer = new Customer();
 		customer.setFirstName("bob");
-		Errors errors = doValidate("testNestedModelRules.xml", customer).errors;
+		Errors errors = doValidate("testNestedRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
 		assertNull(errors.getFieldError("firstName"));
 		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
@@ -68,7 +70,7 @@ public class ValidationIntegrationTest {
 	}
 	
 	@Test
-	public void testModelRuleRecursion() {
+	public void testPreventRuleRecursion() {
 		Customer customer = new Customer();
 		customer.setReferredBy(customer);
 		Address address = new Address();
@@ -76,7 +78,7 @@ public class ValidationIntegrationTest {
 		customer.setAddress(address);
 		customer.setSecondaryAddress(address);
 		
-		Errors errors = doValidate("testModelRuleRecursion.xml", customer).errors;
+		Errors errors = doValidate("testPreventRuleRecursion.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 		assertNull(errors.getFieldError("referredBy.firstName"));
@@ -87,7 +89,7 @@ public class ValidationIntegrationTest {
 	}
 	
 	@Test
-	public void testCollectionModelRules() {
+	public void testCollectionRules() {
 		Company company = new Company();
 		Customer namedCustomer = new Customer();
 		namedCustomer.setFirstName("bob");
@@ -95,7 +97,7 @@ public class ValidationIntegrationTest {
 		company.getCustomers().add(new Customer());
 		company.getCustomers().add(new Customer());
 		
-		Errors errors = doValidate("testCollectionModelRules.xml", company).errors;
+		Errors errors = doValidate("testCollectionRules.xml", company).errors;
 		assertEquals(3, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("name").getCode());
 		assertNull(errors.getFieldError("customers[0].firstName"));
@@ -143,80 +145,59 @@ public class ValidationIntegrationTest {
 	}
 	
 	@Test
-	public void testMultiSourceMVCContextRules() {
+	public void testMultiSourceMVCFormRules() {
 		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/foo/new");
 		request.setServletPath("/foo/new");
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
 		Customer customer = new Customer();
-		Errors errors = doValidate("testContextRules.xml", customer).errors;
+		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
 	}
 	
 	@Test
-	public void testPathVariableMVCContextRules() {
+	public void testPathVariableMVCFormRules() {
 		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/foo/1/edit");
 		request.setServletPath("/foo/1/edit");
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
 		Customer customer = new Customer();
-		Errors errors = doValidate("testContextRules.xml", customer).errors;
+		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
-	public void testWildcardPathMVCContextRules() {
+	public void testWildcardPathMVCFormRules() {
 		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/bar/1/foo/new");
 		request.setServletPath("/bar/1/foo/new");
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
 		Customer customer = new Customer();
-		Errors errors = doValidate("testContextRules.xml", customer).errors;
+		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
-	public void testWildcardAndPathVariableMVCContextRules() {
+	public void testWildcardAndPathVariableMVCFormRules() {
 		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/bar/1/foo/1/edit");
 		request.setServletPath("/bar/1/foo/1/edit");
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
 		Customer customer = new Customer();
-		Errors errors = doValidate("testContextRules.xml", customer).errors;
+		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
-	public void testWebFlowContextRules() {
-		org.springframework.webflow.execution.RequestContextHolder.setRequestContext(new MockRequestContext());
+	public void testWebFlowFormRules() {
+		RequestContext mockRequestContext = new MockRequestContext();
+		((MockExternalContext) mockRequestContext.getExternalContext()).setNativeRequest(new MockHttpServletRequest());
+		org.springframework.webflow.execution.RequestContextHolder.setRequestContext(mockRequestContext);
 		Customer customer = new Customer();
-		Errors errors = doValidate("testContextRules.xml", customer).errors;
+		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());	
-	}
-	
-	@Test
-	public void testSkipModelRuleFieldsInRequestBehavior() {
-		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/foo/new");
-		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
-		Customer customer = new Customer();
-		Errors errors = doValidate("testModelRuleFieldsInRequest.xml", customer).errors;
-		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-	}
-	
-	@Test
-	public void testApplyModelRuleFieldsInRequestBehavior() {
-		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/foo/new");
-		request.setParameter("firstName", "bob");
-		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
-		Customer customer = new Customer();
-		customer.setFirstName("bob");
-		Errors errors = doValidate("testModelRuleFieldsInRequest.xml", customer).errors;
-		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.minLength", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test

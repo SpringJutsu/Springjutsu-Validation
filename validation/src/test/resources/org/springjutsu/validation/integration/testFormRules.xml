@@ -4,7 +4,7 @@
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="
-	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.6.1.xsd
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.0.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
@@ -14,10 +14,12 @@
 	<configuration validatorName="testValidationManagerName"/>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<model-validation>
-			<rule path="firstName" type="minLength" value="5" />
-			<rule path="lastName" type="required" validateWhenNotInRequest="true"/>
-		</model-validation>
+		<form path="/foo/new,/**/foo/new,/foo/{id}/edit,/**/foo/{id}/edit,mockFlow:mockState">
+			<rule path="firstName" type="required" />
+		</form>
+		<form path="/foo/new">
+			<rule path="lastName" type="required" />
+		</form>
 	</entity>
 	
 	<!-- Include messages used by application -->

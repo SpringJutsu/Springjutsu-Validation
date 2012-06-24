@@ -1,5 +1,7 @@
 package org.springjutsu.validation.rules;
 
+import java.util.List;
+
 /**
  * A java representation of an XML template-ref
  * Template references will be unwrapped into rule
@@ -19,6 +21,12 @@ public class ValidationTemplateReference {
 	 * The name of the validation template to reference.
 	 */
 	protected String templateName;
+	
+	/**
+	 * A list of form mappings, if provided, the rule will
+	 * only execute when the specified form(s) is/are loaded.
+	 */
+	protected List<String> formConstraints;
 	
 	/**
 	 * Default constructor. Initialize.
@@ -56,6 +64,14 @@ public class ValidationTemplateReference {
 	 */
 	public void setTemplateName(String templateName) {
 		this.templateName = templateName;
+	}
+
+	public List<String> getFormConstraints() {
+		return formConstraints;
+	}
+
+	public void setFormConstraints(List<String> formConstraints) {
+		this.formConstraints = formConstraints;
 	}
 	
 }

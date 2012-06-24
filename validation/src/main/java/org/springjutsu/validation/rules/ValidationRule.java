@@ -60,6 +60,12 @@ public class ValidationRule {
 	protected String errorPath;
 	
 	/**
+	 * A list of form mappings, if provided, the rule will
+	 * only execute when the specified form(s) is/are loaded.
+	 */
+	protected List<String> formConstraints;
+
+	/**
 	 * These are any validation rules that were nested
 	 * within the current rule in XML. If nested rules exist
 	 * and this rule passed, the nested rules would be run.
@@ -78,13 +84,6 @@ public class ValidationRule {
 	protected List<ValidationTemplateReference> templateReferences;
 	
 	/**
-	 * Boolean value indicating whether or not rule should
-	 * be executed when the path specified in not found
-	 * in the Request. Defaults to false.
-	 */
-	protected boolean validateWhenNotInRequest = false;
-	
-	/**
 	 * Default constructor, utilized by @link{ValidationDefinitionParser}
 	 * @param path See path docs.
 	 * @param type See type docs.
@@ -95,6 +94,7 @@ public class ValidationRule {
 		this.type = type;
 		this.value = value;
 		this.rules = new ArrayList<ValidationRule>();
+		this.formConstraints = new ArrayList<String>();
 		this.templateReferences = new ArrayList<ValidationTemplateReference>();
 	}
 	
@@ -145,6 +145,30 @@ public class ValidationRule {
 		}
 		rule += "/>";
 		return rule;
+	}
+	
+	/** Returns true if the rule applies to the current form.
+	 * Replace any REST variable wildcards with wildcard regex.
+	 * Replace ant path wildcards with wildcard regexes as well.
+	 * Iterate through possible form names to find the first match.
+	 */
+	public boolean appliesToForm(String form) {
+		boolean appliesToForm = formConstraints.isEmpty();
+		for (String formName : formConstraints) {
+			String formPattern = 
+				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
+				.replaceAll("\\*\\*/?", "(*/?)+")
+				.replace("*", "[^/]+");
+			if (form.matches(formPattern)) {
+				appliesToForm = true;
+				break;
+			}			
+		}
+		return appliesToForm;
+	}
+	
+	public void addFormConstraint(String form) {
+		this.formConstraints.add(form);
 	}
 	
 	/**
@@ -247,6 +271,14 @@ public class ValidationRule {
 	public void setErrorPath(String errorPath) {
 		this.errorPath = errorPath;
 	}
+	
+	public List<String> getFormConstraints() {
+		return formConstraints;
+	}
+
+	public void setFormConstraints(List<String> formConstraints) {
+		this.formConstraints = formConstraints;
+	}
 
 	/**
 	 * @return the templateReferences
@@ -262,18 +294,4 @@ public class ValidationRule {
 			List<ValidationTemplateReference> templateReferences) {
 		this.templateReferences = templateReferences;
 	}
-
-	/**
-	 * @return whether or not to validate when path is not in request
-	 */
-	public boolean isValidateWhenNotInRequest() {
-		return validateWhenNotInRequest;
-	}
-
-	/**
-	 * @param set whether or not to validate when path is not in request
-	 */
-	public void setValidateWhenNotInRequest(boolean validateWhenNotInRequest) {
-		this.validateWhenNotInRequest = validateWhenNotInRequest;
-	}	
 }

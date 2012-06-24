@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns="http://www.springjutsu.org/schema/validation"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	targetNamespace="http://www.springjutsu.org/schema/validation"
 	elementFormDefault="qualified" attributeFormDefault="unqualified">
-
-	<xsd:import namespace="http://www.springframework.org/schema/beans" 
-		schemaLocation="http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"/>
 
 	<xsd:element name="configuration">
 		<xsd:annotation>
@@ -127,11 +123,12 @@
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:all>
-				<xsd:element name="model-validation" type="model-validation" minOccurs="0" maxOccurs="1"/>
-				<xsd:element name="context-validation" type="context-validation" minOccurs="0" maxOccurs="1"/>
-				<xsd:element name="templates" type="templates" minOccurs="0" maxOccurs="1"/> 
-			</xsd:all>
+			<xsd:sequence>
+				<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element name="form" type="form" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element name="template" type="template" minOccurs="0" maxOccurs="unbounded"/> 
+			</xsd:sequence>
 			<xsd:attribute name="class" type="xsd:string" use="required">
 				<xsd:annotation>
 					<xsd:documentation source="java:java.lang.Class">
@@ -141,59 +138,19 @@
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-
-	<xsd:complexType name="model-validation">
-		<xsd:annotation>
-			<xsd:documentation>
-				Model rules are those rules which should always execute if the
-				field to be validated was present in the request. These are rules
-				like formatting constraints, length constraints, and type constraints.
-				These rules should not dictate what fields are required, since they will
-				be evaluated if and only if the field to be validated was posted in
-				the request.
-			</xsd:documentation>
-		</xsd:annotation>
-		<xsd:sequence>
-			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-		</xsd:sequence>
-	</xsd:complexType>
 	
-	<xsd:complexType name="context-validation">
+	<xsd:complexType name="template">
 		<xsd:annotation>
 			<xsd:documentation>
-				Context rules are executed specific to a form.
-				Here the user may define one or more forms each with its own set
-				of context-specific validation rules.
-			</xsd:documentation>
-		</xsd:annotation>
-		<xsd:sequence>
-			<xsd:element name="form" type="form" minOccurs="1" maxOccurs="unbounded"/>
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="templates">
-		<xsd:annotation>
-			<xsd:documentation>
-				Defines one or more validation templates.
 				Validation templates are analagous to JSR-303 groups, except
 				more powerful. A validation template is a named set of nestable
 				rules and other templates refrences that allows a class member  
 				to be validated according to the rule set. 
 				These validation templates can be applied to a field path
 				on the object being validated.
-				Templates are also nestable within rules, making it possible
+				Templates references are also nestable within rules, making it possible
 				to perform conditional evaluation of an entire template.
-			</xsd:documentation>
-		</xsd:annotation>
-		<xsd:sequence>
-			<xsd:element name="template" type="template" minOccurs="1" maxOccurs="unbounded"/>
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="template">
-		<xsd:annotation>
-			<xsd:documentation>
-				Defines a validation template with the assigned name.
+				This element defines a validation template with the assigned name.
 				This group of rules can be referenced by template-ref in order
 				to apply a set of rules and/or sub templates to a base path.
 				Useful for applying repeated sets of validation rules to a form,
@@ -274,6 +231,10 @@
 					The type of rule you wish to apply.
 					This corresponds to the bean name 
 					of the validation rule to be referenced.
+					Rules not nested in a form elements are always on,
+					and always evaluated, regardless of whether or not 
+					the object specified by the rule's path is present 
+					in the current request.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -302,13 +263,6 @@
 			<xsd:annotation>
 				<xsd:documentation>
 					The path to the field under which the error is to be logged, which will override the default given by "path".
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="validateWhenNotInRequest" type="xsd:boolean" use="optional" default="false">
-			<xsd:annotation>
-				<xsd:documentation>
-					Boolean indicator of whether or not this rule should be executed when the provided path is not a part of the request. Defaults to false.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>

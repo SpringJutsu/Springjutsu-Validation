@@ -2,7 +2,6 @@ package org.springjutsu.validation.executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,7 +30,7 @@ public class RuleExecutorContainerTest {
 	public void setup()
 	{
 		executor = new AnnotatedRuleExecutor();
-		HashMap executors = new HashMap();
+		HashMap<String, Object> executors = new HashMap<String, Object>();
 		executors.put("testExecutor", executor);
 		Mockito.when(beanFactory.getBeansWithAnnotation(ConfiguredRuleExecutor.class)).thenReturn(executors);
 		executorContainer.beanFactory = beanFactory;
@@ -47,7 +46,7 @@ public class RuleExecutorContainerTest {
 	@Test
 	public void testSetCustomRuleExecutorStringRuleExecutor() {
 		executor = new AnnotatedRuleExecutor();
-		HashMap executors = new HashMap();
+		HashMap<String, RuleExecutor> executors = new HashMap<String, RuleExecutor>();
 		executors.put("testExecutor", executor);
 		executorContainer.setCustomRuleExecutors(executors);
 		assertEquals(executor, executorContainer.getRuleExecutorByName("testExecutor"));
