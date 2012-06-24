@@ -3,7 +3,7 @@
  	<modelVersion>4.0.0</modelVersion>
     <groupId>org.springjutsu</groupId>
     <artifactId>validation</artifactId>
-    <version>0.6.1-SNAPSHOT</version>
+    <version>0.6.2-SNAPSHOT</version>
     <name>validation</name>
     <packaging>jar</packaging>
     <description>an XML-driven conditional validation system for Spring Framework</description>
@@ -21,15 +21,15 @@
 	</licenses>
     <scm>
     	<url>https://github.com/SpringJutsu/Springjutsu-Validation</url>
-    	<connection>git://github.com/SpringJutsu/Springjutsu-Validation.git</connection>
-    	<developerConnection>https://username@github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
+    	<connection>scm:git:https://twicksell@github.com/SpringJutsu/Springjutsu-Validation.git</connection>
+    	<developerConnection>scm:git:https://twicksell@github.com/SpringJutsu/Springjutsu-Validation.git</developerConnection>
     </scm>
     <developers>
     	<developer>
     		<id>twicksell</id>
     		<name>Taylor Wicksell</name>
     		<email>issues@springjutsu.org</email>
-    		<url>https://github.com/gradinko</url>
+    		<url>https://github.com/twicksell</url>
     	</developer>
     	<developer>
     		<id>cduplichien</id>
