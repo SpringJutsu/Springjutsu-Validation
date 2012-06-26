@@ -1,5 +1,6 @@
 package org.springjutsu.validation.rules;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,6 +37,7 @@ public class ValidationTemplateReference {
 	public ValidationTemplateReference(String basePath, String templateName) {
 		this.basePath = basePath;
 		this.templateName = templateName;
+		this.formConstraints = new ArrayList<String>();
 	}
 
 	/**

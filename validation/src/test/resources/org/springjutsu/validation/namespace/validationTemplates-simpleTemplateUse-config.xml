@@ -13,6 +13,7 @@
 	
 	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
 		<form path="mockFlow:mockState">
 			<template-ref basePath="address" templateName="unitedStatesAddress"/>
 		</form>

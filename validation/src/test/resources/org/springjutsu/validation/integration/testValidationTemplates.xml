@@ -24,9 +24,9 @@
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<template-ref basePath="secondaryAddress" templateName="shortAddress"/>
 		<form path="/foo/new">
 			<template-ref basePath="address" templateName="fullAddress"/>
-			<template-ref basePath="secondaryAddress" templateName="shortAddress"/>
 		</form>
 	</entity>
 	

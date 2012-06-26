@@ -7,7 +7,8 @@ public class Customer extends Person {
 	private Color favoriteColor;
 	private String emailAddress;
 	private Customer referredBy;
-	
+	private Customer copayer;
+
 	public Address getAddress() {
 		return address;
 	}
@@ -38,5 +39,10 @@ public class Customer extends Person {
 	public void setSecondaryAddress(Address secondaryAddress) {
 		this.secondaryAddress = secondaryAddress;
 	}
-	
+	public Customer getCopayer() {
+		return copayer;
+	}
+	public void setCopayer(Customer copayer) {
+		this.copayer = copayer;
+	}
 }

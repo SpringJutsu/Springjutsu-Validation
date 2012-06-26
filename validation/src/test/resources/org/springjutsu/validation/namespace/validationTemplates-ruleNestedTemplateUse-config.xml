@@ -13,6 +13,10 @@
 	
 	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<rule path="lastName" type="notEmpty">
+			<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
+			<template-ref basePath="copayer" templateName="secondaryAddressedCustomer"/>
+		</rule>
 		<form path="mockFlow:mockState">
 			<rule path="firstName" type="notEmpty">
 				<template-ref basePath="address" templateName="unitedStatesAddress"/>

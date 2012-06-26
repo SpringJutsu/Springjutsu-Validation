@@ -37,25 +37,15 @@ public class ValidationTemplatesParsingTest {
 		triggerValidationParse(context);
 	}
 	
-	/** TODO */
-	/*
-	@Test
-	public void testTemplateClassMismatch() {
-		ApplicationContext context =
-		    new ClassPathXmlApplicationContext(new String[] {
-		    	xmlDirectory + "validationTemplates-wrongClassForTemplate-config.xml"});
-		triggerValidationParse(context);
-	}
-	*/
-	
 	@Test
 	public void testUnwrapSimpleTemplateUse() {
 		ApplicationContext context =
 		    new ClassPathXmlApplicationContext(new String[] {
 		    	xmlDirectory + "validationTemplates-simpleTemplateUse-config.xml"});
 		ValidationEntity entity = triggerValidationParse(context);
-		Assert.assertEquals(1, entity.getValidationRules("mockFlow:mockState").size());
-		Assert.assertEquals("address.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
+		Assert.assertEquals(2, entity.getValidationRules("mockFlow:mockState").size());
+		Assert.assertEquals("secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
+		Assert.assertEquals("address.zipCode", entity.getValidationRules("mockFlow:mockState").get(1).getPath());
 	}
 	
 	@Test
@@ -64,9 +54,10 @@ public class ValidationTemplatesParsingTest {
 		    new ClassPathXmlApplicationContext(new String[] {
 		    	xmlDirectory + "validationTemplates-templateNestedTemplateUse-config.xml"});
 		ValidationEntity entity = triggerValidationParse(context);
-		Assert.assertEquals(2, entity.getValidationRules("mockFlow:mockState").size());
-		Assert.assertEquals("address.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
-		Assert.assertEquals("referredBy.secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(1).getPath());
+		Assert.assertEquals(3, entity.getValidationRules("mockFlow:mockState").size());
+		Assert.assertEquals("copayer.secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
+		Assert.assertEquals("address.zipCode", entity.getValidationRules("mockFlow:mockState").get(1).getPath());
+		Assert.assertEquals("referredBy.secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(2).getPath());
 	}
 	
 	@Test
@@ -75,13 +66,20 @@ public class ValidationTemplatesParsingTest {
 		    new ClassPathXmlApplicationContext(new String[] {
 		    	xmlDirectory + "validationTemplates-ruleNestedTemplateUse-config.xml"});
 		ValidationEntity entity = triggerValidationParse(context);
-		Assert.assertEquals(1, entity.getValidationRules("mockFlow:mockState").size());
-		Assert.assertEquals("firstName", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
+		Assert.assertEquals(2, entity.getValidationRules("mockFlow:mockState").size());
+		Assert.assertEquals("lastName", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
 		Assert.assertEquals(2, entity.getValidationRules("mockFlow:mockState").get(0).getRules().size());
-		Assert.assertEquals("address.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(0).getPath());
-		Assert.assertEquals("referredBy.lastName", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(1).getPath());
+		Assert.assertEquals("secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(0).getPath());
+		Assert.assertEquals("copayer.lastName", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(1).getPath());
 		Assert.assertEquals(1, entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(1).getRules().size());
-		Assert.assertEquals("referredBy.secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(1).getRules().get(0).getPath());
+		Assert.assertEquals("copayer.secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(1).getRules().get(0).getPath());
+		
+		Assert.assertEquals("firstName", entity.getValidationRules("mockFlow:mockState").get(1).getPath());
+		Assert.assertEquals(2, entity.getValidationRules("mockFlow:mockState").get(1).getRules().size());
+		Assert.assertEquals("address.zipCode", entity.getValidationRules("mockFlow:mockState").get(1).getRules().get(0).getPath());
+		Assert.assertEquals("referredBy.lastName", entity.getValidationRules("mockFlow:mockState").get(1).getRules().get(1).getPath());
+		Assert.assertEquals(1, entity.getValidationRules("mockFlow:mockState").get(1).getRules().get(1).getRules().size());
+		Assert.assertEquals("referredBy.secondaryAddress.zipCode", entity.getValidationRules("mockFlow:mockState").get(1).getRules().get(1).getRules().get(0).getPath());
 	}
 
 }
