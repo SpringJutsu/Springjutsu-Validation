@@ -17,9 +17,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.test.MockExternalContext;
 import org.springframework.webflow.test.MockRequestContext;
+import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Company;
 import org.springjutsu.validation.test.entities.Customer;
+import org.springjutsu.validation.test.entities.Developer;
+import org.springjutsu.validation.test.entities.Person;
+import org.springjutsu.validation.test.entities.ValuedCustomer;
 
 public class ValidationIntegrationTest {
 	
@@ -219,5 +223,41 @@ public class ValidationIntegrationTest {
 		assertEquals("errors.required", errors.getFieldError("address.lineOne").getCode());
 		assertEquals("errors.required", errors.getFieldError("address.city").getCode());
 		assertEquals("errors.required", errors.getFieldError("secondaryAddress.city").getCode());
+	}
+	
+	@Test
+	public void testRuleInheritance() {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + "testInheritance.xml"});
+		ValidationRulesContainer container = context.getBean(ValidationRulesContainer.class);
+		assertEquals(2, container.getValidationEntity(Person.class).getRules().size());
+		assertEquals(3, container.getValidationEntity(Developer.class).getRules().size());
+		assertEquals(3, container.getValidationEntity(Customer.class).getRules().size());
+		assertEquals(4, container.getValidationEntity(ValuedCustomer.class).getRules().size());
+	}
+	
+	/**
+	 * Test fix for bug #14
+	 */
+	public void testInitializationDelegation() {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + "testInheritance.xml"});
+		ValidationRulesContainer container = context.getBean(ValidationRulesContainer.class);
+		container.supportsClass(ValuedCustomer.class);
+		assertEquals(4, container.getValidationEntity(ValuedCustomer.class).getRules().size());
+	}
+	
+	/**
+	 * Test fix for bug #14
+	 */
+	public void testInitializationDelegationAgain() {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + "testInheritance.xml"});
+		ValidationRulesContainer container = context.getBean(ValidationRulesContainer.class);
+		container.hasRulesForClass(ValuedCustomer.class);
+		assertEquals(4, container.getValidationEntity(ValuedCustomer.class).getRules().size());
 	}
 }

@@ -58,11 +58,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	private Map<Class<?>, ValidationEntity> validationEntityMap = null;
 	
 	public ValidationEntity getValidationEntity(Class<?> clazz) {
-		if (validationEntityMap == null) {
-			initValidationEntityMap();
-			unwrapTemplateReferences();
-			initRuleInheritance();
-		}
+		initValidationEntityMap();
 		return validationEntityMap.get(clazz);
 	}
 	
@@ -74,12 +70,16 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * occur on the first access. 
 	 */
 	protected void initValidationEntityMap() {
-		validationEntityMap = new HashMap<Class<?>, ValidationEntity>();
-		Collection<ValidationEntity> validationEntities = 
-			((ListableBeanFactory) beanFactory)
-			.getBeansOfType(ValidationEntity.class).values();
-		for (ValidationEntity validationEntity : validationEntities) {
-			validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
+		if (validationEntityMap == null) {
+			validationEntityMap = new HashMap<Class<?>, ValidationEntity>();
+			Collection<ValidationEntity> validationEntities = 
+				((ListableBeanFactory) beanFactory)
+				.getBeansOfType(ValidationEntity.class).values();
+			for (ValidationEntity validationEntity : validationEntities) {
+				validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
+			}
+			unwrapTemplateReferences();
+			initRuleInheritance();
 		}
 	}
 	
@@ -96,14 +96,15 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				classStack.push(clazz);
 			}
 			
-			List<ValidationRule> inheritableRules = new ArrayList<ValidationRule>();			
+			Set<ValidationRule> inheritableRules = new HashSet<ValidationRule>();			
 			while (!classStack.isEmpty()) {
 				Class<?> clazz = classStack.pop();
 				if (supportsClass(clazz) && !inheritanceChecked.contains(clazz)) {
 					for (ValidationRule rule : inheritableRules) {
 						validationEntityMap.get(clazz).addRule(rule);
 					}
-					inheritableRules.clear();
+				}
+				if (hasRulesForClass(clazz)) {
 					inheritableRules.addAll(validationEntityMap.get(clazz).getRules());
 				}
 				inheritanceChecked.add(clazz);
@@ -256,9 +257,6 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 *   nested model validation.
 	 */
 	public Boolean supportsClass(Class<?> clazz) {
-		if (validationEntityMap == null) {
-			initValidationEntityMap();
-		}
-		return validationEntityMap.containsKey(clazz);
+		return getValidationEntity(clazz) != null;
 	}
 }
