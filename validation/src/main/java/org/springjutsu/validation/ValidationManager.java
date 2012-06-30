@@ -19,6 +19,7 @@ package org.springjutsu.validation;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -256,34 +258,81 @@ public class ValidationManager extends CustomValidatorBean  {
 		}
 		for (ValidationRule rule : modelRules) {
 			
-			// get full path to current model
-			String fullPath = appendPath(errors.getNestedPath(), rule.getPath());
+			// get path to current model
+			String appendedPath = appendPath(errors.getNestedPath(), rule.getPath());
 			
-			// update rule for full path
-			ValidationRule modelRule = rule.cloneWithPath(fullPath);
+			// break down any collections into indexed paths.
+			List<String> fullPaths = considerCollectionPaths(appendedPath, model);
 			
-			if (passes(modelRule, model)) {
-				// If the rule passes and it has children,
-				// it is a condition for nested elements.
-				// Call children instead.
-				if (modelRule.hasChildren()) {
-					callRules(model, errors, modelRule.getRules());
-				}
-			} else {
-				// If the rule fails and it has children,
-				// it is a condition for nested elements.
-				// Skip nested elements.
-				if (modelRule.hasChildren()) {
-					continue;
+			for (String fullPath : fullPaths) {
+			
+				// update rule for full path
+				ValidationRule modelRule = rule.cloneWithPath(fullPath);
+				
+				if (passes(modelRule, model)) {
+					// If the rule passes and it has children,
+					// it is a condition for nested elements.
+					// Call children instead.
+					if (modelRule.hasChildren()) {
+						callRules(model, errors, modelRule.getRules());
+					}
 				} else {
-					// If the rule has no children and fails,
-					// perform fail action.
-					logError(modelRule, model, errors);
+					// If the rule fails and it has children,
+					// it is a condition for nested elements.
+					// Skip nested elements.
+					if (modelRule.hasChildren()) {
+						continue;
+					} else {
+						// If the rule has no children and fails,
+						// perform fail action.
+						logError(modelRule, model, errors);
+					}
 				}
 			}
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
+	private List<String> considerCollectionPaths(String path, Object rootModel) {
+		BeanWrapper rootModelWrapper = new BeanWrapperImpl(rootModel);
+		List<String> collectionPaths = new ArrayList<String>();
+		String[] tokens = path.split("\\.");
+		for (int i = 0; i < tokens.length; i++) {
+			String token = tokens[i];
+			// if first pass, add the token as the root path.
+			if (i == 0) {
+				collectionPaths.add(token);
+			} else {
+				// otherwise, append the new token to all existing paths.
+				List <String> appendedCollectionPaths = new ArrayList<String>();
+				for (String collectionPath : collectionPaths) {
+					appendedCollectionPaths.add(appendPath(collectionPath, token));
+				}
+				collectionPaths.clear();
+				collectionPaths = appendedCollectionPaths;
+			}
+			
+			// iterate through new appended paths, and break down collection tokens.
+			List<String> brokenDownCollectionPaths = new ArrayList<String>();
+			Iterator<String> collectionPathIterator = collectionPaths.iterator();
+			while (collectionPathIterator.hasNext()) {
+				String collectionPath = collectionPathIterator.next();
+				Class pathClass = rootModelWrapper.getPropertyType(collectionPath);
+				if (pathClass != null && (pathClass.isArray() || List.class.isAssignableFrom(pathClass))) {
+					int collectionSize = pathClass.isArray() ? 
+						((Object[]) rootModelWrapper.getPropertyValue(collectionPath)).length : 
+						((List) rootModelWrapper.getPropertyValue(collectionPath)).size();
+					for (int j = 0; j < collectionSize; j++) {
+						brokenDownCollectionPaths.add(collectionPath + "[" + j + "]");
+					}
+					collectionPathIterator.remove();
+				}
+			}
+			collectionPaths.addAll(brokenDownCollectionPaths);
+		}
+		return collectionPaths;
+	}
+
 	/**
 	 * Just cleans up a Servlet path URL for rule resolving by
 	 * the rules container.
@@ -614,7 +663,6 @@ public class ValidationManager extends CustomValidatorBean  {
 		List<Object> inheritedCheckedModels = new ArrayList<Object>();
 		inheritedCheckedModels.addAll(checkedModels);
 		return inheritedCheckedModels;
-	}
-	
+	}	
 }
 

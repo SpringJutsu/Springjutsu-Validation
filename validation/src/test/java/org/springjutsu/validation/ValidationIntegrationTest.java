@@ -260,4 +260,63 @@ public class ValidationIntegrationTest {
 		container.hasRulesForClass(ValuedCustomer.class);
 		assertEquals(4, container.getValidationEntity(ValuedCustomer.class).getRules().size());
 	}
+	
+	@Test
+	public void testCollectionRulePathFromModel() {
+		Company company = new Company();
+		Customer namedCustomer = new Customer();
+		namedCustomer.setFirstName("bob");
+		company.getCustomers().add(namedCustomer);
+		company.getCustomers().add(new Customer());
+		company.getCustomers().add(new Customer());
+		
+		Errors errors = doValidate("testCollectionRulePathFromModel.xml", company).errors;
+		assertEquals(3, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("name").getCode());
+		assertNull(errors.getFieldError("customers[0].firstName"));
+		assertEquals("errors.required", errors.getFieldError("customers[1].firstName").getCode());
+		assertEquals("errors.required", errors.getFieldError("customers[2].firstName").getCode());
+	}
+	
+	@Test
+	public void testCollectionRulePathFromCollectionNestedModel() {
+		Company company = new Company();
+		Customer namedCustomer = new Customer();
+		namedCustomer.setFirstName("bob");
+		company.getAcquisitions().add(new Company());
+		company.getAcquisitions().add(new Company());
+		company.getAcquisitions().get(0).getCustomers().add(new Customer());
+		company.getAcquisitions().get(0).getCustomers().add(new Customer());
+		company.getAcquisitions().get(1).getCustomers().add(namedCustomer);
+		company.getAcquisitions().get(1).getCustomers().add(new Customer());
+		
+		Errors errors = doValidate("testCollectionRulePathFromCollectionNestedModel.xml", company).errors;
+		assertEquals(3, errors.getErrorCount());
+		
+		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[0].firstName").getCode());
+		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].firstName").getCode());
+		assertNull(errors.getFieldError("acquisitions[1].customers[0].firstName"));
+		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
+	}
+	
+	@Test
+	public void testNestedCollectionRulePathFromModel() {
+		Company company = new Company();
+		Customer namedCustomer = new Customer();
+		namedCustomer.setFirstName("bob");
+		company.getAcquisitions().add(new Company());
+		company.getAcquisitions().add(new Company());
+		company.getAcquisitions().get(0).getCustomers().add(new Customer());
+		company.getAcquisitions().get(0).getCustomers().add(new Customer());
+		company.getAcquisitions().get(1).getCustomers().add(namedCustomer);
+		company.getAcquisitions().get(1).getCustomers().add(new Customer());
+		
+		Errors errors = doValidate("testNestedCollectionRulePathFromModel.xml", company).errors;
+		assertEquals(3, errors.getErrorCount());
+		
+		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[0].firstName").getCode());
+		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].firstName").getCode());
+		assertNull(errors.getFieldError("acquisitions[1].customers[0].firstName"));
+		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
+	}
 }

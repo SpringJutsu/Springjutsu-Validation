@@ -27,6 +27,8 @@ import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.xml.DomUtils;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
@@ -191,24 +193,28 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 	 * @return true if path exists.
 	 */
 	public boolean pathExists(Class<?> clazz, String path) {
-        if (path.contains(".")) {
-                Class<?> intermediateClass = clazz;
-                String[] pathTokens = path.split("\\.");
-                for (String token : pathTokens) {
-                        PropertyDescriptor descriptor =
-                                BeanUtils.getPropertyDescriptor(intermediateClass, token);
-                        if (descriptor == null) {
-                                return false;
-                        } else {
-                                intermediateClass = descriptor.getPropertyType();
-                        }
-                }
-        } else {
-                if (!new BeanWrapperImpl(clazz).isReadableProperty(path)) {
-                        return false;
-                }
-        }
-        return true;
+		if (path.contains(".")) {
+			Class<?> intermediateClass = clazz;
+			String[] pathTokens = path.split("\\.");
+			for (String token : pathTokens) {
+				PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor(intermediateClass, token);
+				if (descriptor == null) {
+					return false;
+				} else if (List.class.isAssignableFrom(descriptor.getPropertyType())) {
+					intermediateClass = TypeDescriptor.nested(ReflectionUtils.findField(
+									intermediateClass, token), 1).getObjectType();
+				} else if (descriptor.getPropertyType().isArray()) {
+					intermediateClass = descriptor.getPropertyType().getComponentType();
+				} else {
+					intermediateClass = descriptor.getPropertyType();
+				}
+			}
+		} else {
+			if (!new BeanWrapperImpl(clazz).isReadableProperty(path)) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	/**
