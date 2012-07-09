@@ -56,6 +56,18 @@
 				Configures look up of messages from the spring MessageSource.
 			</xsd:documentation>
 		</xsd:annotation>
+		<xsd:attribute name="enableSuperclassFieldLabelLookup" type="xsd:boolean" use="optional" default="true">
+			<xsd:annotation>
+				<xsd:documentation>
+					When set to true (as it is by default), searches using parent class
+					names as the prefix for the error message field labels. For example,
+					if there is an error on ValuedCustomer's last name field, it will 
+					first search for a field label at "valuedCustomer.lastName" and if
+					not found, search on the parent class Customer by using the 
+					message source lookup string "customer.lastName".
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
 		<xsd:attribute name="fieldLabelPrefix" type="xsd:string" use="optional" default="">
 			<xsd:annotation>
 				<xsd:documentation>
@@ -68,7 +80,7 @@
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="errorMessagePrefix" type="xsd:string" use="optional" default="errors.">
+		<xsd:attribute name="errorMessagePrefix" type="xsd:string" use="optional" default="errors">
 			<xsd:annotation>
 				<xsd:documentation>
 					Indicates a message code prefix for default failure messages

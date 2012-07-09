@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springjutsu.validation.ValidationManager;
@@ -43,7 +42,9 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			validationManagerBuilder.addPropertyValue("errorMessagePrefix", 
 					messageConfig.getAttribute("errorMessagePrefix"));
 			validationManagerBuilder.addPropertyValue("fieldLabelPrefix", 
-					messageConfig.getAttribute("fieldLabelPrefix"));			
+					messageConfig.getAttribute("fieldLabelPrefix"));
+			validationManagerBuilder.addPropertyValue("enableSuperclassFieldLabelLookup", 
+					messageConfig.getAttribute("enableSuperclassFieldLabelLookup"));
 		}
 		
 		// Parse rules configuration...

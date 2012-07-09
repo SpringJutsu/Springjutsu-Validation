@@ -1,5 +1,6 @@
 package org.springjutsu.validation;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -9,6 +10,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.Errors;
@@ -132,6 +134,36 @@ public class ValidationIntegrationTest {
 		assertEquals("First Name must match Last Name", messageSource.getMessage(errors.getFieldError("firstName"), Locale.US));
 		assertEquals("Last Name must be at least 4 characters long", messageSource.getMessage(errors.getFieldError("lastName"), Locale.US));
 		assertEquals("emailAddress required", messageSource.getMessage(errors.getFieldError("emailAddress"), Locale.US));
+	}
+	
+	@Test
+	public void testPolymorphicMessageNegotiation() {
+		ValuedCustomer customer = new ValuedCustomer();
+		customer.setFirstName("bob");
+		customer.setLastName("joe");
+		TestResult result = doValidate("testPolymorphicMessageNegotiation.xml", customer);
+		Errors errors = result.errors;
+		MessageSource messageSource = result.messageSource;
+		assertEquals(3, errors.getErrorCount());
+		assertEquals("First Name must match Most Valuable Last Name", messageSource.getMessage(errors.getFieldError("firstName"), Locale.US));
+		assertEquals("Most Valuable Last Name must be at least 4 characters long", messageSource.getMessage(errors.getFieldError("lastName"), Locale.US));
+		assertEquals("emailAddress required", messageSource.getMessage(errors.getFieldError("emailAddress"), Locale.US));
+		assertArrayEquals(new Object[]{"valuedCustomer.emailAddress"}, ((MessageSourceResolvable) errors.getFieldError("emailAddress").getArguments()[0]).getCodes());
+	}
+	
+	@Test
+	public void testPolymorphicMessageNegotiationDisabled() {
+		ValuedCustomer customer = new ValuedCustomer();
+		customer.setFirstName("bob");
+		customer.setLastName("joe");
+		TestResult result = doValidate("testPolymorphicMessageNegotiationDisabled.xml", customer);
+		Errors errors = result.errors;
+		MessageSource messageSource = result.messageSource;
+		assertEquals(3, errors.getErrorCount());
+		assertEquals("valuedCustomer.firstName must match Most Valuable Last Name", messageSource.getMessage(errors.getFieldError("firstName"), Locale.US));
+		assertEquals("Most Valuable Last Name must be at least 4 characters long", messageSource.getMessage(errors.getFieldError("lastName"), Locale.US));
+		assertEquals("emailAddress required", messageSource.getMessage(errors.getFieldError("emailAddress"), Locale.US));
+		assertArrayEquals(new Object[]{"valuedCustomer.emailAddress"}, ((MessageSourceResolvable) errors.getFieldError("emailAddress").getArguments()[0]).getCodes());
 	}
 	
 	@Test

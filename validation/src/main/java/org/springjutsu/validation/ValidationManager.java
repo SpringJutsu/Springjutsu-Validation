@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.core.NamedThreadLocal;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
@@ -90,6 +91,11 @@ public class ValidationManager extends CustomValidatorBean  {
 	private String fieldLabelPrefix = null;
 	
 	/**
+	 * Whether or not to enable 
+	 */
+	private boolean enableSuperclassFieldLabelLookup = true;
+
+	/**
 	 * Holds the validation rules which have been 
 	 * parsed from the XML rule sets.
 	 * @see ValidationRulesContainer
@@ -112,7 +118,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * the spring message source.
 	 * @see MessageSource
 	 */
-	@Autowired 
+	@Autowired
 	protected MessageSource messageSource;
 	
 	/**
@@ -463,7 +469,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	protected void logError(ValidationRule rule, Object rootModel, Errors errors) {
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
-                errorMessageKey = (errorMessagePrefix != null ? errorMessagePrefix + "." : "") + rule.getType();
+                errorMessageKey = (errorMessagePrefix != null  && !errorMessagePrefix.isEmpty() ? errorMessagePrefix + "." : "") + rule.getType();
         }
         
 		String defaultError =  rule.getPath() + " " + rule.getType();
@@ -579,8 +585,30 @@ public class ValidationManager extends CustomValidatorBean  {
 			parentType = rootModel.getClass();
 		}
 		
-		return (fieldLabelPrefix != null ? fieldLabelPrefix + "." : "")
-			+ StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;		
+		if (enableSuperclassFieldLabelLookup) {
+			MessageSourceAccessor messageSourceAccessor = new MessageSourceAccessor(messageSource);
+			Class<?> messageBearingType = parentType;
+			while (messageBearingType != null) {
+				if (!messageSourceAccessor.getMessage(
+						buildMessageKey(messageBearingType, fieldPath), "MessageNotFound")
+						.equals("MessageNotFound")) {
+					break;
+				}
+				else {
+					messageBearingType = messageBearingType.getSuperclass();
+				}
+			}
+			if (messageBearingType != null) {
+				parentType = messageBearingType;
+			}
+		}
+		
+		return buildMessageKey(parentType, fieldPath);
+	}
+	
+	protected String buildMessageKey(Class<?> parentType, String fieldPath) {
+		return (fieldLabelPrefix != null && !fieldLabelPrefix.isEmpty() ? fieldLabelPrefix + "." : "")
+		+ StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;
 	}
 	
 	/**
@@ -659,6 +687,15 @@ public class ValidationManager extends CustomValidatorBean  {
 		this.fieldLabelPrefix = fieldLabelPrefix == null ? "" : fieldLabelPrefix;
 	}
 	
+	public boolean getEnableSuperclassFieldLabelLookup() {
+		return enableSuperclassFieldLabelLookup;
+	}
+
+	public void setEnableSuperclassFieldLabelLookup(
+			boolean enableSuperclassFieldLabelLookup) {
+		this.enableSuperclassFieldLabelLookup = enableSuperclassFieldLabelLookup;
+	}
+
 	protected List<Object> inheritedCheckedModels(List<Object> checkedModels) {
 		List<Object> inheritedCheckedModels = new ArrayList<Object>();
 		inheritedCheckedModels.addAll(checkedModels);
