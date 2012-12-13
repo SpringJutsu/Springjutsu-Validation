@@ -30,6 +30,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
+import org.springjutsu.validation.util.PathUtils;
 
 /**
  * This serves as a container for all parsed validation rules.
@@ -166,7 +167,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		for (ValidationTemplateReference subTemplateReference : template.getTemplateReferences()) {
 			subTemplateReference.setFormConstraints(templateReference.getFormConstraints());
 			unwrapTemplateReference(subTemplateReference, dumpTo, usedNames, 
-				appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
+				PathUtils.appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
 		}
 		
 		// adapt template rules:
@@ -174,10 +175,10 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		// clone with basename subpath.
 		// apply form constraints.
 		for (ValidationRule rule : template.getRules()) {
-			ValidationRule adaptedRule = rule.cloneWithPath(appendPath(baseName, templateReference.getBasePath(), rule.getPath()));
+			ValidationRule adaptedRule = rule.cloneWithBasePath(PathUtils.appendPath(baseName, templateReference.getBasePath()));
 			adaptedRule.setFormConstraints(templateReference.getFormConstraints());
 			unwrapValidationRuleTemplateReferences(adaptedRule, usedNames, 
-				appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
+					PathUtils.appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
 			dumpTo.add(adaptedRule);
 		}
 		
@@ -202,17 +203,6 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		
 		// Don't re-evaluate these template references.
 		rule.getTemplateReferences().clear();
-	}
-	
-	protected String appendPath(String... pathSegments) {
-		String path = pathSegments[0];
-		for (int i = 1; i < pathSegments.length; i++) {
-			path += "." + pathSegments[i];
-		}
-		if (path.startsWith(".")) {
-			path = path.substring(1);
-		}
-		return path;
 	}
 
 	/**

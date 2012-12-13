@@ -49,6 +49,21 @@ public class ValidationTemplatesParsingTest {
 	}
 	
 	@Test
+	public void testUnwrapSimpleTemplateWithNestedRules() {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + "validationTemplates-nestedRulesInTemplate-config.xml"});
+		ValidationEntity entity = triggerValidationParse(context);
+		Assert.assertEquals(2, entity.getValidationRules("mockFlow:mockState").size());
+		Assert.assertEquals("secondaryAddress.lineTwo", entity.getValidationRules("mockFlow:mockState").get(0).getPath());
+		Assert.assertEquals("address.lineTwo", entity.getValidationRules("mockFlow:mockState").get(1).getPath());
+		Assert.assertEquals(1, entity.getValidationRules("mockFlow:mockState").get(0).getRules().size());
+		Assert.assertEquals("secondaryAddress.lineOne", entity.getValidationRules("mockFlow:mockState").get(0).getRules().get(0).getPath());
+		Assert.assertEquals(1, entity.getValidationRules("mockFlow:mockState").get(1).getRules().size());
+		Assert.assertEquals("address.lineOne", entity.getValidationRules("mockFlow:mockState").get(1).getRules().get(0).getPath());
+	}
+	
+	@Test
 	public void testUnwrapTemplateNestedTemplateUse() {
 		ApplicationContext context =
 		    new ClassPathXmlApplicationContext(new String[] {

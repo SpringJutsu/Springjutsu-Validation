@@ -19,6 +19,8 @@ package org.springjutsu.validation.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springjutsu.validation.util.PathUtils;
+
 /**
  * Java representation of an XML validation rule.
  * @author Clark Duplichien
@@ -109,6 +111,24 @@ public class ValidationRule {
 		newRule.setErrorPath(this.errorPath);
 		newRule.setMessage(this.message);
 		newRule.getRules().addAll(this.rules);
+		newRule.getTemplateReferences().addAll(this.templateReferences);
+		return newRule;
+	}
+	
+	/**
+	 * Clones this validation rule but with a different base path
+	 * Used within validation logic of @link{ValidationManager}
+	 * The base path is also applied to all sub rules recursively.
+	 * @param path The new path to apply to the cloned rule
+	 * @return A cloned rule with the new path.
+	 */
+	public ValidationRule cloneWithBasePath(String basePath) {
+		ValidationRule newRule = new ValidationRule(PathUtils.appendPath(basePath, path), this.type, this.value);
+		newRule.setErrorPath(this.errorPath);
+		newRule.setMessage(this.message);
+		for (ValidationRule rule : this.rules) {
+			newRule.getRules().add(rule.cloneWithBasePath(basePath));
+		}
 		newRule.getTemplateReferences().addAll(this.templateReferences);
 		return newRule;
 	}
@@ -294,4 +314,5 @@ public class ValidationRule {
 			List<ValidationTemplateReference> templateReferences) {
 		this.templateReferences = templateReferences;
 	}
+
 }
