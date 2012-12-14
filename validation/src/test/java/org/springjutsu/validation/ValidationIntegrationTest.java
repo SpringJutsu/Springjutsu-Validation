@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.Errors;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -108,7 +109,25 @@ public class ValidationIntegrationTest {
 		assertEquals("errors.required", errors.getFieldError("name").getCode());
 		assertNull(errors.getFieldError("customers[0].firstName"));
 		assertEquals("errors.required", errors.getFieldError("customers[1].firstName").getCode());
+		assertEquals("customer.firstName", ((DefaultMessageSourceResolvable) errors.getFieldError("customers[1].firstName").getArguments()[0]).getCode());
 		assertEquals("errors.required", errors.getFieldError("customers[2].firstName").getCode());
+		assertEquals("customer.firstName", ((DefaultMessageSourceResolvable) errors.getFieldError("customers[2].firstName").getArguments()[0]).getCode());
+	}
+	
+	@Test
+	public void testLocalCollectionRules() {
+		Company company = new Company();
+		company.setName("Awesome Co.");
+		company.getSlogans().add("Doing right.");
+		company.getSlogans().add("Doing our customers right.");
+		company.getSlogans().add("Doing our customers right in a non-suggestive way.");
+		
+		Errors errors = doValidate("testCollectionRules.xml", company).errors;
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.maxLength", errors.getFieldError("slogans[1]").getCode());
+		assertEquals("company.slogans", ((DefaultMessageSourceResolvable) errors.getFieldError("slogans[1]").getArguments()[0]).getCode());
+		assertEquals("errors.maxLength", errors.getFieldError("slogans[2]").getCode());
+		assertEquals("company.slogans", ((DefaultMessageSourceResolvable) errors.getFieldError("slogans[2]").getArguments()[0]).getCode());
 	}
 	
 	@Test

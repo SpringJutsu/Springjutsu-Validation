@@ -15,6 +15,7 @@
 	
 	<entity class="org.springjutsu.validation.test.entities.Company">
 		<rule path="name" type="required"/>
+		<rule path="slogans" type="maxLength" value="20"/>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">

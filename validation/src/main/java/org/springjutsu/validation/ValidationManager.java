@@ -566,11 +566,14 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @return A message key used to resolve a message describing the field
 	 * that failed.
 	 */
-	protected String getModelMessageKey(String rulePath, Object rootModel) {
+	protected String getModelMessageKey(String rawRulePath, Object rootModel) {
 		
-		if (rulePath == null || rulePath.length() < 1) {
-			return rulePath;
-		}		
+		if (rawRulePath == null || rawRulePath.length() < 1) {
+			return rawRulePath;
+		}
+		
+		// clean up any collection and/or map indexing paths from last path segment.
+		String rulePath = rawRulePath.trim().replaceAll("\\[[^\\]]+\\]$", "");
 
 		Class<?> parentType = null;
 		String fieldPath = null;

@@ -8,7 +8,14 @@ public class Company {
 	private String name;
 	private List<Customer> customers = new ArrayList<Customer>();
 	private List<Company> acquisitions = new ArrayList<Company>();
+	private List<String> slogans = new ArrayList<String>();
 	
+	public List<String> getSlogans() {
+		return slogans;
+	}
+	public void setSlogans(List<String> slogans) {
+		this.slogans = slogans;
+	}
 	public String getName() {
 		return name;
 	}
