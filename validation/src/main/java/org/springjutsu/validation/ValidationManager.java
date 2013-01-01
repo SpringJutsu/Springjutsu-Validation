@@ -265,7 +265,8 @@ public class ValidationManager extends CustomValidatorBean  {
 		for (ValidationRule rule : modelRules) {
 			
 			// get path to current model
-			String appendedPath = appendPath(errors.getNestedPath(), rule.getPath());
+			String appendedPath = hasEL(rule.getPath()) ? rule.getPath() 
+				: appendPath(errors.getNestedPath(), rule.getPath());
 			
 			// break down any collections into indexed paths.
 			List<String> fullPaths = considerCollectionPaths(appendedPath, model);
@@ -488,6 +489,10 @@ public class ValidationManager extends CustomValidatorBean  {
         }
 		if (!errors.getNestedPath().isEmpty() && errorMessagePath.startsWith(errors.getNestedPath())) {
 			errorMessagePath = appendPath(errorMessagePath.substring(errors.getNestedPath().length()), "");
+		}
+		
+		if (hasEL(errorMessagePath)) {
+			throw new IllegalStateException("Could not log error for rule: " + rule.toString() + ". Rules with EL path should specify the errorPath attribute.");
 		}
 
 		errors.rejectValue(errorMessagePath, errorMessageKey, 
