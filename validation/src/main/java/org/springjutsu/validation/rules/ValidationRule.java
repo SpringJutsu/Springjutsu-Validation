@@ -62,6 +62,12 @@ public class ValidationRule {
 	protected String errorPath;
 	
 	/**
+	 * Indicates whether the rule should be applied to individual
+	 * collection members, or to the collection object itself.
+	 */
+	protected CollectionStrategy collectionStrategy;
+	
+	/**
 	 * A list of form mappings, if provided, the rule will
 	 * only execute when the specified form(s) is/are loaded.
 	 */
@@ -162,6 +168,9 @@ public class ValidationRule {
 		}
 		if (errorPath != null && errorPath.length() > 0) {
 			rule += "errorPath=\"" + errorPath + "\" "; 
+		}
+		if (collectionStrategy != null) {
+			rule += "collectionStrategy=\"" + collectionStrategy.getXmlValue() + "\" ";
 		}
 		rule += "/>";
 		return rule;
@@ -292,6 +301,14 @@ public class ValidationRule {
 		this.errorPath = errorPath;
 	}
 	
+	public CollectionStrategy getCollectionStrategy() {
+		return collectionStrategy;
+	}
+
+	public void setCollectionStrategy(CollectionStrategy collectionStrategy) {
+		this.collectionStrategy = collectionStrategy;
+	}
+
 	public List<String> getFormConstraints() {
 		return formConstraints;
 	}

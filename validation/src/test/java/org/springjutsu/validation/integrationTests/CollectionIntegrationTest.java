@@ -104,5 +104,49 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		assertNull(errors.getFieldError("acquisitions[1].customers[0].firstName"));
 		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
 	}
+	
+	@Test
+	public void testCollectionStrategyDefault() {
+		Company company = new Company();
+		company.getSlogans().add("Doing right.");
+		company.getSlogans().add("Doing our customers right.");
+		
+		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.maxLength", errors.getFieldError("slogans[1]").getCode());
+	}
+	
+	@Test
+	public void testCollectionStrategyValidateMembers() {
+		Company company = new Company();
+		company.getWebsites().add("www.shorturl.com");
+		company.getWebsites().add("http://www.longerurlthanisallowedforthisfield.com/lolstillevenlonger");
+		
+		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.maxLength", errors.getFieldError("websites[1]").getCode());
+	}
+	
+	@Test
+	public void testCollectionStrategyValidateCollectionObject() {
+		Company company = new Company();
+		company.setAcquisitions(null);
+		
+		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("acquisitions").getCode());
+	}
+	
+	@Test
+	public void testCollectionStrategyIgnoredForNonCollection() {
+		Company company = new Company();
+		company.getCustomers().add(new Customer());
+		company.getCustomers().add(new Customer());
+		company.getCustomers().get(0).setFirstName("bob");
+		
+		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("customers[1].firstName").getCode());
+	}
 
 }

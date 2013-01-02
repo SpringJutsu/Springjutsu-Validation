@@ -41,6 +41,7 @@ import org.springframework.validation.beanvalidation.CustomValidatorBean;
 import org.springframework.webflow.execution.RequestContextHolder;
 import org.springjutsu.validation.executors.RuleExecutor;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
+import org.springjutsu.validation.rules.CollectionStrategy;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.springjutsu.validation.spel.WebContextSPELResolver;
@@ -274,7 +275,7 @@ public class ValidationManager extends CustomValidatorBean  {
 				: appendPath(errors.getNestedPath(), rule.getPath());
 			
 			// break down any collections into indexed paths.
-			List<String> fullPaths = considerCollectionPaths(appendedPath, model);
+			List<String> fullPaths = considerCollectionPaths(appendedPath, model, rule.getCollectionStrategy());
 			
 			for (String fullPath : fullPaths) {
 			
@@ -305,7 +306,7 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private List<String> considerCollectionPaths(String path, Object rootModel) {
+	private List<String> considerCollectionPaths(String path, Object rootModel, CollectionStrategy collectionStrategy) {
 		BeanWrapper rootModelWrapper = new BeanWrapperImpl(rootModel);
 		List<String> collectionPaths = new ArrayList<String>();
 		String[] tokens = path.split("\\.");
@@ -331,13 +332,32 @@ public class ValidationManager extends CustomValidatorBean  {
 				String collectionPath = collectionPathIterator.next();
 				Class pathClass = rootModelWrapper.getPropertyType(collectionPath);
 				if (pathClass != null && (pathClass.isArray() || List.class.isAssignableFrom(pathClass))) {
+					
+					// if this is the final segment in the path
+					// and it represents a collection (check above)
+					// and the collection strategy is validateCollectionObject,
+					// leave the collection as an object reference and continue.
+					if (i + 1 == tokens.length
+							&& collectionStrategy == CollectionStrategy.VALIDATE_COLLECTION_OBJECT) {
+						continue;
+					}
+					
+					// otherwise, treat as iteration: 
+					// remove the reference to the collection object and generate sub-paths.
+					collectionPathIterator.remove();
+					
+					Object collectionObject = rootModelWrapper.getPropertyValue(collectionPath);
+					// skip this path for sub bean validation if the collection itself is null.
+					if (collectionObject == null) {
+						continue;
+					}
+					// Add each index of the collection as a subpath for iteration.
 					int collectionSize = pathClass.isArray() ? 
-						((Object[]) rootModelWrapper.getPropertyValue(collectionPath)).length : 
-						((List) rootModelWrapper.getPropertyValue(collectionPath)).size();
+						((Object[]) collectionObject).length : 
+						((List) collectionObject).size();
 					for (int j = 0; j < collectionSize; j++) {
 						brokenDownCollectionPaths.add(collectionPath + "[" + j + "]");
 					}
-					collectionPathIterator.remove();
 				}
 			}
 			collectionPaths.addAll(brokenDownCollectionPaths);

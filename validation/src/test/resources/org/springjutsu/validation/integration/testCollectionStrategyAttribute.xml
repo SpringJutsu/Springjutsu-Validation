@@ -13,13 +13,11 @@
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
-	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<form path="/foo/new,/**/foo/new,/foo/{id}/edit,/**/foo/{id}/edit,mockFlow:mockState">
-			<rule path="firstName" type="required" />
-		</form>
-		<form path="/foo/new">
-			<rule path="lastName" type="required" />
-		</form>
+	<entity class="org.springjutsu.validation.test.entities.Company">
+		<rule path="slogans" type="maxLength" value="20"/>
+		<rule path="websites" type="maxLength" value="20" collectionStrategy="validateMembers" />
+		<rule path="acquisitions" type="required" collectionStrategy="validateCollectionObject" />
+		<rule path="customers.firstName" type="required" collectionStrategy="validateCollectionObject" />
 	</entity>
 	
 	<!-- Include messages used by application -->

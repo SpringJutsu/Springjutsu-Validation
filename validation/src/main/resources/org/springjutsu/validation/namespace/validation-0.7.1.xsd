@@ -278,5 +278,26 @@
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
+		<xsd:attribute name="collectionStrategy" use="optional" default="validateMembers">
+			<xsd:annotation>
+				<xsd:documentation>
+					When set to "validateMembers", the rule is applied to each member of the collection, iteratively.
+					When set to "validateCollectionObject", the collection object itself serves as the model for the rule.
+					Defaults to "validateMembers".
+					Applies only to a collection indicated by the last segment of the rule path, e.g. path="someCollection" or path="path.to.someCollection".
+					If the last segment of the rule path is not a collection, this attribute is ignored, and the default will be applied.
+					If it is desired to validate an attribute on a collection object itself, instead use a SPEL expression e.g. path="${model.collectionObject.length}"
+					If the rule path indicates a collection on a collection subpath (e.g. path="bean.collection.anotherCollection"),
+					then the specified collectionStrategy pertains only to the collection indicated by the last segment of the rule path,
+					and any prior collections will be iterated over in order to provide access to the collection object on each member.
+				</xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="validateMembers" />
+					<xsd:enumeration value="validateCollectionObject" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
 	</xsd:complexType>
 </xsd:schema>
