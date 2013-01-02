@@ -264,6 +264,11 @@ public class ValidationManager extends CustomValidatorBean  {
 		}
 		for (ValidationRule rule : modelRules) {
 			
+			// skip form rules during sub-bean validation
+			if (!errors.getNestedPath().isEmpty() && !rule.getFormConstraints().isEmpty()) {
+				continue;
+			}
+			
 			// get path to current model
 			String appendedPath = hasEL(rule.getPath()) ? rule.getPath() 
 				: appendPath(errors.getNestedPath(), rule.getPath());

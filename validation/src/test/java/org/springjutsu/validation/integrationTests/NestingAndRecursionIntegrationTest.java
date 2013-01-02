@@ -22,6 +22,20 @@ public class NestingAndRecursionIntegrationTest extends ValidationIntegrationTes
 	}
 	
 	@Test
+	public void testSubPathRulesIgnoreFormRules() {
+		setCurrentFormPath("/foo/new");
+		Customer customer = new Customer();
+		customer.setFirstName("bob");
+		customer.setReferredBy(new Customer());
+		customer.getReferredBy().setFirstName("bob");
+		Errors errors = doValidate("testSubPathFormRulesIgnored.xml", customer).errors;
+		assertEquals(2, errors.getErrorCount());
+		assertNull(errors.getFieldError("firstName"));
+		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+	}
+	
+	@Test
 	public void testPreventRuleRecursion() {
 		Customer customer = new Customer();
 		customer.setReferredBy(customer);
