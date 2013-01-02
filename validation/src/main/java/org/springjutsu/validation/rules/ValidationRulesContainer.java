@@ -16,6 +16,7 @@
 
 package org.springjutsu.validation.rules;
 
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -58,6 +61,11 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 */
 	private Map<Class<?>, ValidationEntity> validationEntityMap = null;
 	
+	/**
+	 * Annotation classes which mark a field that should not be validated.
+	 */
+	private List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+
 	public ValidationEntity getValidationEntity(Class<?> clazz) {
 		initValidationEntityMap();
 		return validationEntityMap.get(clazz);
@@ -79,11 +87,45 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			for (ValidationEntity validationEntity : validationEntities) {
 				validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
 			}
+			initExcludePaths();
 			unwrapTemplateReferences();
 			initRuleInheritance();
 		}
 	}
 	
+	/**
+	 * Read from exclude annotations to further 
+	 * populate exclude paths already parsed from XML.
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void initExcludePaths() {
+		for (ValidationEntity entity : validationEntityMap.values()) {
+			// no paths to check on an interface.
+			if (entity.getValidationClass().isInterface()) {
+				continue;
+			}
+			BeanWrapper entityWrapper = new BeanWrapperImpl(entity.getValidationClass());
+			for (PropertyDescriptor descriptor : entityWrapper.getPropertyDescriptors()) {
+				if (!entityWrapper.isReadableProperty(descriptor.getName())
+						|| !entityWrapper.isWritableProperty(descriptor.getName())) {
+					continue;
+				}
+				for(Class excludeAnnotation : excludeAnnotations) {
+					try {
+						if (entity.getValidationClass().getDeclaredField(descriptor.getName())
+								.getAnnotation(excludeAnnotation) != null) {
+							entity.getExcludedPaths().add(descriptor.getName());
+						}
+					} catch (SecurityException se) {
+						throw new IllegalStateException("Unexpected error while checking for excluded properties", se);
+					} catch (NoSuchFieldException nsfe) {
+						throw new IllegalStateException("Unexpected error while checking for excluded properties", nsfe);
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Copy rules from parent classes into child classes.
 	 */
@@ -248,5 +290,13 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 */
 	public Boolean supportsClass(Class<?> clazz) {
 		return getValidationEntity(clazz) != null;
+	}
+	
+	public List<Class<?>> getExcludeAnnotations() {
+		return excludeAnnotations;
+	}
+
+	public void setExcludeAnnotations(List<Class<?>> excludeAnnotations) {
+		this.excludeAnnotations = excludeAnnotations;
 	}
 }

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springjutsu.validation.ValidationManager;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.executors.RuleExecutorContainer.RuleExecutorBeanRegistrant;
+import org.springjutsu.validation.rules.SkipValidation;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -64,6 +65,21 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 					ruleExecutorBeanName, ruleExecutorNode.getAttribute("name")));
 			}
 			ruleExecutorContainerBuilder.addPropertyValue("ruleExecutorBeanRegistrants", ruleExecutors);
+			
+			List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+			excludeAnnotations.add(SkipValidation.class);
+			
+			NodeList excludeAnnotationNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "exclude-annotation");
+			for (int excludeNbr = 0; excludeNbr < excludeAnnotationNodes.getLength(); excludeNbr++) {
+				Element excludeNode = (Element) excludeAnnotationNodes.item(excludeNbr);
+				String excludeAnnotationClass = excludeNode.getAttribute("class");
+				try {
+					excludeAnnotations.add(Class.forName(excludeAnnotationClass));
+				} catch (ClassNotFoundException cnfe) {
+					throw new IllegalArgumentException("Invalid exclude annotation class: " + excludeAnnotationClass, cnfe);
+				}
+			}
+			validationRulesContainerBuilder.addPropertyValue("excludeAnnotations", excludeAnnotations);
 		}
 		
 		// Register them beans.

@@ -224,6 +224,11 @@ public class ValidationManager extends CustomValidatorBean  {
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
 		PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors(); 
 		for (PropertyDescriptor property : propertyDescriptors) {
+			if (rulesContainer.getValidationEntity(validateMe.getClass())
+					.getExcludedPaths().contains(property.getName())) {
+				continue;
+			}
+			
 			if (rulesContainer.supportsClass(property.getPropertyType())) {
 				errors.pushNestedPath(property.getName());
 				validateModel(model, errors, inheritedCheckedModels(checkedModels), currentForm);
@@ -733,6 +738,6 @@ public class ValidationManager extends CustomValidatorBean  {
 		List<Object> inheritedCheckedModels = new ArrayList<Object>();
 		inheritedCheckedModels.addAll(checkedModels);
 		return inheritedCheckedModels;
-	}	
+	}
 }
 

@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.springframework.validation.Errors;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
+import org.springjutsu.validation.test.entities.SkippablePerson;
 
 public class NestingAndRecursionIntegrationTest extends ValidationIntegrationTest {
 	
@@ -52,6 +53,24 @@ public class NestingAndRecursionIntegrationTest extends ValidationIntegrationTes
 		assertNull(errors.getFieldError("address.customer.firstName"));
 		assertEquals("errors.required", errors.getFieldError("secondaryAddress.state").getCode());
 		assertNull(errors.getFieldError("secondaryAddress.customer.firstName"));
+	}
+	
+	@Test
+	public void testIgnoreExcludedSubPaths() {
+		SkippablePerson skippablePerson = new SkippablePerson();
+		skippablePerson.setSkipMe(new SkippablePerson());
+		skippablePerson.setSkipMeFromXml(new SkippablePerson());
+		skippablePerson.setCustomSkipMe(new SkippablePerson());
+		skippablePerson.setDontSkipMeBro(new SkippablePerson());
+		skippablePerson.getSkipUs().add(new SkippablePerson());
+		skippablePerson.getSkipUsFromXml().add(new SkippablePerson());
+		skippablePerson.getDontSkipUsBro().add(new SkippablePerson());
+		
+		Errors errors = doValidate("testExclusions.xml", skippablePerson).errors;
+		assertEquals(3, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("name").getCode());
+		assertEquals("errors.required", errors.getFieldError("dontSkipMeBro.name").getCode());
+		assertEquals("errors.required", errors.getFieldError("dontSkipUsBro[0].name").getCode());
 	}
 
 }

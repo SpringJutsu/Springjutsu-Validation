@@ -33,11 +33,13 @@
 		<xsd:annotation>
 			<xsd:documentation>
 				Allows for the registration of one or more custom rule executors,
-				and specification of whether or not default rules should be added.
+				specification of whether or not default rules should be added,
+				and configuration of rule path exclusion annotations.
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:sequence>
 			<xsd:element name="rule-executor" type="rule-executor" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="exclude-annotation" type="exclude-annotation" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
 		<xsd:attribute name="addDefaultRuleExecutors" type="xsd:boolean" use="optional" default="true">
 			<xsd:annotation>
@@ -118,6 +120,27 @@
 		</xsd:attribute>
 	</xsd:complexType>
 	
+	<xsd:complexType name="exclude-annotation">
+		<xsd:annotation>
+			<xsd:documentation>
+				Registers an annotation class as a marker to exclude a bean property
+				from sub bean validation.
+				The org.springjutsu.validation.rules.SkipValidation annotation
+				will be configured by default. 
+				Useful if you want to exclude properties 
+				marked with @Transient, @XMLTransient, @JSONIgnore or your own 
+				pre-existing annotations from sub bean validation.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="class" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation source="java:java.lang.Class">
+					The fully qualified class name of the annotation.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
 	<xsd:element name="mvc-annotations">
 		<xsd:annotation>
 			<xsd:documentation>
@@ -136,6 +159,7 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
+				<xsd:element name="exclude" type="exclude" minOccurs="0" maxOccurs="unbounded"/>
 				<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
 				<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
 				<xsd:element name="form" type="form" minOccurs="0" maxOccurs="unbounded"/>
@@ -231,6 +255,25 @@
 			</xsd:annotation>
 		</xsd:attribute>
 	</xsd:complexType>
+	
+	<xsd:complexType name="exclude">
+		<xsd:annotation>
+			<xsd:documentation>
+				Excludes a given sub bean path from sub bean model validation.
+				This should reference a single property, i.e. should not be a nested path.
+				Class-level rules declared for the sub bean's class will not be evaluated against the sub bean.
+				Sub beans can also be excluded in the java class utilizing the @SkipValidation annotation,
+				or a different annotation configured through the exclude-annotation-class element of the rules-config.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="path" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					The single-property non-nested name of the sub bean field to exclude from validation.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 		
 	<xsd:complexType name="rule">
 		<xsd:sequence>
@@ -246,7 +289,9 @@
 					Rules not nested in a form elements are always on,
 					and always evaluated, regardless of whether or not 
 					the object specified by the rule's path is present 
-					in the current request.
+					in the current request, unless the rule's path is 
+					specified for exclusion from validation using an 
+					exclude element or annotation.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>

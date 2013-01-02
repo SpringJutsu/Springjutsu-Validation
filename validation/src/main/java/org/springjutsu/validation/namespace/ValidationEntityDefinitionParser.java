@@ -64,6 +64,21 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			throw new ValidationParseException("Class " + className + " does not exist as a model class.");
 		}
 		
+		List<String> excludePaths = new ArrayList<String>();
+		
+		NodeList excludes = entityNode.getElementsByTagNameNS(
+				entityNode.getNamespaceURI(), "exclude");
+		for (int excludeNbr = 0; excludeNbr < excludes.getLength(); excludeNbr++) {
+			Element excludeNode = (Element) excludes.item(excludeNbr);
+			String path = excludeNode.getAttribute("path");
+			if (path.contains(".")) {
+				throw new ValidationParseException("Invalid exclude path " + path 
+					+ " Exclude paths should not be nested fields.");
+			} else {
+				excludePaths.add(path);
+			}
+		}
+		
 		ValidationStructure validationStructure = parseNestedValidation(entityNode, modelClass);
 		
 		NodeList forms = entityNode.getElementsByTagNameNS(
@@ -115,6 +130,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 		entityDefinition.getPropertyValues().add("templateReferences", validationStructure.refs);
 		entityDefinition.getPropertyValues().add("validationTemplates", templates);
 		entityDefinition.getPropertyValues().add("validationClass", modelClass);
+		entityDefinition.getPropertyValues().add("excludedPaths", excludePaths);
 		String entityName = parserContext.getReaderContext().registerWithGeneratedName(entityDefinition);
 		parserContext.registerComponent(new BeanComponentDefinition(entityDefinition, entityName));
 		return null;

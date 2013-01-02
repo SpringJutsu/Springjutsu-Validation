@@ -49,6 +49,11 @@ public class ValidationEntity {
 	 * Log; for debugging purposes.
 	 */
 	Log log = LogFactory.getLog(ValidationEntity.class);
+	
+	/**
+	 * A list of paths configured for exclusion from validation.
+	 */
+	private List<String> excludedPaths;
 
 	/**
 	 * A list of validation rules to evaluate on the model object.
@@ -180,5 +185,13 @@ public class ValidationEntity {
 	 */
 	public void setRules(List<ValidationRule> rules) {
 		this.rules = rules;
+	}
+	
+	public List<String> getExcludedPaths() {
+		return excludedPaths;
+	}
+
+	public void setExcludedPaths(List<String> excludedPaths) {
+		this.excludedPaths = excludedPaths;
 	}
 }
