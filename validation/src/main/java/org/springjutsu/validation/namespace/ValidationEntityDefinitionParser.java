@@ -16,25 +16,21 @@
 
 package org.springjutsu.validation.namespace;
 
-import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.xml.DomUtils;
 import org.springjutsu.validation.rules.CollectionStrategy;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationTemplate;
 import org.springjutsu.validation.rules.ValidationTemplateReference;
+import org.springjutsu.validation.util.PathUtils;
 import org.springjutsu.validation.util.RequestUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -167,7 +163,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				String path = rule.getAttribute("path");
 				if (path != null && path.length() > 0 
 						&& !path.contains("${") 
-						&& !pathExists(modelClass, path)) {
+						&& !PathUtils.pathExists(modelClass, path)) {
 					throw new ValidationParseException("Path \"" + path 
 							+ "\" does not exist on class " + modelClass.getCanonicalName());
 				}
@@ -192,7 +188,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				String basePath = templateReference.getAttribute("basePath");
 				if (basePath != null && basePath.length() > 0 
 						&& !basePath.contains("${") 
-						&& !pathExists(modelClass, basePath)) {
+						&& !PathUtils.pathExists(modelClass, basePath)) {
 					throw new ValidationParseException("Path \"" + basePath 
 							+ "\" does not exist on class " + modelClass.getCanonicalName());
 				}
@@ -203,37 +199,6 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			}
 		}
 		return structure;
-	}
-	
-	/**
-	 * Determine if a path exists on the given class.
-	 * @param clazz Class to check 
-	 * @param path Path to check
-	 * @return true if path exists.
-	 */
-	public boolean pathExists(Class<?> clazz, String path) {
-		if (path.contains(".")) {
-			Class<?> intermediateClass = clazz;
-			String[] pathTokens = path.split("\\.");
-			for (String token : pathTokens) {
-				PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor(intermediateClass, token);
-				if (descriptor == null) {
-					return false;
-				} else if (List.class.isAssignableFrom(descriptor.getPropertyType())) {
-					intermediateClass = TypeDescriptor.nested(ReflectionUtils.findField(
-									intermediateClass, token), 1).getObjectType();
-				} else if (descriptor.getPropertyType().isArray()) {
-					intermediateClass = descriptor.getPropertyType().getComponentType();
-				} else {
-					intermediateClass = descriptor.getPropertyType();
-				}
-			}
-		} else {
-			if (!new BeanWrapperImpl(clazz).isReadableProperty(path)) {
-				return false;
-			}
-		}
-		return true;
 	}
 	
 	/**

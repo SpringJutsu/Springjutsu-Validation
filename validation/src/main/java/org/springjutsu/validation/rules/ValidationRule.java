@@ -18,6 +18,7 @@ package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.springjutsu.validation.util.PathUtils;
 
@@ -107,6 +108,14 @@ public class ValidationRule {
 	}
 	
 	/**
+	 * Straight up clone.
+	 * @return cloned rule
+	 */
+	public ValidationRule clone() {
+		return cloneWithPath(getPath());
+	}
+	
+	/**
 	 * Clones this validation rule but with a different path
 	 * Used within validation logic of @link{ValidationManager}
 	 * @param path The new path to apply to the cloned rule
@@ -115,9 +124,13 @@ public class ValidationRule {
 	public ValidationRule cloneWithPath(String path) {
 		ValidationRule newRule = new ValidationRule(path, this.type, this.value);
 		newRule.setErrorPath(this.errorPath);
+		newRule.setCollectionStrategy(this.collectionStrategy);
 		newRule.setMessage(this.message);
-		newRule.getRules().addAll(this.rules);
+		for (ValidationRule childRule : rules) {
+			newRule.getRules().add(childRule.clone());
+		}
 		newRule.getTemplateReferences().addAll(this.templateReferences);
+		newRule.setFormConstraints(this.formConstraints);
 		return newRule;
 	}
 	
@@ -129,14 +142,26 @@ public class ValidationRule {
 	 * @return A cloned rule with the new path.
 	 */
 	public ValidationRule cloneWithBasePath(String basePath) {
-		ValidationRule newRule = new ValidationRule(PathUtils.appendPath(basePath, path), this.type, this.value);
-		newRule.setErrorPath(this.errorPath);
-		newRule.setMessage(this.message);
+		String newPath = PathUtils.appendPath(basePath, path);
+		ValidationRule newRule = cloneWithPath(newPath);
+		newRule.getRules().clear();
 		for (ValidationRule rule : this.rules) {
 			newRule.getRules().add(rule.cloneWithBasePath(basePath));
 		}
-		newRule.getTemplateReferences().addAll(this.templateReferences);
 		return newRule;
+	}
+	
+	/**
+	 * Replaces a base path within this and any sub rules.
+	 * @param oldBasePath the old base path to replace
+	 * @param newBasePath the new base path to apply
+	 */
+	public void applyBasePathReplacement(String oldBasePath, String newBasePath) {
+		String regex = "^" + Pattern.quote(oldBasePath);
+		setPath(getPath().replaceFirst(regex, newBasePath));
+		for (ValidationRule rule : this.rules) {
+			rule.applyBasePathReplacement(oldBasePath, newBasePath); 
+		}
 	}
 	
 	/**

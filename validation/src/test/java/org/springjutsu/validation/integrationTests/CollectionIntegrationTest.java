@@ -106,6 +106,47 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 	}
 	
 	@Test
+	public void testNestedCollectionRulesAdaptedToMembers() {
+		Company company = new Company();
+		Customer noNameCustomer = new Customer();
+		Customer partiallyNamedCustomer = new Customer();
+		partiallyNamedCustomer.setFirstName("bob");
+		Customer fullyNamedCustomer = new Customer();
+		fullyNamedCustomer.setFirstName("joe");
+		fullyNamedCustomer.setLastName("alsojoe");
+		
+		company.getCustomers().add(noNameCustomer);
+		company.getCustomers().add(partiallyNamedCustomer);
+		company.getCustomers().add(fullyNamedCustomer);
+		
+		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", company).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("customers[1].lastName").getCode());
+	}
+	
+	@Test
+	public void testDeepNestedCollectionRulesAdaptedToMembers() {
+		Company company = new Company();
+		Customer noNameCustomer = new Customer();
+		Customer partiallyNamedCustomer = new Customer();
+		partiallyNamedCustomer.setFirstName("bob");
+		Customer fullyNamedCustomer = new Customer();
+		fullyNamedCustomer.setFirstName("joe");
+		fullyNamedCustomer.setLastName("alsojoe");
+		
+		company.getCustomers().add(noNameCustomer);
+		company.getCustomers().add(partiallyNamedCustomer);
+		company.getCustomers().add(fullyNamedCustomer);
+		
+		Company parentCompany = new Company();
+		parentCompany.getAcquisitions().add(company);
+		
+		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", parentCompany).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].lastName").getCode());
+	}
+	
+	@Test
 	public void testCollectionStrategyDefault() {
 		Company company = new Company();
 		company.getSlogans().add("Doing right.");
@@ -135,18 +176,6 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("acquisitions").getCode());
-	}
-	
-	@Test
-	public void testCollectionStrategyIgnoredForNonCollection() {
-		Company company = new Company();
-		company.getCustomers().add(new Customer());
-		company.getCustomers().add(new Customer());
-		company.getCustomers().get(0).setFirstName("bob");
-		
-		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
-		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("customers[1].firstName").getCode());
 	}
 
 }

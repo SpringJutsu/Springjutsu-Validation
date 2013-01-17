@@ -45,6 +45,7 @@ import org.springjutsu.validation.rules.CollectionStrategy;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.springjutsu.validation.spel.WebContextSPELResolver;
+import org.springjutsu.validation.util.PathUtils;
 import org.springjutsu.validation.util.RequestUtils;
 
 /**
@@ -218,7 +219,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		}
 		
 		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), currentForm);
-		callRules(model, errors, rules);
+		callRules(model, errors, rules, false);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -262,9 +263,10 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param model The object being validated
 	 * @param errors Standard errors object to record validation errors.
 	 * @param modelRules A list of ValidationRules parsed from
+	 * @param prelocalized indicates if child rules are already localized to the base path of the errors object. 
 	 *  the &lt;model-rules> section of the validation XML.
 	 */
-	protected void callRules(Object model, Errors errors, List<ValidationRule> modelRules) {
+	protected void callRules(Object model, Errors errors, List<ValidationRule> modelRules, boolean prelocalized) {
 		if (modelRules == null) {
 			return;
 		}
@@ -275,35 +277,31 @@ public class ValidationManager extends CustomValidatorBean  {
 				continue;
 			}
 			
-			// get path to current model
-			String appendedPath = hasEL(rule.getPath()) ? rule.getPath() 
-				: appendPath(errors.getNestedPath(), rule.getPath());
+			// adapt rule to current model path.
+			ValidationRule localizedRule = hasEL(rule.getPath()) ? rule : prelocalized ? rule : rule.cloneWithBasePath(errors.getNestedPath());
 			
 			// break down any collections into indexed paths.
-			List<String> fullPaths = considerCollectionPaths(appendedPath, model, rule.getCollectionStrategy());
+			List<ValidationRule> adaptedRules = considerCollectionPaths(localizedRule, model);
 			
-			for (String fullPath : fullPaths) {
-			
-				// update rule for full path
-				ValidationRule modelRule = rule.cloneWithPath(fullPath);
+			for (ValidationRule adaptedRule : adaptedRules) {
 				
-				if (passes(modelRule, model)) {
+				if (passes(adaptedRule, model)) {
 					// If the rule passes and it has children,
 					// it is a condition for nested elements.
 					// Call children instead.
-					if (modelRule.hasChildren()) {
-						callRules(model, errors, modelRule.getRules());
+					if (adaptedRule.hasChildren()) {
+						callRules(model, errors, adaptedRule.getRules(), true);
 					}
 				} else {
 					// If the rule fails and it has children,
 					// it is a condition for nested elements.
 					// Skip nested elements.
-					if (modelRule.hasChildren()) {
+					if (adaptedRule.hasChildren()) {
 						continue;
 					} else {
 						// If the rule has no children and fails,
 						// perform fail action.
-						logError(modelRule, model, errors);
+						logError(adaptedRule, model, errors);
 					}
 				}
 			}
@@ -311,10 +309,43 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private List<String> considerCollectionPaths(String path, Object rootModel, CollectionStrategy collectionStrategy) {
+	private List<ValidationRule> considerCollectionPaths(ValidationRule rule, Object rootModel) {
+		String path = rule.getPath();
 		BeanWrapper rootModelWrapper = new BeanWrapperImpl(rootModel);
 		List<String> collectionPaths = new ArrayList<String>();
+		List<ValidationRule> brokenDownRules = new ArrayList<ValidationRule>();
+		
+		// First we need to discover which tokens within the given path are collections, if any.
+		// We'll also determine the last collection in the path in order to conditionally apply
+		// the user-specified collectionStrategy.
+		Class<?>[] pathClasses = 
+			PathUtils.getClassesForPathTokens(rootModelWrapper.getWrappedClass(), path, false);
+		
+		// check for empty path
+		if (pathClasses == null) {
+			brokenDownRules.add(rule);
+			return brokenDownRules;
+		}
+		
+		boolean[] tokenCollection = new boolean[pathClasses.length];
+		int lastCollectionIndex = -1;
+		for (int i = 0; i < pathClasses.length; i++) {
+			tokenCollection[i] = pathClasses[i].isArray() || List.class.isAssignableFrom(pathClasses[i]);
+			if (tokenCollection[i]) {
+				lastCollectionIndex = i;
+			}
+		}
+		
+		// if there's no collections here to replace, stop wasting time and return single path.
+		if (lastCollectionIndex == -1 || 
+				(lastCollectionIndex == 0 && rule.getCollectionStrategy() == CollectionStrategy.VALIDATE_COLLECTION_OBJECT)) {
+			brokenDownRules.add(rule);
+			return brokenDownRules;
+		}
+		
+		// Now split tokens to begin generating broken-down collection paths.
 		String[] tokens = path.split("\\.");
+		
 		for (int i = 0; i < tokens.length; i++) {
 			String token = tokens[i];
 			// if first pass, add the token as the root path.
@@ -338,12 +369,11 @@ public class ValidationManager extends CustomValidatorBean  {
 				Class pathClass = rootModelWrapper.getPropertyType(collectionPath);
 				if (pathClass != null && (pathClass.isArray() || List.class.isAssignableFrom(pathClass))) {
 					
-					// if this is the final segment in the path
-					// and it represents a collection (check above)
+					// if this is the final collection in the path
 					// and the collection strategy is validateCollectionObject,
 					// leave the collection as an object reference and continue.
-					if (i + 1 == tokens.length
-							&& collectionStrategy == CollectionStrategy.VALIDATE_COLLECTION_OBJECT) {
+					if (i == lastCollectionIndex
+							&& rule.getCollectionStrategy() == CollectionStrategy.VALIDATE_COLLECTION_OBJECT) {
 						continue;
 					}
 					
@@ -367,7 +397,25 @@ public class ValidationManager extends CustomValidatorBean  {
 			}
 			collectionPaths.addAll(brokenDownCollectionPaths);
 		}
-		return collectionPaths;
+		
+		// Collection paths have been broken down.
+		// Now need to make some rules.
+		// Using the last collection path token index, 
+		// discern the original and adapted collection tokens
+		// for each broken down collection path, and apply 
+		// replacement recursively through nested rules.
+		int lastReplacementIndex = rule.getCollectionStrategy() == 
+			CollectionStrategy.VALIDATE_COLLECTION_OBJECT ? lastCollectionIndex - 1 : lastCollectionIndex;
+		
+		String replacableCollectionSubPath = PathUtils.subPath(path, 0, lastReplacementIndex);
+		for (String collectionPath : collectionPaths) {
+			String replacementCollectionSubPath = PathUtils.subPath(collectionPath, 0, lastReplacementIndex);
+			ValidationRule brokenDownRule = rule.clone();
+			brokenDownRule.applyBasePathReplacement(replacableCollectionSubPath, replacementCollectionSubPath);
+			brokenDownRules.add(brokenDownRule);
+		}
+		
+		return brokenDownRules;
 	}
 
 	/**

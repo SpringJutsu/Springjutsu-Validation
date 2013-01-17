@@ -14,9 +14,9 @@
 	<configuration validatorName="testValidationManagerName"/>
 	
 	<entity class="org.springjutsu.validation.test.entities.Company">
-		<rule path="slogans" type="maxLength" value="20"/>
-		<rule path="websites" type="maxLength" value="20" collectionStrategy="validateMembers" />
-		<rule path="acquisitions" type="required" collectionStrategy="validateCollectionObject" />
+		<rule path="customers.firstName" type="notEmpty">
+			<rule path="customers.lastName" type="required"/>
+		</rule>
 	</entity>
 	
 	<!-- Include messages used by application -->
