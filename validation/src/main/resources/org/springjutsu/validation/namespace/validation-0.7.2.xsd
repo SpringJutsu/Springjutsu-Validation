@@ -266,7 +266,7 @@
 				or a different annotation configured through the exclude-annotation-class element of the rules-config.
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:attribute name="path" type="xsd:string" use="optional">
+		<xsd:attribute name="path" type="xsd:string" use="required">
 			<xsd:annotation>
 				<xsd:documentation>
 					The single-property non-nested name of the sub bean field to exclude from validation.
