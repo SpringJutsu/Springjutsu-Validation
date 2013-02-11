@@ -114,14 +114,16 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		Customer fullyNamedCustomer = new Customer();
 		fullyNamedCustomer.setFirstName("joe");
 		fullyNamedCustomer.setLastName("alsojoe");
+		fullyNamedCustomer.setEmailAddress("alsojoe@joe.com");
 		
 		company.getCustomers().add(noNameCustomer);
 		company.getCustomers().add(partiallyNamedCustomer);
 		company.getCustomers().add(fullyNamedCustomer);
 		
 		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", company).errors;
-		assertEquals(1, errors.getErrorCount());
+		assertEquals(2, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("customers[1].lastName").getCode());
+		assertEquals("emailRequired", errors.getFieldError("customers[1]").getCode());
 	}
 	
 	@Test
@@ -133,6 +135,7 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		Customer fullyNamedCustomer = new Customer();
 		fullyNamedCustomer.setFirstName("joe");
 		fullyNamedCustomer.setLastName("alsojoe");
+		fullyNamedCustomer.setEmailAddress("alsojoe@joe.com");
 		
 		company.getCustomers().add(noNameCustomer);
 		company.getCustomers().add(partiallyNamedCustomer);
@@ -142,8 +145,9 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		parentCompany.getAcquisitions().add(company);
 		
 		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", parentCompany).errors;
-		assertEquals(1, errors.getErrorCount());
+		assertEquals(2, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].lastName").getCode());
+		assertEquals("emailRequired", errors.getFieldError("acquisitions[0].customers[1]").getCode());
 	}
 	
 	@Test

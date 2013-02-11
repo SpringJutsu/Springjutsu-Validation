@@ -16,6 +16,7 @@
 	<entity class="org.springjutsu.validation.test.entities.Company">
 		<rule path="customers.firstName" type="notEmpty">
 			<rule path="customers.lastName" type="required"/>
+			<rule path="customers.emailAddress" type="required" errorPath="customers" message="emailRequired"/>
 		</rule>
 	</entity>
 	

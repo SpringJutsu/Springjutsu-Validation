@@ -144,6 +144,9 @@ public class ValidationRule {
 	public ValidationRule cloneWithBasePath(String basePath) {
 		String newPath = PathUtils.appendPath(basePath, path);
 		ValidationRule newRule = cloneWithPath(newPath);
+		if (newRule.getErrorPath() != null && !newRule.getErrorPath().isEmpty()) {
+			newRule.setErrorPath(PathUtils.appendPath(basePath, newRule.getErrorPath()));
+		}
 		newRule.getRules().clear();
 		for (ValidationRule rule : this.rules) {
 			newRule.getRules().add(rule.cloneWithBasePath(basePath));
@@ -153,12 +156,17 @@ public class ValidationRule {
 	
 	/**
 	 * Replaces a base path within this and any sub rules.
+	 * This will irrevocably change the current rule and all child rules,
+	 * so it is vital to clone the rule first if this change is not intentional.
 	 * @param oldBasePath the old base path to replace
 	 * @param newBasePath the new base path to apply
 	 */
 	public void applyBasePathReplacement(String oldBasePath, String newBasePath) {
 		String regex = "^" + Pattern.quote(oldBasePath);
 		setPath(getPath().replaceFirst(regex, newBasePath));
+		if (getErrorPath() != null && !getErrorPath().isEmpty()) {
+			setErrorPath(getErrorPath().replaceFirst(regex, newBasePath));
+		}
 		for (ValidationRule rule : this.rules) {
 			rule.applyBasePathReplacement(oldBasePath, newBasePath); 
 		}
