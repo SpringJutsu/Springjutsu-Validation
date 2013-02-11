@@ -11,7 +11,8 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springjutsu.validation.ValidationManager;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.executors.RuleExecutorContainer.RuleExecutorBeanRegistrant;
-import org.springjutsu.validation.rules.SkipValidation;
+import org.springjutsu.validation.rules.RecursiveValidationExclude;
+import org.springjutsu.validation.rules.RecursiveValidationInclude;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -67,9 +68,9 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			ruleExecutorContainerBuilder.addPropertyValue("ruleExecutorBeanRegistrants", ruleExecutors);
 			
 			List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
-			excludeAnnotations.add(SkipValidation.class);
+			excludeAnnotations.add(RecursiveValidationExclude.class);
 			
-			NodeList excludeAnnotationNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "exclude-annotation");
+			NodeList excludeAnnotationNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "recursion-exclude-annotation");
 			for (int excludeNbr = 0; excludeNbr < excludeAnnotationNodes.getLength(); excludeNbr++) {
 				Element excludeNode = (Element) excludeAnnotationNodes.item(excludeNbr);
 				String excludeAnnotationClass = excludeNode.getAttribute("class");
@@ -80,6 +81,21 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 				}
 			}
 			validationRulesContainerBuilder.addPropertyValue("excludeAnnotations", excludeAnnotations);
+			
+			List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
+			includeAnnotations.add(RecursiveValidationInclude.class);
+			
+			NodeList includeAnnotationNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "recursion-include-annotation");
+			for (int includeNbr = 0; includeNbr < includeAnnotationNodes.getLength(); includeNbr++) {
+				Element includeNode = (Element) includeAnnotationNodes.item(includeNbr);
+				String includeAnnotationClass = includeNode.getAttribute("class");
+				try {
+					includeAnnotations.add(Class.forName(includeAnnotationClass));
+				} catch (ClassNotFoundException cnfe) {
+					throw new IllegalArgumentException("Invalid include annotation class: " + includeAnnotationClass, cnfe);
+				}
+			}
+			validationRulesContainerBuilder.addPropertyValue("includeAnnotations", includeAnnotations);
 		}
 		
 		// Register them beans.

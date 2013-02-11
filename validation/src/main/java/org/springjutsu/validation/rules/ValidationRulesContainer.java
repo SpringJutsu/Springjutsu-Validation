@@ -32,6 +32,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.ReflectionUtils;
 import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
 import org.springjutsu.validation.util.PathUtils;
 
@@ -62,9 +63,14 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	private Map<Class<?>, ValidationEntity> validationEntityMap = null;
 	
 	/**
-	 * Annotation classes which mark a field that should not be validated.
+	 * Annotation classes which mark a field that should not be validated recursively.
 	 */
 	private List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+	
+	/**
+	 * Annotation classes which mark a field that should be validated recursively.
+	 */
+	private List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
 
 	public ValidationEntity getValidationEntity(Class<?> clazz) {
 		initValidationEntityMap();
@@ -87,9 +93,10 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			for (ValidationEntity validationEntity : validationEntities) {
 				validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
 			}
+			initIncludePaths();
 			initExcludePaths();
 			unwrapTemplateReferences();
-			initRuleInheritance();
+			initInheritance();
 		}
 	}
 	
@@ -112,14 +119,43 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				}
 				for(Class excludeAnnotation : excludeAnnotations) {
 					try {
-						if (entity.getValidationClass().getDeclaredField(descriptor.getName())
+						if (ReflectionUtils.findField(entity.getValidationClass(), descriptor.getName())
 								.getAnnotation(excludeAnnotation) != null) {
 							entity.getExcludedPaths().add(descriptor.getName());
 						}
 					} catch (SecurityException se) {
 						throw new IllegalStateException("Unexpected error while checking for excluded properties", se);
-					} catch (NoSuchFieldException nsfe) {
-						throw new IllegalStateException("Unexpected error while checking for excluded properties", nsfe);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Read from include annotations to further 
+	 * populate include paths already parsed from XML.
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void initIncludePaths() {
+		for (ValidationEntity entity : validationEntityMap.values()) {
+			// no paths to check on an interface.
+			if (entity.getValidationClass().isInterface()) {
+				continue;
+			}
+			BeanWrapper entityWrapper = new BeanWrapperImpl(entity.getValidationClass());
+			for (PropertyDescriptor descriptor : entityWrapper.getPropertyDescriptors()) {
+				if (!entityWrapper.isReadableProperty(descriptor.getName())
+						|| !entityWrapper.isWritableProperty(descriptor.getName())) {
+					continue;
+				}
+				for(Class includeAnnotation : includeAnnotations) {
+					try {
+						if (ReflectionUtils.findField(entity.getValidationClass(), descriptor.getName())
+								.getAnnotation(includeAnnotation) != null) {
+							entity.getIncludedPaths().add(descriptor.getName());
+						}
+					} catch (SecurityException se) {
+						throw new IllegalStateException("Unexpected error while checking for included properties", se);
 					}
 				}
 			}
@@ -129,7 +165,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	/**
 	 * Copy rules from parent classes into child classes.
 	 */
-	protected void initRuleInheritance() {
+	protected void initInheritance() {
 		Set<Class<?>> inheritanceChecked = new HashSet<Class<?>>();
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			
@@ -139,16 +175,25 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				classStack.push(clazz);
 			}
 			
-			Set<ValidationRule> inheritableRules = new HashSet<ValidationRule>();			
+			Set<ValidationRule> inheritableRules = new HashSet<ValidationRule>();
+			Set<String> inheritableExclusionPaths = new HashSet<String>();
+			Set<String> inheritableInclusionPaths = new HashSet<String>();
+			
 			while (!classStack.isEmpty()) {
 				Class<?> clazz = classStack.pop();
 				if (supportsClass(clazz) && !inheritanceChecked.contains(clazz)) {
 					for (ValidationRule rule : inheritableRules) {
 						validationEntityMap.get(clazz).addRule(rule);
 					}
+					validationEntityMap.get(clazz).getExcludedPaths().addAll(inheritableExclusionPaths);
+					validationEntityMap.get(clazz).getIncludedPaths().addAll(inheritableInclusionPaths);
 				}
 				if (hasRulesForClass(clazz)) {
 					inheritableRules.addAll(validationEntityMap.get(clazz).getRules());
+				}
+				if (supportsClass(clazz)) {
+					inheritableExclusionPaths.addAll(validationEntityMap.get(clazz).getExcludedPaths());
+					inheritableInclusionPaths.addAll(validationEntityMap.get(clazz).getIncludedPaths());
 				}
 				inheritanceChecked.add(clazz);
 			}
@@ -298,5 +343,13 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 
 	public void setExcludeAnnotations(List<Class<?>> excludeAnnotations) {
 		this.excludeAnnotations = excludeAnnotations;
+	}
+
+	public List<Class<?>> getIncludeAnnotations() {
+		return includeAnnotations;
+	}
+
+	public void setIncludeAnnotations(List<Class<?>> includeAnnotations) {
+		this.includeAnnotations = includeAnnotations;
 	}
 }

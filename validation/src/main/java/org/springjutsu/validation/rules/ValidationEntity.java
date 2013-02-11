@@ -51,9 +51,14 @@ public class ValidationEntity {
 	Log log = LogFactory.getLog(ValidationEntity.class);
 	
 	/**
-	 * A list of paths configured for exclusion from validation.
+	 * A list of paths configured for exclusion from recursive validation.
 	 */
 	private List<String> excludedPaths;
+	
+	/**
+	 * A list of paths configured for inclusion into recursive validation.
+	 */
+	private List<String> includedPaths;
 
 	/**
 	 * A list of validation rules to evaluate on the model object.
@@ -193,5 +198,13 @@ public class ValidationEntity {
 
 	public void setExcludedPaths(List<String> excludedPaths) {
 		this.excludedPaths = excludedPaths;
+	}
+
+	public List<String> getIncludedPaths() {
+		return includedPaths;
+	}
+
+	public void setIncludedPaths(List<String> includedPaths) {
+		this.includedPaths = includedPaths;
 	}
 }

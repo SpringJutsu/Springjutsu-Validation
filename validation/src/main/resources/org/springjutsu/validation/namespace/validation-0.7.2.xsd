@@ -12,8 +12,22 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:all>
-				<xsd:element name="rules-config" type="rules-config" minOccurs="0" maxOccurs="1"/>
-				<xsd:element name="message-config" type="message-config" minOccurs="0" maxOccurs="1"/>
+				<xsd:element name="rules-config" type="rules-config" minOccurs="0" maxOccurs="1">
+					<xsd:annotation>
+						<xsd:documentation>
+							Allows for the registration of one or more custom rule executors,
+							specification of whether or not default rules should be added,
+							and configuration of rule path exclusion annotations.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="message-config" type="message-config" minOccurs="0" maxOccurs="1">
+					<xsd:annotation>
+						<xsd:documentation>
+							Configures look up of messages from the spring MessageSource.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
 			</xsd:all>
 			<xsd:attribute name="validatorName" type="xsd:string" use="optional" default="validationManager">
 				<xsd:annotation>
@@ -30,16 +44,39 @@
 	</xsd:element>
 	
 	<xsd:complexType name="rules-config">
-		<xsd:annotation>
-			<xsd:documentation>
-				Allows for the registration of one or more custom rule executors,
-				specification of whether or not default rules should be added,
-				and configuration of rule path exclusion annotations.
-			</xsd:documentation>
-		</xsd:annotation>
 		<xsd:sequence>
-			<xsd:element name="rule-executor" type="rule-executor" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="exclude-annotation" type="exclude-annotation" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="rule-executor" type="rule-executor" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						Registers a single rule executor with a given name and implementation.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="recursion-exclude-annotation" type="class" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						Registers an annotation class as a marker to exclude a bean property
+						from recursive sub bean validation.
+						The org.springjutsu.validation.rules.RecursiveValidationExclude annotation
+						will be configured by default. 
+						Useful if you want to exclude properties 
+						marked with @Transient, @XMLTransient, @JSONIgnore or your own 
+						pre-existing annotations from sub bean validation.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="recursion-include-annotation" type="class" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						Registers an annotation class as a marker to include a bean property
+						into recursive sub bean validation.
+						The org.springjutsu.validation.rules.RecursiveValidationInclude annotation
+						will be configured by default. 
+						Useful if you want to automatically include properties marked with an 
+						already-in-use annotation.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
 		</xsd:sequence>
 		<xsd:attribute name="addDefaultRuleExecutors" type="xsd:boolean" use="optional" default="true">
 			<xsd:annotation>
@@ -53,11 +90,6 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="message-config">
-		<xsd:annotation>
-			<xsd:documentation>
-				Configures look up of messages from the spring MessageSource.
-			</xsd:documentation>
-		</xsd:annotation>
 		<xsd:attribute name="enableSuperclassFieldLabelLookup" type="xsd:boolean" use="optional" default="true">
 			<xsd:annotation>
 				<xsd:documentation>
@@ -97,11 +129,6 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="rule-executor">
-		<xsd:annotation>
-			<xsd:documentation>
-				Registers a single rule executor with a given name and implementation.
-			</xsd:documentation>
-		</xsd:annotation>
 		<xsd:attribute name="name" use="required">
 			<xsd:annotation>
 				<xsd:documentation>
@@ -120,22 +147,11 @@
 		</xsd:attribute>
 	</xsd:complexType>
 	
-	<xsd:complexType name="exclude-annotation">
-		<xsd:annotation>
-			<xsd:documentation>
-				Registers an annotation class as a marker to exclude a bean property
-				from sub bean validation.
-				The org.springjutsu.validation.rules.SkipValidation annotation
-				will be configured by default. 
-				Useful if you want to exclude properties 
-				marked with @Transient, @XMLTransient, @JSONIgnore or your own 
-				pre-existing annotations from sub bean validation.
-			</xsd:documentation>
-		</xsd:annotation>
+	<xsd:complexType name="class">
 		<xsd:attribute name="class" type="xsd:string" use="required">
 			<xsd:annotation>
 				<xsd:documentation source="java:java.lang.Class">
-					The fully qualified class name of the annotation.
+					A fully qualified canonical java class name.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -159,11 +175,62 @@
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element name="exclude" type="exclude" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element name="recursion-exclude" type="property" minOccurs="0" maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>
+							Excludes a given sub bean path from recursive model validation.
+							This should reference a single property, i.e. should not be a nested path.
+							Class-level rules declared for the sub bean's class will not be evaluated against the sub bean.
+							Sub beans can also be excluded in the java class utilizing an annotation
+							configured through the recursion-exclude-annotation element of the rules-config.
+							When a recursion-include element is present, the excludes are processed secondarily,
+							only exlcuding from paths previously covered by an include.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="recursion-include" type="property" minOccurs="0" maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>
+							Includes a given sub bean path for recursive model validation.
+							This should reference a single property, i.e. should not be a nested path.
+							Class-level rules declared for the sub bean's class will be evaluated against the sub bean.
+							Sub beans can also be included in the java class utilizing an annotation
+							configured through the recursion-include-annotation element of the rules-config.
+							When an include is present, any field not included will be excluded. 
+							Excludes run secondarily and can override an include.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
 				<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>
+							References a named validation template.
+							Applies all the rules in the template to the object
+							referenced by the base-path. 
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
 				<xsd:element name="form" type="form" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element name="template" type="template" minOccurs="0" maxOccurs="unbounded"/> 
+				<xsd:element name="template" type="template" minOccurs="0" maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>
+							Validation templates are analagous to JSR-303 groups, except
+							more powerful. A validation template is a named set of nestable
+							rules and other templates refrences that allows a class member  
+							to be validated according to the rule set. 
+							These validation templates can be applied to a field path
+							on the object being validated.
+							Templates references are also nestable within rules, making it possible
+							to perform conditional evaluation of an entire template.
+							This element defines a validation template with the assigned name.
+							This group of rules can be referenced by template-ref in order
+							to apply a set of rules and/or sub templates to a base path.
+							Useful for applying repeated sets of validation rules to a form,
+							for instance a full address or short form address.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element> 
 			</xsd:sequence>
 			<xsd:attribute name="class" type="xsd:string" use="required">
 				<xsd:annotation>
@@ -176,26 +243,17 @@
 	</xsd:element>
 	
 	<xsd:complexType name="template">
-		<xsd:annotation>
-			<xsd:documentation>
-				Validation templates are analagous to JSR-303 groups, except
-				more powerful. A validation template is a named set of nestable
-				rules and other templates refrences that allows a class member  
-				to be validated according to the rule set. 
-				These validation templates can be applied to a field path
-				on the object being validated.
-				Templates references are also nestable within rules, making it possible
-				to perform conditional evaluation of an entire template.
-				This element defines a validation template with the assigned name.
-				This group of rules can be referenced by template-ref in order
-				to apply a set of rules and/or sub templates to a base path.
-				Useful for applying repeated sets of validation rules to a form,
-				for instance a full address or short form address.
-			</xsd:documentation>
-		</xsd:annotation>
 		<xsd:sequence>
 			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						References a named validation template.
+						Applies all the rules in the template to the object
+						referenced by the base-path.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
 		</xsd:sequence>
 		<xsd:attribute name="name" type="xsd:string" use="required">
 			<xsd:annotation>
@@ -210,7 +268,15 @@
 	<xsd:complexType name="form">
 		<xsd:sequence>
 			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						References a named validation template.
+						Applies all the rules in the template to the object
+						referenced by the base-path. 
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
 		</xsd:sequence>
 		<xsd:attribute name="path" type="xsd:string" use="required">
 			<xsd:annotation>
@@ -226,13 +292,6 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="template-ref">
-		<xsd:annotation>
-			<xsd:documentation>
-				References a named validation template.
-				Applies all the rules in the template to the object
-				referenced by the base-path. 
-			</xsd:documentation>
-		</xsd:annotation>
 		<xsd:attribute name="basePath" type="xsd:string" use="optional" default="">
 			<xsd:annotation>
 				<xsd:documentation>
@@ -256,20 +315,11 @@
 		</xsd:attribute>
 	</xsd:complexType>
 	
-	<xsd:complexType name="exclude">
-		<xsd:annotation>
-			<xsd:documentation>
-				Excludes a given sub bean path from sub bean model validation.
-				This should reference a single property, i.e. should not be a nested path.
-				Class-level rules declared for the sub bean's class will not be evaluated against the sub bean.
-				Sub beans can also be excluded in the java class utilizing the @SkipValidation annotation,
-				or a different annotation configured through the exclude-annotation-class element of the rules-config.
-			</xsd:documentation>
-		</xsd:annotation>
-		<xsd:attribute name="path" type="xsd:string" use="required">
+	<xsd:complexType name="property">
+		<xsd:attribute name="propertyName" type="xsd:string" use="required">
 			<xsd:annotation>
 				<xsd:documentation>
-					The single-property non-nested name of the sub bean field to exclude from validation.
+					Name of a single property on a bean
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -278,7 +328,15 @@
 	<xsd:complexType name="rule">
 		<xsd:sequence>
 			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						References a named validation template.
+						Applies all the rules in the template to the object
+						referenced by the base-path, if the wrapping rule passes.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
 		</xsd:sequence>
 		<xsd:attribute name="type" type="xsd:string" use="required">
 			<xsd:annotation>

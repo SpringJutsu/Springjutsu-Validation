@@ -11,11 +11,21 @@
 	<context:annotation-config />
 
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
-	<configuration validatorName="testValidationManagerName"/>
+	<configuration validatorName="testValidationManagerName">
+		<rules-config>
+			<recursion-include-annotation class="org.springjutsu.validation.test.entities.CustomValidateRecursively"/>
+		</rules-config>
+	</configuration>
 	
-	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<rule path="" type="alphabetic" />
+	<entity class="org.springjutsu.validation.test.entities.LessSkippablePerson">
+		<recursion-include propertyName="dontSkipMeFromXml" />
+		<recursion-include propertyName="dontSkipUsFromXml" />
+		
+		<rule path="name" type="required"/>
 	</entity>
+	
+	<entity class="org.springjutsu.validation.test.entities.SkippablePerson"/>
+	<entity class="org.springjutsu.validation.test.entities.ExtendedLessSkippablePerson"/>
 	
 	<!-- Include messages used by application -->
 	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>

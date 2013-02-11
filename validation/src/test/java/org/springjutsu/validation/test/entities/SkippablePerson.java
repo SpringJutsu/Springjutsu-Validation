@@ -3,13 +3,13 @@ package org.springjutsu.validation.test.entities;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springjutsu.validation.rules.SkipValidation;
+import org.springjutsu.validation.rules.RecursiveValidationExclude;
 
 public class SkippablePerson {
 	
 	private String name;
 
-	@SkipValidation
+	@RecursiveValidationExclude
 	private SkippablePerson skipMe;
 	
 	@CustomSkipValidation
@@ -17,14 +17,17 @@ public class SkippablePerson {
 	
 	private SkippablePerson skipMeFromXml;
 	
-	private SkippablePerson dontSkipMeBro;
+	private SkippablePerson dontSkipMeFromXml;
 	
-	@SkipValidation
+	@RecursiveValidationExclude
 	private List<SkippablePerson> skipUs = new ArrayList<SkippablePerson>();
+	
+	@CustomSkipValidation
+	private List<SkippablePerson> customSkipUs = new ArrayList<SkippablePerson>();
 	
 	private List<SkippablePerson> skipUsFromXml = new ArrayList<SkippablePerson>();
 	
-	private List<SkippablePerson> dontSkipUsBro = new ArrayList<SkippablePerson>();
+	private List<SkippablePerson> dontSkipUsFromXml = new ArrayList<SkippablePerson>();
 
 	public String getName() {
 		return name;
@@ -58,12 +61,12 @@ public class SkippablePerson {
 		this.skipMeFromXml = skipMeFromXml;
 	}
 
-	public SkippablePerson getDontSkipMeBro() {
-		return dontSkipMeBro;
+	public SkippablePerson getDontSkipMeFromXml() {
+		return dontSkipMeFromXml;
 	}
 
-	public void setDontSkipMeBro(SkippablePerson dontSkipMeBro) {
-		this.dontSkipMeBro = dontSkipMeBro;
+	public void setDontSkipMeFromXml(SkippablePerson dontSkipMeFromXml) {
+		this.dontSkipMeFromXml = dontSkipMeFromXml;
 	}
 
 	public List<SkippablePerson> getSkipUs() {
@@ -72,6 +75,14 @@ public class SkippablePerson {
 
 	public void setSkipUs(List<SkippablePerson> skipUs) {
 		this.skipUs = skipUs;
+	}
+	
+	public List<SkippablePerson> getCustomSkipUs() {
+		return customSkipUs;
+	}
+
+	public void setCustomSkipUs(List<SkippablePerson> customSkipUs) {
+		this.customSkipUs = customSkipUs;
 	}
 
 	public List<SkippablePerson> getSkipUsFromXml() {
@@ -82,11 +93,12 @@ public class SkippablePerson {
 		this.skipUsFromXml = skipUsFromXml;
 	}
 
-	public List<SkippablePerson> getDontSkipUsBro() {
-		return dontSkipUsBro;
+	public List<SkippablePerson> getDontSkipUsFromXml() {
+		return dontSkipUsFromXml;
 	}
 
-	public void setDontSkipUsBro(List<SkippablePerson> dontSkipUsBro) {
-		this.dontSkipUsBro = dontSkipUsBro;
+	public void setDontSkipUsFromXml(List<SkippablePerson> dontSkipUsFromXml) {
+		this.dontSkipUsFromXml = dontSkipUsFromXml;
 	}
+	
 }

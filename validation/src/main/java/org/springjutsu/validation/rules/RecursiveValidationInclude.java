@@ -23,13 +23,13 @@ import java.lang.annotation.Target;
 
 /**
  * Use to annotate a property representing a sub bean
- * that has rules associated with its class, but should
- * not be validated during sub bean validation. 
+ * that has rules associated with its class, and should
+ * be validated during sub bean validation. 
  * @author Clark Duplichien
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface SkipValidation {
+public @interface RecursiveValidationInclude {
 
 }

@@ -60,18 +60,31 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			throw new ValidationParseException("Class " + className + " does not exist as a model class.");
 		}
 		
-		List<String> excludePaths = new ArrayList<String>();
-		
+		List<String> excludePaths = new ArrayList<String>();		
 		NodeList excludes = entityNode.getElementsByTagNameNS(
-				entityNode.getNamespaceURI(), "exclude");
+				entityNode.getNamespaceURI(), "recursion-exclude");
 		for (int excludeNbr = 0; excludeNbr < excludes.getLength(); excludeNbr++) {
 			Element excludeNode = (Element) excludes.item(excludeNbr);
-			String path = excludeNode.getAttribute("path");
+			String path = excludeNode.getAttribute("propertyName");
 			if (path.contains(".")) {
-				throw new ValidationParseException("Invalid exclude path " + path 
-					+ " Exclude paths should not be nested fields.");
+				throw new ValidationParseException("Invalid recursion-exclude property name \"" + path 
+					+ "\" Exclude paths should not be nested fields.");
 			} else {
 				excludePaths.add(path);
+			}
+		}
+		
+		List<String> includePaths = new ArrayList<String>();
+		NodeList includes = entityNode.getElementsByTagNameNS(
+				entityNode.getNamespaceURI(), "recursion-include");
+		for (int includeNbr = 0; includeNbr < includes.getLength(); includeNbr++) {
+			Element includeNode = (Element) includes.item(includeNbr);
+			String path = includeNode.getAttribute("propertyName");
+			if (path.contains(".")) {
+				throw new ValidationParseException("Invalid recursion-include property name \"" + path 
+					+ "\" Include paths should not be nested fields.");
+			} else {
+				includePaths.add(path);
 			}
 		}
 		
@@ -126,6 +139,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 		entityDefinition.getPropertyValues().add("templateReferences", validationStructure.refs);
 		entityDefinition.getPropertyValues().add("validationTemplates", templates);
 		entityDefinition.getPropertyValues().add("validationClass", modelClass);
+		entityDefinition.getPropertyValues().add("includedPaths", includePaths);
 		entityDefinition.getPropertyValues().add("excludedPaths", excludePaths);
 		String entityName = parserContext.getReaderContext().registerWithGeneratedName(entityDefinition);
 		parserContext.registerComponent(new BeanComponentDefinition(entityDefinition, entityName));

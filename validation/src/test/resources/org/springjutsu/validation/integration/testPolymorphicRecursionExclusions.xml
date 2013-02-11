@@ -4,7 +4,7 @@
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="
-	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.1.xsd
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.2.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
@@ -13,16 +13,18 @@
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName">
 		<rules-config>
-			<exclude-annotation class="org.springjutsu.validation.test.entities.CustomSkipValidation"/>
+			<recursion-exclude-annotation class="org.springjutsu.validation.test.entities.CustomSkipValidation"/>
 		</rules-config>
 	</configuration>
 	
 	<entity class="org.springjutsu.validation.test.entities.SkippablePerson">
-		<exclude path="skipMeFromXml" />
-		<exclude path="skipUsFromXml" />
+		<recursion-exclude propertyName="skipMeFromXml" />
+		<recursion-exclude propertyName="skipUsFromXml" />
 		
 		<rule path="name" type="required"/>
 	</entity>
+	
+	<entity class="org.springjutsu.validation.test.entities.ExtendedSkippablePerson"/>
 	
 	<!-- Include messages used by application -->
 	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>

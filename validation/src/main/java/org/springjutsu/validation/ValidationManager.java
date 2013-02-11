@@ -42,6 +42,7 @@ import org.springframework.webflow.execution.RequestContextHolder;
 import org.springjutsu.validation.executors.RuleExecutor;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.rules.CollectionStrategy;
+import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.springjutsu.validation.spel.WebContextSPELResolver;
@@ -225,8 +226,15 @@ public class ValidationManager extends CustomValidatorBean  {
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
 		PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors(); 
 		for (PropertyDescriptor property : propertyDescriptors) {
-			if (rulesContainer.getValidationEntity(validateMe.getClass())
-					.getExcludedPaths().contains(property.getName())) {
+			
+			ValidationEntity validationEntity = rulesContainer.getValidationEntity(validateMe.getClass());
+			
+			if (!validationEntity.getIncludedPaths().isEmpty() 
+					&& !validationEntity.getIncludedPaths().contains(property.getName())) {
+				continue;
+			}
+			
+			if (validationEntity.getExcludedPaths().contains(property.getName())) {
 				continue;
 			}
 			

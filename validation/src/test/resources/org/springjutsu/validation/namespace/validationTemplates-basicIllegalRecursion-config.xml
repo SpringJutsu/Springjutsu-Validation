@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	xsi:schemaLocation="
-	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.1.xsd
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.2.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
