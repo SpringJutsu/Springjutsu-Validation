@@ -1,29 +1,33 @@
 package org.springjutsu.validation.util;
 
 import java.beans.PropertyDescriptor;
+import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.ReflectionUtils;
 
 public class PathUtils {
 	
 	public static String appendPath(String... pathSegments) {
-		String path = pathSegments[0] == null ? null : pathSegments[0].trim();
-		for (int i = 1; i < pathSegments.length; i++) {
-			if (path == null || path.isEmpty()) {
-				path = pathSegments[i];
-			} else if (pathSegments[i] != null && !pathSegments[i].trim().isEmpty()) {
-				path += "." + pathSegments[i].trim();
-			}
-		}
-		if (path.startsWith(".")) {
-			path = path.substring(1);
-		}
-		return path == null ? null : path.replaceAll("\\.+", "\\.");
+		String joinedPath = StringUtils.join(pathSegments, ".");
+		return removeExtraneousPathSeparators(joinedPath);
+	}
+	
+	/**
+	 * Joins multiple path segments into a single path.
+	 * @param pathSegments individual path segments
+	 * @return joined path.
+	 */
+	public static String joinPathSegments(Collection<String> pathSegments) {
+		String joinedPath = StringUtils.join(pathSegments, ".");
+		return removeExtraneousPathSeparators(joinedPath);
+	}
+	
+	public static String removeExtraneousPathSeparators(String path) {
+		return path == null ? null : path.replaceAll("\\.+", "\\.").replaceAll("^\\.|\\.$", "").trim();
 	}
 	
 	/**
@@ -103,5 +107,14 @@ public class PathUtils {
 			subPath = appendPath(subPath, tokens[i]);
 		}
 		return subPath;
+	}
+	
+	/**
+	 * Use to determine if a path contains an ${EL} fragment.
+	 * @param path Path to check for EL fragments
+	 * @return true if the path contains an EL fragment.
+	 */
+	public static boolean containsEL(String path) {
+		return path.matches(".*\\$\\{.+\\}.*");
 	}
 }

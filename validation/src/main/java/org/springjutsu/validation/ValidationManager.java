@@ -155,8 +155,19 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 	
 	/**
-	 * We perform actual validation in the order
-	 * of context rules followed by model rules.
+	 * Validation entry point defined in SpringValidatorAdapter
+	 * Validation Hints are really a JSR-303 construct for validation groups,
+	 * and should be handled by issue #19 which would allow for delegation
+	 * to other validation managers to handle mixing JSR-303 annotations
+	 * with Springjutsu validation XMLs.
+	 */
+	@Override
+	public void validate(Object target, Errors errors, Object... validationHints) {
+		validate(target, errors);
+	}
+	
+	/**
+	 * Validation entry point defined in SpringValidatorAdapter
 	 */
 	@Override
 	public void validate(Object model, Errors errors) {
@@ -170,57 +181,29 @@ public class ValidationManager extends CustomValidatorBean  {
 					currentForm = getMVCFormName();
 				}
 			}
-			validateModel(model, errors, new ArrayList<Object>(), currentForm);
+			validateModel(new ValidationContext(model, errors, currentForm));
 		} finally {
 			spelResolver.set(null);
 		}
 	}
-	
-	@Override
-	public void validate(Object target, Errors errors,
-			Object... validationHints) {
-		// TODO Support Validation Hints
-			validate(target, errors);
-	}
 
-	/**
-	 * Responsible for testing all XML-defined per-class rules.
-	 * We will check recursively: using a BeanWrapper to get a 
-	 * @link(PropertyDescriptor) for each field, and then checking to
-	 * see if any of the fields are supported by validation rules.
-	 * If so, we will test those nested paths using that class's
-	 * model rules as well. This ensures that sub beans are properly
-	 * validated using their standard model rules.
-	 * @param model the model object to validate. May be a recursed sub bean.
-	 * @param errors standard Errors object to record validation errors to.
-	 * @param checkedModels A list of model objects we have already validated,
-	 * 	in order to prevent unneeded or infinite recursion
-	 */
-	protected void validateModel(Object model, Errors errors, List<Object> checkedModels, String currentForm) {
-		if (model == null) {
+	
+	protected void validateModel(ValidationContext context) {
+		if (context.getModelWrapper() == null) {
 			return;
 		}
 		
-		BeanWrapperImpl beanWrapper = new BeanWrapperImpl(model);
-		Object validateMe = null;
-		String beanPath = appendPath(errors.getNestedPath(), "");
-		
-		// get sub bean to validate
-		if (beanPath.isEmpty()) {
-			validateMe = model;
-		} else {
-			validateMe = beanWrapper.getPropertyValue(beanPath);
-		}
+		Object validateMe = context.getBeanAtNestedPath();
 		
 		// Infinite recursion check
-		if (validateMe == null || checkedModels.contains(validateMe.hashCode())) {
+		if (validateMe == null || context.previouslyValidated(validateMe)) {
 			return;
 		} else {
-			checkedModels.add(validateMe.hashCode());
+			context.markValidated(validateMe);
 		}
 		
-		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), currentForm);
-		callRules(model, errors, rules, false);
+		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), context.getCurrentForm());
+		callRules(context.getRootModel(), context.getErrors(), rules, false);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -239,9 +222,9 @@ public class ValidationManager extends CustomValidatorBean  {
 			}
 			
 			if (rulesContainer.supportsClass(property.getPropertyType())) {
-				errors.pushNestedPath(property.getName());
-				validateModel(model, errors, inheritedCheckedModels(checkedModels), currentForm);
-				errors.popNestedPath();
+				context.pushNestedPath(property.getName());
+				validateModel(context);
+				context.popNestedPath();
 			} else if (List.class.isAssignableFrom(property.getPropertyType()) || property.getPropertyType().isArray()) {
 				Object potentialList = subBeanWrapper.getPropertyValue(property.getName());
 				List<?> list = (List<?>) (property.getPropertyType().isArray() 
@@ -255,9 +238,9 @@ public class ValidationManager extends CustomValidatorBean  {
 				}
 				
 				for (int i = 0; i < list.size(); i++) {
-					errors.pushNestedPath(property.getName() + "[" + i + "]");
-					validateModel(model, errors, inheritedCheckedModels(checkedModels), currentForm);
-					errors.popNestedPath();
+					context.pushNestedPath(property.getName() + "[" + i + "]");
+					validateModel(context);
+					context.popNestedPath();
 				}
 			}
 		}
@@ -286,7 +269,7 @@ public class ValidationManager extends CustomValidatorBean  {
 			}
 			
 			// adapt rule to current model path.
-			ValidationRule localizedRule = hasEL(rule.getPath()) ? rule : prelocalized ? rule : rule.cloneWithBasePath(errors.getNestedPath());
+			ValidationRule localizedRule = PathUtils.containsEL(rule.getPath()) ? rule : prelocalized ? rule : rule.cloneWithBasePath(errors.getNestedPath());
 			
 			// break down any collections into indexed paths.
 			List<ValidationRule> adaptedRules = considerCollectionPaths(localizedRule, model);
@@ -363,7 +346,7 @@ public class ValidationManager extends CustomValidatorBean  {
 				// otherwise, append the new token to all existing paths.
 				List <String> appendedCollectionPaths = new ArrayList<String>();
 				for (String collectionPath : collectionPaths) {
-					appendedCollectionPaths.add(appendPath(collectionPath, token));
+					appendedCollectionPaths.add(PathUtils.appendPath(collectionPath, token));
 				}
 				collectionPaths.clear();
 				collectionPaths = appendedCollectionPaths;
@@ -494,7 +477,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (expression == null || expression.isEmpty()) {
 			return model;
 		}
-		if (hasEL(expression)) {
+		if (PathUtils.containsEL(expression)) {
 			result = resolveSPEL(expression, model);
 		} else {
 			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(model);
@@ -518,7 +501,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		if (expression == null || expression.isEmpty()) {
 			return null;
 		}
-		if (hasEL(expression)) {
+		if (PathUtils.containsEL(expression)) {
 			result = resolveSPEL(expression, model);
 		} else {
 			result = expression;
@@ -574,10 +557,10 @@ public class ValidationManager extends CustomValidatorBean  {
                 errorMessagePath = rule.getPath();
         }
 		if (!errors.getNestedPath().isEmpty() && errorMessagePath.startsWith(errors.getNestedPath())) {
-			errorMessagePath = appendPath(errorMessagePath.substring(errors.getNestedPath().length()), "");
+			errorMessagePath = PathUtils.appendPath(errorMessagePath.substring(errors.getNestedPath().length()), "");
 		}
 		
-		if (hasEL(errorMessagePath)) {
+		if (PathUtils.containsEL(errorMessagePath)) {
 			throw new IllegalStateException("Could not log error for rule: " + rule.toString() + ". Rules with EL path should specify the errorPath attribute.");
 		}
 
@@ -609,7 +592,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		// if there is no path, return.
 		if (rulePath == null || rulePath.length() < 1) {
 			return rulePath;
-		} else if (hasEL(rulePath)) {
+		} else if (PathUtils.containsEL(rulePath)) {
 			// If the path is actually an expression language statement
 			// Need to check if it resolves to a path on the model.
 			// trim off EL denotation #{}
@@ -706,14 +689,6 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 	
 	/**
-	 * @param expression A string expression
-	 * @return returns true if the expression string is EL.
-	 */
-	protected boolean hasEL(String expression) {
-		return expression.matches(".*\\$\\{.+\\}.*");
-	}
-	
-	/**
 	 * Responsible for resolving a SPEL expression.
 	 * Unwraps the EL string, creates an instance of a 
 	 * @link{SPELReadyRequestContext}, adds all the needed
@@ -745,24 +720,6 @@ public class ValidationManager extends CustomValidatorBean  {
 			}
 			return elResolvable;
 		}
-	}
-	
-	/**
-	 * Appends two subpath segments together and handles
-	 * period replacement appropriately.
-	 * @param path A string path.
-	 * @param suffix A string path to add to the prior path.
-	 * @return A combined path.
-	 */
-	protected String appendPath(String path, String suffix) {
-		String newPath = path + (path.endsWith(".") ? "" : ".") + suffix;
-		if (newPath.startsWith(".")) {
-			newPath = newPath.substring(1);
-		}
-		if (newPath.endsWith(".")) {
-			newPath = newPath.substring(0, newPath.length() - 1);
-		}
-		return newPath;
 	}
 	
 	public String getErrorMessagePrefix() {
