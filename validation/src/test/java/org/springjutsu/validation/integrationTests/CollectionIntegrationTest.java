@@ -3,6 +3,8 @@ package org.springjutsu.validation.integrationTests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
+
 import org.junit.Test;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.Errors;
@@ -141,13 +143,21 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		company.getCustomers().add(partiallyNamedCustomer);
 		company.getCustomers().add(fullyNamedCustomer);
 		
+		Company acquired = new Company();
+		acquired.getCustomers().add(noNameCustomer);
+		acquired.getCustomers().add(partiallyNamedCustomer);
+		acquired.getCustomers().add(fullyNamedCustomer);
+		company.getAcquisitions().add(acquired);
+		
 		Company parentCompany = new Company();
 		parentCompany.getAcquisitions().add(company);
 		
 		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", parentCompany).errors;
-		assertEquals(2, errors.getErrorCount());
+		assertEquals(4, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].lastName").getCode());
 		assertEquals("emailRequired", errors.getFieldError("acquisitions[0].customers[1]").getCode());
+		assertEquals("errors.required", errors.getFieldError("acquisitions[0].acquisitions[0].customers[1].lastName").getCode());
+		assertEquals("emailRequired", errors.getFieldError("acquisitions[0].acquisitions[0].customers[1]").getCode());
 	}
 	
 	@Test

@@ -9,8 +9,12 @@
 		</layout>
 	</appender>
 
+	<logger name="org.springjutsu">
+		<level value="debug" />
+	</logger>
+
 	<root>
-		<priority value="debug" />
+		<priority value="error" />
 		<appender-ref ref="console" />
 	</root>
 

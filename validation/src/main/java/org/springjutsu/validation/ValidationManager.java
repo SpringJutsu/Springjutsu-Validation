@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,7 +57,7 @@ import org.springjutsu.validation.util.RequestUtils;
  *
  *@see CustomValidatorBean
  */
-public class ValidationManager extends CustomValidatorBean  {
+public class ValidationManager extends CustomValidatorBean {
 	
 	/**
 	 * Validate a lot of requests. A log is fine, too.
@@ -157,21 +158,38 @@ public class ValidationManager extends CustomValidatorBean  {
 
 	
 	protected void validateModel(ValidationContext context) {
+		if (log.isDebugEnabled()) {
+			String nestedPath = PathUtils.joinPathSegments(context.getNestedPath());
+			log.debug("Current recursion path is: " + (nestedPath.isEmpty() ? "root object" : nestedPath));
+		}
 		if (context.getModelWrapper() == null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Attempted to validate null object, skipping.");
+			}
 			return;
 		}
 		
 		Object validateMe = context.getBeanAtNestedPath();
+		if (log.isDebugEnabled()) {
+			log.debug("Found object to validate: " + String.valueOf(validateMe));
+		}
 		
 		// Infinite recursion check
 		if (validateMe == null || context.previouslyValidated(validateMe)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Already validated this object on current path structure, skipping to prevent infinite recursion.");
+			}
 			return;
 		} else {
 			context.markValidated(validateMe);
 		}
 		
 		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), context.getCurrentForm());
-		callRules(context, rules, false);
+		if (log.isDebugEnabled()) {
+			log.debug("Found " + rules.size() + " rules");
+		}
+		
+		callRules(context, rules);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -206,15 +224,25 @@ public class ValidationManager extends CustomValidatorBean  {
 				}
 				
 				for (int i = 0; i < list.size(); i++) {
-					context.pushNestedPath(property.getName() + "[" + i + "]");
+					String nestedPathSegment = property.getName() + "[" + i + "]";
+					if (log.isDebugEnabled()) {
+						log.debug("Pushing nested path: " + nestedPathSegment);
+					}
+					context.pushNestedPath(nestedPathSegment);
 					validateModel(context);
 					context.popNestedPath();
+					log.debug("Done validating nested path: " + nestedPathSegment);
 				}
 			}
 		}
+		if (log.isDebugEnabled()) {
+			String nestedPath = PathUtils.joinPathSegments(context.getNestedPath());
+			log.debug("Done validating recursion path: " + (nestedPath.isEmpty() ? "root object" : nestedPath));
+		}
 	}
 	
-	protected void callRules(ValidationContext context, List<ValidationRule> modelRules, boolean prelocalized) {
+	@SuppressWarnings("unchecked")
+	protected void callRules(ValidationContext context, List<ValidationRule> modelRules) {
 		if (modelRules == null) {
 			return;
 		}
@@ -222,45 +250,68 @@ public class ValidationManager extends CustomValidatorBean  {
 			
 			// skip form rules during sub-bean validation
 			if (!context.getNestedPath().isEmpty() && !context.getCurrentForm().isEmpty()) {
+				if (log.isDebugEnabled()) {
+					log.debug("Skipping form rule during recursive validation: " + rule.toString());
+				}
 				continue;
 			}
 			
 			// adapt rule to current model path.
-			ValidationRule localizedRule = PathUtils.containsEL(rule.getPath()) ? rule : prelocalized 
-					? rule : rule.cloneWithBasePath(PathUtils.joinPathSegments(context.getNestedPath()));
+			ValidationRule localizedRule = PathUtils.containsEL(rule.getPath()) ? rule : 
+				rule.cloneWithBasePath(PathUtils.joinPathSegments(context.getNestedPath()));
 			
 			// break down any collections into indexed paths.
-			List<ValidationRule> adaptedRules = considerCollectionPaths(localizedRule, context.getRootModel());
+			SingletonMap collectionReplacements = resolveCollectionPathReplacements(context, localizedRule);
 			
-			for (ValidationRule adaptedRule : adaptedRules) {
+			// if there are no collection replacements to be made, 
+			// run the rule (and any sub rules) as normal.
+			if (collectionReplacements == null) {
+				handleValidationRule(context, rule);
+			} else {
+				// Otherwise, iterate through the collection replacements,
+				// and run the rule (and any sub rules) for each base path.
+				String collectionReplacementKey = (String) collectionReplacements.getKey();
+				List<String> collectionReplacementValues = (List<String>) collectionReplacements.getValue();
 				
-				if (passes(adaptedRule, context)) {
-					// If the rule passes and it has children,
-					// it is a condition for nested elements.
-					// Call children instead.
-					if (adaptedRule.hasChildren()) {
-						callRules(context, adaptedRule.getRules(), true);
-					}
-				} else {
-					// If the rule fails and it has children,
-					// it is a condition for nested elements.
-					// Skip nested elements.
-					if (adaptedRule.hasChildren()) {
-						continue;
-					} else {
-						// If the rule has no children and fails,
-						// perform fail action.
-						logError(context, adaptedRule);
-					}
+				for (String collectionReplacementValue : collectionReplacementValues) {
+					context.getCollectionPathReplacements()
+						.put(collectionReplacementKey, collectionReplacementValue);
+					handleValidationRule(context, rule);
+					context.getCollectionPathReplacements().remove(collectionReplacementKey);
 				}
 			}
 		}
 	}
 	
+	protected void handleValidationRule(ValidationContext context, ValidationRule rule) {
+		if (passes(rule, context)) {
+			// If the rule passes and it has children,
+			// it is a condition for nested elements.
+			// Call children instead.
+			if (rule.hasChildren()) {
+				if (log.isDebugEnabled()) {
+					log.debug("Running " + rule.getRules().size() + " nested rules.");
+				}
+				callRules(context, rule.getRules());
+			}
+		} else {
+			// If the rule fails and it has children,
+			// it is a condition for nested elements.
+			// Skip nested elements.
+			if (rule.hasChildren()) {
+				return;
+			} else {
+				// If the rule has no children and fails,
+				// perform fail action.
+				logError(context, rule);
+			}
+		}
+	}
+	
 	@SuppressWarnings("rawtypes")
-	private List<ValidationRule> considerCollectionPaths(ValidationRule rule, Object rootModel) {
-		String path = rule.getPath();
-		BeanWrapper rootModelWrapper = new BeanWrapperImpl(rootModel);
+	private SingletonMap resolveCollectionPathReplacements(ValidationContext context, ValidationRule rule) {
+		String path = context.getCollectionAdaptedRulePath(rule.getPath());
+		BeanWrapper rootModelWrapper = new BeanWrapperImpl(context.getRootModel());
 		List<String> collectionPaths = new ArrayList<String>();
 		List<ValidationRule> brokenDownRules = new ArrayList<ValidationRule>();
 		
@@ -273,7 +324,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		// check for empty path
 		if (pathClasses == null) {
 			brokenDownRules.add(rule);
-			return brokenDownRules;
+			return null;
 		}
 		
 		boolean[] tokenCollection = new boolean[pathClasses.length];
@@ -285,17 +336,20 @@ public class ValidationManager extends CustomValidatorBean  {
 			}
 		}
 		
-		// if there's no collections here to replace, stop wasting time and return single path.
+		// if there's no collections here to replace, stop wasting time and return.
 		if (lastCollectionIndex == -1 || 
 				(lastCollectionIndex == 0 && rule.getCollectionStrategy() == CollectionStrategy.VALIDATE_COLLECTION_OBJECT)) {
 			brokenDownRules.add(rule);
-			return brokenDownRules;
+			return null;
 		}
 		
-		// Now split tokens to begin generating broken-down collection paths.
+		// Resolve the base path for the collection(s):
+		// This is everything from the beggining of the path
+		// to the token of the last collection.
 		String[] tokens = path.split("\\.");
+		String baseCollectionPath = PathUtils.appendPath(Arrays.copyOfRange(tokens, 0, lastCollectionIndex + 1));
 		
-		for (int i = 0; i < tokens.length; i++) {
+		for (int i = 0; i <= lastCollectionIndex; i++) {
 			String token = tokens[i];
 			// if first pass, add the token as the root path.
 			if (i == 0) {
@@ -347,24 +401,7 @@ public class ValidationManager extends CustomValidatorBean  {
 			collectionPaths.addAll(brokenDownCollectionPaths);
 		}
 		
-		// Collection paths have been broken down.
-		// Now need to make some rules.
-		// Using the last collection path token index, 
-		// discern the original and adapted collection tokens
-		// for each broken down collection path, and apply 
-		// replacement recursively through nested rules.
-		int lastReplacementIndex = rule.getCollectionStrategy() == 
-			CollectionStrategy.VALIDATE_COLLECTION_OBJECT ? lastCollectionIndex - 1 : lastCollectionIndex;
-		
-		String replacableCollectionSubPath = PathUtils.subPath(path, 0, lastReplacementIndex);
-		for (String collectionPath : collectionPaths) {
-			String replacementCollectionSubPath = PathUtils.subPath(collectionPath, 0, lastReplacementIndex);
-			ValidationRule brokenDownRule = rule.clone();
-			brokenDownRule.applyBasePathReplacement(replacableCollectionSubPath, replacementCollectionSubPath);
-			brokenDownRules.add(brokenDownRule);
-		}
-		
-		return brokenDownRules;
+		return new SingletonMap(baseCollectionPath, collectionPaths);
 	}
 
 	/**
@@ -406,9 +443,21 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @return
 	 */
 	protected boolean passes(ValidationRule rule, ValidationContext context) {
+		if (log.isDebugEnabled()) {
+			log.debug("Preparing to execute rule: " + rule);
+			log.debug("Actual rule path is " + context.getLocalizedRulePath(rule.getPath()));
+		}
+		
 		// get args
 		Object ruleModel = context.resolveRuleModel(rule);
+		if (log.isDebugEnabled()) {
+			log.debug("Resolved rule model: " + ruleModel);
+		}
+		
 		Object ruleArg = context.resolveRuleArgument(rule);
+		if (log.isDebugEnabled()) {
+			log.debug("Resolved rule argument: " + ruleModel);
+		}
 
 		// call method
 		boolean isValid;
@@ -418,6 +467,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		} catch (Exception ve) {
 			throw new RuntimeException("Error occured during validation: ", ve);
 		}
+		log.debug("Rule executor returned " + isValid);
 		return isValid;
 	}
 	
@@ -449,12 +499,13 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param errors standard Errors object to record error on.
 	 */
 	protected void logError(ValidationContext context, ValidationRule rule) {
+		String localizedRulePath = context.getLocalizedRulePath(rule.getPath());
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
                 errorMessageKey = (errorMessagePrefix != null  && !errorMessagePrefix.isEmpty() ? errorMessagePrefix + "." : "") + rule.getType();
         }
         
-		String defaultError =  rule.getPath() + " " + rule.getType();
+		String defaultError =  localizedRulePath + " " + rule.getType();
 		String modelMessageKey = getMessageResolver(context, rule, true);
         String ruleArg = getMessageResolver(context, rule, false);
 		
@@ -465,8 +516,10 @@ public class ValidationManager extends CustomValidatorBean  {
 		
 		// get the local path to error, in case errors object is on nested path.
 		String errorMessagePath = rule.getErrorPath();
-        if (errorMessagePath == null || errorMessagePath.isEmpty()) {
-                errorMessagePath = rule.getPath();
+        if (errorMessagePath != null && !errorMessagePath.isEmpty()) {
+        	errorMessagePath = context.getLocalizedRulePath(errorMessagePath);
+        } else {
+        	errorMessagePath = localizedRulePath;
         }
 		if (!context.getErrors().getNestedPath().isEmpty() && errorMessagePath.startsWith(context.getErrors().getNestedPath())) {
 			errorMessagePath = PathUtils.appendPath(errorMessagePath.substring(context.getErrors().getNestedPath().length()), "");
@@ -528,7 +581,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		} else {
 			if (resolveAsModel) {
 				// not an expression, just get the model message key.
-				return getModelMessageKey(rulePath, context.getRootModel());
+				return getModelMessageKey(context.getLocalizedRulePath(rulePath), context.getRootModel());
 			} else {
 				// not an expression, return literal
 				return rulePath;

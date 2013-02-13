@@ -155,24 +155,6 @@ public class ValidationRule {
 	}
 	
 	/**
-	 * Replaces a base path within this and any sub rules.
-	 * This will irrevocably change the current rule and all child rules,
-	 * so it is vital to clone the rule first if this change is not intentional.
-	 * @param oldBasePath the old base path to replace
-	 * @param newBasePath the new base path to apply
-	 */
-	public void applyBasePathReplacement(String oldBasePath, String newBasePath) {
-		String regex = "^" + Pattern.quote(oldBasePath);
-		setPath(getPath().replaceFirst(regex, newBasePath));
-		if (getErrorPath() != null && !getErrorPath().isEmpty()) {
-			setErrorPath(getErrorPath().replaceFirst(regex, newBasePath));
-		}
-		for (ValidationRule rule : this.rules) {
-			rule.applyBasePathReplacement(oldBasePath, newBasePath); 
-		}
-	}
-	
-	/**
 	 * @return true if there are nested validation rules.
 	 */
 	public boolean hasChildren() {

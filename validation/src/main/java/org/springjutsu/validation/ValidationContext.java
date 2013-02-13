@@ -1,8 +1,11 @@
 package org.springjutsu.validation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -18,8 +21,8 @@ public class ValidationContext {
 	private WebContextSPELResolver spelResolver;
 	private String currentForm;
 	private Stack<String> nestedPath;
-	private String collectionPath;
-	private String currentCollectionMemberPath;
+	private Stack<String> templateBasePaths;
+	private Map<String, String> collectionPathReplacements;
 	
 	/**
 	 * Checked model hashes prevent infinite recursion.
@@ -42,7 +45,9 @@ public class ValidationContext {
 		this.currentForm = currentForm == null ? "" : currentForm;
 		this.nestedPath = new Stack<String>();
 		this.checkedModelHashes = new Stack<List<Integer>>();
-		checkedModelHashes.push(new ArrayList<Integer>());
+		this.checkedModelHashes.push(new ArrayList<Integer>());
+		this.templateBasePaths = new Stack<String>();
+		this.collectionPathReplacements = new HashMap<String, String>(); 
 	}
 	
 	public Object getBeanAtNestedPath() {
@@ -82,8 +87,12 @@ public class ValidationContext {
 			result = spelResolver.resolveSPELString(rule.getPath());
 		} else {
 			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(getRootModel());
-			if (beanWrapper.isReadableProperty(rule.getPath())) {
-				result = beanWrapper.getPropertyValue(rule.getPath());
+			String localizedRulePath = getLocalizedRulePath(rule.getPath());
+			// TODO: Why is this check here?
+			// Under what circumstances did we want this to return null
+			// instead of throwing an exception?
+			if (beanWrapper.isReadableProperty(localizedRulePath)) {
+				result = beanWrapper.getPropertyValue(localizedRulePath);
 			}
 		}
 		return result;
@@ -121,6 +130,46 @@ public class ValidationContext {
 		nestedPath.pop();
 		errors.popNestedPath();
 		checkedModelHashes.pop();
+	}
+	
+	/**
+	 * Performs the following operations to localize a rule path
+	 * to the current context:
+	 * 1) prepends with template base paths
+	 * 2) applies collection replacements
+	 * 3) prepends resultant path with nestedPath
+	 * @param rulePath
+	 * @return
+	 */
+	public String getLocalizedRulePath(String rulePath) {
+		String localizedPath = PathUtils.appendPath(
+				PathUtils.joinPathSegments(nestedPath),
+				PathUtils.joinPathSegments(templateBasePaths), 
+				rulePath);
+		for (Map.Entry<String, String> collectionPathReplacement : collectionPathReplacements.entrySet()) {
+			if (localizedPath.startsWith(collectionPathReplacement.getKey())) {
+				localizedPath = localizedPath.replaceAll(
+					"^" + Pattern.quote(collectionPathReplacement.getKey()),
+					collectionPathReplacement.getValue());
+				break;
+			}
+		}
+		return localizedPath;
+	}
+	
+	// TODO: Delete once rules are no longer cloned to localize.
+	public String getCollectionAdaptedRulePath(String rulePath) {
+		String localizedPath = PathUtils.appendPath(
+				PathUtils.joinPathSegments(templateBasePaths), rulePath);
+		for (Map.Entry<String, String> collectionPathReplacement : collectionPathReplacements.entrySet()) {
+			if (localizedPath.startsWith(collectionPathReplacement.getKey())) {
+				localizedPath = localizedPath.replaceAll(
+					"^" + Pattern.quote(collectionPathReplacement.getKey()),
+					collectionPathReplacement.getValue());
+				break;
+			}
+		}
+		return localizedPath;
 	}
 
 	public Errors getErrors() {
@@ -163,21 +212,7 @@ public class ValidationContext {
 		this.nestedPath = nestedPath;
 	}
 
-	public String getCollectionPath() {
-		return collectionPath;
-	}
-
-	public void setCollectionPath(String collectionPath) {
-		this.collectionPath = collectionPath;
-	}
-
-	public String getCurrentCollectionMemberPath() {
-		return currentCollectionMemberPath;
-	}
-
-	public void setCurrentCollectionMemberPath(String currentCollectionMemberPath) {
-		this.currentCollectionMemberPath = currentCollectionMemberPath;
-	}
+	
 
 	public Stack<List<Integer>> getCheckedModelHashes() {
 		return checkedModelHashes;
@@ -185,6 +220,23 @@ public class ValidationContext {
 
 	public void setCheckedModelHashes(Stack<List<Integer>> checkedModelHashes) {
 		this.checkedModelHashes = checkedModelHashes;
+	}
+
+	public Stack<String> getTemplateBasePaths() {
+		return templateBasePaths;
+	}
+
+	public void setTemplateBasePaths(Stack<String> templateBasePaths) {
+		this.templateBasePaths = templateBasePaths;
+	}
+	
+	public Map<String, String> getCollectionPathReplacements() {
+		return collectionPathReplacements;
+	}
+
+	public void setCollectionPathReplacements(
+			Map<String, String> collectionPathReplacements) {
+		this.collectionPathReplacements = collectionPathReplacements;
 	}
 
 }
