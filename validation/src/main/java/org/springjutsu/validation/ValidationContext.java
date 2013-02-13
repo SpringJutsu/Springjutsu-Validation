@@ -2,6 +2,7 @@ package org.springjutsu.validation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -47,7 +48,7 @@ public class ValidationContext {
 		this.checkedModelHashes = new Stack<List<Integer>>();
 		this.checkedModelHashes.push(new ArrayList<Integer>());
 		this.templateBasePaths = new Stack<String>();
-		this.collectionPathReplacements = new HashMap<String, String>(); 
+		this.collectionPathReplacements = new LinkedHashMap<String, String>(); 
 	}
 	
 	public Object getBeanAtNestedPath() {
@@ -121,14 +122,12 @@ public class ValidationContext {
 	
 	public Object pushNestedPath(String subPath) {
 		nestedPath.push(subPath);
-		errors.pushNestedPath(subPath);
 		checkedModelHashes.push(new ArrayList<Integer>(checkedModelHashes.peek()));
 		return getBeanAtNestedPath();
 	}
 	
 	public void popNestedPath() {
 		nestedPath.pop();
-		errors.popNestedPath();
 		checkedModelHashes.pop();
 	}
 	
@@ -142,31 +141,22 @@ public class ValidationContext {
 	 * @return
 	 */
 	public String getLocalizedRulePath(String rulePath) {
+		if (PathUtils.containsEL(rulePath)) {
+			return rulePath;
+		}
 		String localizedPath = PathUtils.appendPath(
 				PathUtils.joinPathSegments(nestedPath),
 				PathUtils.joinPathSegments(templateBasePaths), 
 				rulePath);
+		// Apply collection path replacements.
+		// Multiple collection paths may build off of one another,
+		// so it is important to run all possible path replacements.
+		// Path replacement order is maintained by the use of a LinkedHashMap
 		for (Map.Entry<String, String> collectionPathReplacement : collectionPathReplacements.entrySet()) {
 			if (localizedPath.startsWith(collectionPathReplacement.getKey())) {
 				localizedPath = localizedPath.replaceAll(
 					"^" + Pattern.quote(collectionPathReplacement.getKey()),
 					collectionPathReplacement.getValue());
-				break;
-			}
-		}
-		return localizedPath;
-	}
-	
-	// TODO: Delete once rules are no longer cloned to localize.
-	public String getCollectionAdaptedRulePath(String rulePath) {
-		String localizedPath = PathUtils.appendPath(
-				PathUtils.joinPathSegments(templateBasePaths), rulePath);
-		for (Map.Entry<String, String> collectionPathReplacement : collectionPathReplacements.entrySet()) {
-			if (localizedPath.startsWith(collectionPathReplacement.getKey())) {
-				localizedPath = localizedPath.replaceAll(
-					"^" + Pattern.quote(collectionPathReplacement.getKey()),
-					collectionPathReplacement.getValue());
-				break;
 			}
 		}
 		return localizedPath;

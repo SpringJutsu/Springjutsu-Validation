@@ -161,6 +161,41 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 	}
 	
 	@Test
+	public void testSubCollectionRulesAdaptedToMembers() {
+		
+		Customer noNameCustomer = new Customer();
+		Customer partiallyNamedCustomer = new Customer();
+		partiallyNamedCustomer.setLastName("bob");
+		
+		Company noNameCompany = new Company();
+		noNameCompany.getCustomers().add(noNameCustomer);
+		noNameCompany.getCustomers().add(partiallyNamedCustomer);
+		
+		Company namedCompany = new Company();
+		namedCompany.setName("Awesome co");
+		namedCompany.getCustomers().add(noNameCustomer);
+		namedCompany.getCustomers().add(partiallyNamedCustomer);
+		
+		Company anotherNamedCompany = new Company();
+		anotherNamedCompany.setName("Awesome co");
+		anotherNamedCompany.getCustomers().add(noNameCustomer);
+		anotherNamedCompany.getCustomers().add(partiallyNamedCustomer);
+		namedCompany.getAcquisitions().add(anotherNamedCompany);
+		
+		Company parentCompany = new Company();		
+		parentCompany.getAcquisitions().add(noNameCompany);
+		parentCompany.getAcquisitions().add(namedCompany);
+		
+		Errors errors = doValidate("testSubCollectionRulesAdaptedToMembers.xml", parentCompany).errors;
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[0].lastName").getCode());
+		assertEquals("customer.lastName", ((DefaultMessageSourceResolvable) errors.getFieldError("acquisitions[1].customers[0].lastName").getArguments()[0]).getCode());
+		assertEquals("errors.required", errors.getFieldError("acquisitions[1].acquisitions[0].customers[0].lastName").getCode());
+		assertEquals("customer.lastName", ((DefaultMessageSourceResolvable) errors.getFieldError("acquisitions[1].acquisitions[0].customers[0].lastName").getArguments()[0]).getCode());
+		
+	}
+	
+	@Test
 	public void testCollectionStrategyDefault() {
 		Company company = new Company();
 		company.getSlogans().add("Doing right.");

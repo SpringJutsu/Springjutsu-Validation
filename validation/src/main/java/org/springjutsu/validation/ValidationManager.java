@@ -256,12 +256,8 @@ public class ValidationManager extends CustomValidatorBean {
 				continue;
 			}
 			
-			// adapt rule to current model path.
-			ValidationRule localizedRule = PathUtils.containsEL(rule.getPath()) ? rule : 
-				rule.cloneWithBasePath(PathUtils.joinPathSegments(context.getNestedPath()));
-			
 			// break down any collections into indexed paths.
-			SingletonMap collectionReplacements = resolveCollectionPathReplacements(context, localizedRule);
+			SingletonMap collectionReplacements = resolveCollectionPathReplacements(context, rule);
 			
 			// if there are no collection replacements to be made, 
 			// run the rule (and any sub rules) as normal.
@@ -310,7 +306,13 @@ public class ValidationManager extends CustomValidatorBean {
 	
 	@SuppressWarnings("rawtypes")
 	private SingletonMap resolveCollectionPathReplacements(ValidationContext context, ValidationRule rule) {
-		String path = context.getCollectionAdaptedRulePath(rule.getPath());
+		String path = context.getLocalizedRulePath(rule.getPath());
+		
+		// Do nothing with EL paths.
+		if (PathUtils.containsEL(path)) {
+			return null;
+		}
+		
 		BeanWrapper rootModelWrapper = new BeanWrapperImpl(context.getRootModel());
 		List<String> collectionPaths = new ArrayList<String>();
 		List<ValidationRule> brokenDownRules = new ArrayList<ValidationRule>();
@@ -521,9 +523,6 @@ public class ValidationManager extends CustomValidatorBean {
         } else {
         	errorMessagePath = localizedRulePath;
         }
-		if (!context.getErrors().getNestedPath().isEmpty() && errorMessagePath.startsWith(context.getErrors().getNestedPath())) {
-			errorMessagePath = PathUtils.appendPath(errorMessagePath.substring(context.getErrors().getNestedPath().length()), "");
-		}
 		
 		if (PathUtils.containsEL(errorMessagePath)) {
 			throw new IllegalStateException("Could not log error for rule: " + rule.toString() + ". Rules with EL path should specify the errorPath attribute.");
