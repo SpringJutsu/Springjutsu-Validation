@@ -16,6 +16,9 @@
 
 package org.springjutsu.validation.spel;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -36,6 +39,8 @@ import org.springjutsu.validation.util.RequestUtils;
  * @author Clark Duplichien
  */
 public class WebContextSPELResolver {
+	
+	public static final String EXPRESSION_MATCHER = "\\$\\{(.(?!\\$\\{))+\\}";
 	
 	/**
 	 * Evaluation context which will contain 
@@ -76,6 +81,36 @@ public class WebContextSPELResolver {
 			} else {
 				throw see;
 			}
+		}
+	}
+	
+	/**
+	 * Resolves one or more SPEL expressions in the given string.
+	 * @param elContainng A string potentially containing one or more SPEL expressions
+	 * @return Either an object represented by the expression (if the entire string
+	 *  was an expression) or a new String with all SPEL expressions replaced by
+	 *  the string value of the respective resolved objects.
+	 */
+	public Object resolveSPELString(String elContaining) {
+		// if the whole thing is a single EL string, try to get the object.
+		if (elContaining.matches(EXPRESSION_MATCHER)) {
+			String resolvableElString = 
+				elContaining.substring(2, elContaining.length() - 1) + "?: null";
+			Object elResult = getBySpel(resolvableElString);
+			return elResult;
+		} else {
+			// otherwise, do string value substitution to build a value.
+			String elResolvable = elContaining;
+			Matcher matcher = Pattern.compile(EXPRESSION_MATCHER).matcher(elResolvable);
+			while (matcher.find()) {
+				String elString = matcher.group();
+				String resolvableElString = elString.substring(2, elString.length() - 1) + "?: null";
+				Object elResult = getBySpel(resolvableElString);
+				String resolvedElString = elResult != null ? String.valueOf(elResult) : "";
+				elResolvable = elResolvable.replace(elString, resolvedElString);
+				matcher.reset(elResolvable);
+			}
+			return elResolvable;
 		}
 	}
 	

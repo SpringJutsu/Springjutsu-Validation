@@ -117,4 +117,13 @@ public class PathUtils {
 	public static boolean containsEL(String path) {
 		return path.matches(".*\\$\\{.+\\}.*");
 	}
+	
+	/**
+	 * Use to determine if a an entire path is an EL expression.
+	 * @param path Path to check for an EL expression
+	 * @return true if the path contains an EL expression.
+	 */
+	public static boolean isEL(String path) {
+		return path.matches("\\$\\{.+\\}");
+	}
 }

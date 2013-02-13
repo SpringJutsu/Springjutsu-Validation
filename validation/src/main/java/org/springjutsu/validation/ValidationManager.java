@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -34,7 +32,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.core.NamedThreadLocal;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
@@ -45,7 +42,6 @@ import org.springjutsu.validation.rules.CollectionStrategy;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
-import org.springjutsu.validation.spel.WebContextSPELResolver;
 import org.springjutsu.validation.util.PathUtils;
 import org.springjutsu.validation.util.RequestUtils;
 
@@ -53,23 +49,7 @@ import org.springjutsu.validation.util.RequestUtils;
  * Registerable as a JSR-303 @link{CustomValidatorBean}, this 
  * ValidationManager class is instead responsible for reading
  * XML-driven nested validation rules.
- * However, it populates a standard Errors object as expected.  
- * Logic is divided into two main portions:
- * First context rules are read from the &lt;context-rules>
- * defined for a given path. These rules are loaded based on 
- * the current path the user is accessing, with implementation
- * handled by subclasses.
- * Context rules are typically those rules which are specific 
- * to a given form: the fields which are required, and also
- * conditional validation logic based on other fields or 
- * variables defined in EL or otherwise. These are the 
- * conditional per-form validation rules not handled by JSR-303
- * Second, model rules are read from the &lt;model-rules>
- * defined for a given class. These rules are loaded directly
- * from the per-class definitions provided in the XML rules.
- * Model rules are those rules which do not change for a 
- * given class and include type checking, length checks, 
- * and so on. These are the more typical JSR-303 type rules. 
+ * However, it populates a standard Errors object as expected.
  *  
  * @author Clark Duplichien
  * @author Taylor Wicksell
@@ -137,13 +117,6 @@ public class ValidationManager extends CustomValidatorBean  {
 	}
 	
 	/**
-	 * Use one per request to evaluate SPEL Expressions, 
-	 * as creation is somewhat expensive. 
-	 */
-	private static final ThreadLocal<WebContextSPELResolver> spelResolver = 
-		new NamedThreadLocal<WebContextSPELResolver>("Validation SPEL Resolver");
-	
-	/**
 	 * Hook point to perform validation without a web request.
 	 * Create and return a BindingModel to allow users to 
 	 * manage errors.
@@ -171,20 +144,15 @@ public class ValidationManager extends CustomValidatorBean  {
 	 */
 	@Override
 	public void validate(Object model, Errors errors) {
-		spelResolver.set(new WebContextSPELResolver(model));
-		try {
-			String currentForm = null;
-			if (RequestUtils.getRequest() != null) {
-				if (RequestUtils.isWebflowRequest()) {
-					currentForm = getWebflowFormName();
-				} else {
-					currentForm = getMVCFormName();
-				}
+		String currentForm = null;
+		if (RequestUtils.getRequest() != null) {
+			if (RequestUtils.isWebflowRequest()) {
+				currentForm = getWebflowFormName();
+			} else {
+				currentForm = getMVCFormName();
 			}
-			validateModel(new ValidationContext(model, errors, currentForm));
-		} finally {
-			spelResolver.set(null);
 		}
+		validateModel(new ValidationContext(model, errors, currentForm));
 	}
 
 	
@@ -203,7 +171,7 @@ public class ValidationManager extends CustomValidatorBean  {
 		}
 		
 		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), context.getCurrentForm());
-		callRules(context.getRootModel(), context.getErrors(), rules, false);
+		callRules(context, rules, false);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -246,42 +214,32 @@ public class ValidationManager extends CustomValidatorBean  {
 		}
 	}
 	
-	/**
-	 * Responsible for delegating each actual model rule
-	 *  to the appropriate @link{RuleExecutor}.
-	 *  Errors are recorded if no previous error has been
-	 *  recorded for the given path.
-	 * @param model The object being validated
-	 * @param errors Standard errors object to record validation errors.
-	 * @param modelRules A list of ValidationRules parsed from
-	 * @param prelocalized indicates if child rules are already localized to the base path of the errors object. 
-	 *  the &lt;model-rules> section of the validation XML.
-	 */
-	protected void callRules(Object model, Errors errors, List<ValidationRule> modelRules, boolean prelocalized) {
+	protected void callRules(ValidationContext context, List<ValidationRule> modelRules, boolean prelocalized) {
 		if (modelRules == null) {
 			return;
 		}
 		for (ValidationRule rule : modelRules) {
 			
 			// skip form rules during sub-bean validation
-			if (!errors.getNestedPath().isEmpty() && !rule.getFormConstraints().isEmpty()) {
+			if (!context.getNestedPath().isEmpty() && !context.getCurrentForm().isEmpty()) {
 				continue;
 			}
 			
 			// adapt rule to current model path.
-			ValidationRule localizedRule = PathUtils.containsEL(rule.getPath()) ? rule : prelocalized ? rule : rule.cloneWithBasePath(errors.getNestedPath());
+			ValidationRule localizedRule = PathUtils.containsEL(rule.getPath()) ? rule : prelocalized 
+					? rule : rule.cloneWithBasePath(PathUtils.joinPathSegments(context.getNestedPath()));
 			
 			// break down any collections into indexed paths.
-			List<ValidationRule> adaptedRules = considerCollectionPaths(localizedRule, model);
+			List<ValidationRule> adaptedRules = considerCollectionPaths(localizedRule, context.getRootModel());
 			
 			for (ValidationRule adaptedRule : adaptedRules) {
 				
-				if (passes(adaptedRule, model)) {
+				if (passes(adaptedRule, context)) {
 					// If the rule passes and it has children,
 					// it is a condition for nested elements.
 					// Call children instead.
 					if (adaptedRule.hasChildren()) {
-						callRules(model, errors, adaptedRule.getRules(), true);
+						callRules(context, adaptedRule.getRules(), true);
 					}
 				} else {
 					// If the rule fails and it has children,
@@ -292,7 +250,7 @@ public class ValidationManager extends CustomValidatorBean  {
 					} else {
 						// If the rule has no children and fails,
 						// perform fail action.
-						logError(adaptedRule, model, errors);
+						logError(context, adaptedRule);
 					}
 				}
 			}
@@ -447,10 +405,10 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param rootModel The model to run the rule on.
 	 * @return
 	 */
-	protected boolean passes(ValidationRule rule, Object rootModel) {			
+	protected boolean passes(ValidationRule rule, ValidationContext context) {
 		// get args
-		Object ruleModel = getContextModel(rootModel, rule.getPath());
-		Object ruleArg = getContextArgument(rootModel, rule.getValue());
+		Object ruleModel = context.resolveRuleModel(rule);
+		Object ruleArg = context.resolveRuleArgument(rule);
 
 		// call method
 		boolean isValid;
@@ -461,52 +419,6 @@ public class ValidationManager extends CustomValidatorBean  {
 			throw new RuntimeException("Error occured during validation: ", ve);
 		}
 		return isValid;
-	}
-	
-	/**
-	 * Responsible for discovering the path-described model which
-	 * is to be validated by the current rule. This path may contain
-	 * EL, and if it does, we delegate to @link(#resolveEL(String, Object))
-	 * to resolve that EL.
-	 * @param model Object to be validated
-	 * @param expression The string path expression for the model.
-	 * @return the Object to validate.
-	 */
-	protected Object getContextModel(Object model, String expression) {
-		Object result = null;
-		if (expression == null || expression.isEmpty()) {
-			return model;
-		}
-		if (PathUtils.containsEL(expression)) {
-			result = resolveSPEL(expression, model);
-		} else {
-			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(model);
-			if (model != null && beanWrapper.isReadableProperty(expression)) {
-				result = beanWrapper.getPropertyValue(expression);
-			}
-		}
-		return result;
-	}
-	
-	/**
-	 * Responsible for determining the argument to be passed to the rule.
-	 * If the argument expression string contains EL, it will be resolved,
-	 * otherwise, the expression string is taken as a literal argument.
-	 * @param model Object to be validated
-	 * @param expression The string path expression for the model.
-	 * @return the Object to serve as a rule argument
-	 */
-	protected Object getContextArgument(Object model, String expression) {
-		Object result = null;
-		if (expression == null || expression.isEmpty()) {
-			return null;
-		}
-		if (PathUtils.containsEL(expression)) {
-			result = resolveSPEL(expression, model);
-		} else {
-			result = expression;
-		}
-		return result;
 	}
 	
 	/**
@@ -536,15 +448,15 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @param rootModel the root model (not failed bean)
 	 * @param errors standard Errors object to record error on.
 	 */
-	protected void logError(ValidationRule rule, Object rootModel, Errors errors) {
+	protected void logError(ValidationContext context, ValidationRule rule) {
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
                 errorMessageKey = (errorMessagePrefix != null  && !errorMessagePrefix.isEmpty() ? errorMessagePrefix + "." : "") + rule.getType();
         }
         
 		String defaultError =  rule.getPath() + " " + rule.getType();
-		String modelMessageKey = getMessageResolver(rootModel, rule.getPath(), true);
-        String ruleArg = getMessageResolver(rootModel, rule.getValue(), false);
+		String modelMessageKey = getMessageResolver(context, rule, true);
+        String ruleArg = getMessageResolver(context, rule, false);
 		
 		MessageSourceResolvable modelMessageResolvable = 
 			new DefaultMessageSourceResolvable(new String[] {modelMessageKey}, modelMessageKey);
@@ -556,15 +468,15 @@ public class ValidationManager extends CustomValidatorBean  {
         if (errorMessagePath == null || errorMessagePath.isEmpty()) {
                 errorMessagePath = rule.getPath();
         }
-		if (!errors.getNestedPath().isEmpty() && errorMessagePath.startsWith(errors.getNestedPath())) {
-			errorMessagePath = PathUtils.appendPath(errorMessagePath.substring(errors.getNestedPath().length()), "");
+		if (!context.getErrors().getNestedPath().isEmpty() && errorMessagePath.startsWith(context.getErrors().getNestedPath())) {
+			errorMessagePath = PathUtils.appendPath(errorMessagePath.substring(context.getErrors().getNestedPath().length()), "");
 		}
 		
 		if (PathUtils.containsEL(errorMessagePath)) {
 			throw new IllegalStateException("Could not log error for rule: " + rule.toString() + ". Rules with EL path should specify the errorPath attribute.");
 		}
 
-		errors.rejectValue(errorMessagePath, errorMessageKey, 
+		context.getErrors().rejectValue(errorMessagePath, errorMessageKey, 
 				new Object[] {modelMessageResolvable, argumentMessageResolvable}, defaultError);
 	}
 	
@@ -588,11 +500,12 @@ public class ValidationManager extends CustomValidatorBean  {
 	 * @return A string used to look up the message to resolve as the model
 	 * or argument of a failed validation rule, as determined by resolveAsModel. 
 	 */
-	protected String getMessageResolver(Object model, String rulePath, boolean resolveAsModel) {
+	protected String getMessageResolver(ValidationContext context, ValidationRule rule, boolean resolveAsModel) {
+		String rulePath = resolveAsModel ? rule.getPath() : rule.getValue();
 		// if there is no path, return.
 		if (rulePath == null || rulePath.length() < 1) {
 			return rulePath;
-		} else if (PathUtils.containsEL(rulePath)) {
+		} else if (PathUtils.isEL(rulePath)) {
 			// If the path is actually an expression language statement
 			// Need to check if it resolves to a path on the model.
 			// trim off EL denotation #{}
@@ -602,20 +515,20 @@ public class ValidationManager extends CustomValidatorBean  {
 				expressionlessValue = expressionlessValue.substring(6);
 			}
 			// check if path matches a path on the model.
-			if (new BeanWrapperImpl(model).isReadableProperty(expressionlessValue)) {
+			if (new BeanWrapperImpl(context.getRootModel()).isReadableProperty(expressionlessValue)) {
 				// Since this matched a model path, get the label 
 				// for the resolved model.
-				return getModelMessageKey(expressionlessValue, model);
+				return getModelMessageKey(expressionlessValue, context.getRootModel());
 			} else {
 				// It's not a model object, so we don't need the label message key.
 				// Instead, use the value of the expression as a label.
 				// If the expression fails, just use the expression itself.
-				return String.valueOf(getContextArgument(model, rulePath));
+				return String.valueOf(context.resolveRuleModel(rule));
 			}
 		} else {
 			if (resolveAsModel) {
 				// not an expression, just get the model message key.
-				return getModelMessageKey(rulePath, model);
+				return getModelMessageKey(rulePath, context.getRootModel());
 			} else {
 				// not an expression, return literal
 				return rulePath;
@@ -688,40 +601,6 @@ public class ValidationManager extends CustomValidatorBean  {
 		+ StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;
 	}
 	
-	/**
-	 * Responsible for resolving a SPEL expression.
-	 * Unwraps the EL string, creates an instance of a 
-	 * @link{SPELReadyRequestContext}, adds all the needed
-	 * property accessors, and runs the SPEL evaluation.
-	 * TODO: find a better way to return null if not found on any scope.   
-	 *  
-	 * @param el The EL expression to resolve.
-	 * @param model The model on which the EL-described field MAY lie.
-	 * @return The object described by the EL expression.
-	 */
-	protected Object resolveSPEL(String elContaining, Object model) {
-		// if the whole thing is a single EL string, try to get the object.
-		if (elContaining.matches("\\$\\{(.(?!\\$\\{))+\\}")) {
-			String resolvableElString = 
-				elContaining.substring(2, elContaining.length() - 1) + "?: null";
-			Object elResult = spelResolver.get().getBySpel(resolvableElString);
-			return elResult;
-		} else {
-			// otherwise, do string value substitution to build a value.
-			String elResolvable = elContaining;
-			Matcher matcher = Pattern.compile("\\$\\{(.(?!\\$\\{))+\\}").matcher(elResolvable);
-			while (matcher.find()) {
-				String elString = matcher.group();
-				String resolvableElString = elString.substring(2, elString.length() - 1) + "?: null";
-				Object elResult = spelResolver.get().getBySpel(resolvableElString);
-				String resolvedElString = elResult != null ? String.valueOf(elResult) : "";
-				elResolvable = elResolvable.replace(elString, resolvedElString);
-				matcher.reset(elResolvable);
-			}
-			return elResolvable;
-		}
-	}
-	
 	public String getErrorMessagePrefix() {
 		return errorMessagePrefix;
 	}
@@ -745,12 +624,6 @@ public class ValidationManager extends CustomValidatorBean  {
 	public void setEnableSuperclassFieldLabelLookup(
 			boolean enableSuperclassFieldLabelLookup) {
 		this.enableSuperclassFieldLabelLookup = enableSuperclassFieldLabelLookup;
-	}
-
-	protected List<Object> inheritedCheckedModels(List<Object> checkedModels) {
-		List<Object> inheritedCheckedModels = new ArrayList<Object>();
-		inheritedCheckedModels.addAll(checkedModels);
-		return inheritedCheckedModels;
 	}
 }
 

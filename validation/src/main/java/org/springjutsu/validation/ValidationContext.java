@@ -7,6 +7,7 @@ import java.util.Stack;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.validation.Errors;
+import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.spel.WebContextSPELResolver;
 import org.springjutsu.validation.util.PathUtils;
 
@@ -38,7 +39,7 @@ public class ValidationContext {
 		this.errors = errors;
 		this.modelWrapper = model == null ? null : new BeanWrapperImpl(model);
 		this.spelResolver = new WebContextSPELResolver(model);
-		this.currentForm = currentForm;
+		this.currentForm = currentForm == null ? "" : currentForm;
 		this.nestedPath = new Stack<String>();
 		this.checkedModelHashes = new Stack<List<Integer>>();
 		checkedModelHashes.push(new ArrayList<Integer>());
@@ -59,6 +60,54 @@ public class ValidationContext {
 	
 	public Object getRootModel() {
 		return modelWrapper == null ? null : modelWrapper.getWrappedInstance();
+	}
+	
+	/**
+	 * Responsible for discovering the path-described model which
+	 * is to be validated by the current rule. This path may contain
+	 * EL, and if it does, we delegate to @link(#resolveEL(String))
+	 * to resolve that EL.
+	 * @param rule The rule for which to resolve the model
+	 * @return the resolved rule model
+	 */
+	public Object resolveRuleModel(ValidationRule rule) {
+		Object result = null;
+		if (rule.getPath() == null || rule.getPath().isEmpty()) {
+			return getRootModel();
+		}
+		// TODO / Note to self: the expression is actually the rule path,
+		// which at this point has already been localized by the nested path
+		// via rule cloning, so long as the rule path didn't contain EL
+		if (PathUtils.containsEL(rule.getPath())) {
+			result = spelResolver.resolveSPELString(rule.getPath());
+		} else {
+			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(getRootModel());
+			if (beanWrapper.isReadableProperty(rule.getPath())) {
+				result = beanWrapper.getPropertyValue(rule.getPath());
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Responsible for determining the argument to be passed to the rule.
+	 * If the argument expression string contains EL, it will be resolved,
+	 * otherwise, the expression string is taken as a literal argument.
+	 * @param rule the rule for which to resolve argument
+	 * @param expression The string path expression for the model.
+	 * @return the Object to serve as a rule argument
+	 */
+	public Object resolveRuleArgument(ValidationRule rule) {
+		Object result = null;
+		if (rule.getValue() == null || rule.getValue().isEmpty()) {
+			return null;
+		}
+		if (PathUtils.containsEL(rule.getValue())) {
+			result = spelResolver.resolveSPELString(rule.getValue());
+		} else {
+			result = rule.getValue();
+		}
+		return result;
 	}
 	
 	public Object pushNestedPath(String subPath) {
