@@ -2,26 +2,28 @@
 <beans:beans xmlns="http://www.springjutsu.org/schema/validation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="
 	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.2.xsd
-	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<context:annotation-config />
 
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
-	<!-- Test basic illegal recursion: two templates reference one another. -->
+	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<form path="mockFlow:mockState">
-			<template-ref basePath="address" templateName="illegalRecursionA"/>
+		<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
+		<form path="/foo/new">
+			<template-ref basePath="address" templateName="unitedStatesAddress"/>
 		</form>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Address">
-		<template name="illegalRecursionA">
-			<template-ref templateName="illegalRecursionB"/>
-		</template>
-		<template name="illegalRecursionB">
-			<template-ref templateName="illegalRecursionA"/>
+		<template name="unitedStatesAddress">
+			<rule path="zipCode" type="exactLength" value="5"/>
 		</template>
 	</entity>
 	

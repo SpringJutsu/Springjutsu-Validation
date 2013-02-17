@@ -8,23 +8,40 @@
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
+	<context:annotation-config />
+
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
-	<!-- Test basic template unwrapping -->
+	<!-- Detect complex illegal recursion through nested rules, 
+		and multiple template references. -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
-		<form path="mockFlow:mockState">
-			<template-ref basePath="address" templateName="unitedStatesAddress"/>
+		<form path="/foo/new">
+			<rule path="favoriteColor" type="notEmpty">
+				<template-ref basePath="address" templateName="illegalRecursionA"/>
+			</rule>
 		</form>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Address">
-		<template name="unitedStatesAddress">
-			<rule path="zipCode" type="exactLength" value="5"/>
+		<template name="illegalRecursionA">
+			<rule path="zipCode" type="notEmpty">
+				<template-ref templateName="illegalRecursionB"/>
+			</rule>
+		</template>
+		<template name="illegalRecursionB">
+			<rule path="lineOne" type="notEmpty">
+				<template-ref templateName="illegalRecursionC"/>
+			</rule>
+		</template>
+		<template name="illegalRecursionC">
+			<rule path="lineTwo" type="notEmpty">
+				<template-ref templateName="illegalRecursionA"/>
+			</rule>
 		</template>
 	</entity>
 	
 	<!-- Include messages used by application -->
 	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>
+	
 </beans:beans>

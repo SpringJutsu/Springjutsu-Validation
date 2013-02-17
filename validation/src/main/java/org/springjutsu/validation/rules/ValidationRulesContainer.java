@@ -33,8 +33,6 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
-import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
-import org.springjutsu.validation.util.PathUtils;
 
 /**
  * This serves as a container for all parsed validation rules.
@@ -61,6 +59,12 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * Maps class to the validation entity for that class.
 	 */
 	private Map<Class<?>, ValidationEntity> validationEntityMap = null;
+	
+	/**
+	 * Maps template name to template
+	 */
+	Map<String, ValidationTemplate> validationTemplateMap = 
+		new HashMap<String, ValidationTemplate>();
 	
 	/**
 	 * Annotation classes which mark a field that should not be validated recursively.
@@ -92,10 +96,12 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				.getBeansOfType(ValidationEntity.class).values();
 			for (ValidationEntity validationEntity : validationEntities) {
 				validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
+				for (ValidationTemplate template : validationEntity.getValidationTemplates()) {
+					validationTemplateMap.put(template.getName(), template);
+				}
 			}
 			initIncludePaths();
 			initExcludePaths();
-			unwrapTemplateReferences();
 			initInheritance();
 		}
 	}
@@ -176,17 +182,17 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			}
 			
 			Set<ValidationRule> inheritableRules = new HashSet<ValidationRule>();
+			Set<ValidationTemplateReference> inheritableTemplateReferences = new HashSet<ValidationTemplateReference>();
 			Set<String> inheritableExclusionPaths = new HashSet<String>();
 			Set<String> inheritableInclusionPaths = new HashSet<String>();
 			
 			while (!classStack.isEmpty()) {
 				Class<?> clazz = classStack.pop();
 				if (supportsClass(clazz) && !inheritanceChecked.contains(clazz)) {
-					for (ValidationRule rule : inheritableRules) {
-						validationEntityMap.get(clazz).addRule(rule);
-					}
+					validationEntityMap.get(clazz).getRules().addAll(inheritableRules);
 					validationEntityMap.get(clazz).getExcludedPaths().addAll(inheritableExclusionPaths);
 					validationEntityMap.get(clazz).getIncludedPaths().addAll(inheritableInclusionPaths);
+					validationEntityMap.get(clazz).getTemplateReferences().addAll(inheritableTemplateReferences);
 				}
 				if (hasRulesForClass(clazz)) {
 					inheritableRules.addAll(validationEntityMap.get(clazz).getRules());
@@ -197,114 +203,6 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				}
 				inheritanceChecked.add(clazz);
 			}
-		}
-	}
-	
-	/**
-	 * Since use of template references and performing error 
-	 * checking on them would otherwise be expensive, unwrap 
-	 * all template references into rule sets during initialization.
-	 */
-	protected void unwrapTemplateReferences() {
-		
-		Map<String, ValidationTemplate> validationTemplateMap = 
-			new HashMap<String, ValidationTemplate>();
-		
-		// for each validation entity, consolidate validation templates.
-		for (ValidationEntity entity : validationEntityMap.values()) {
-			for (ValidationTemplate template : entity.getValidationTemplates()) {
-				validationTemplateMap.put(template.getName(), template);
-			}
-		}
-		
-		// then for each validation entity, unwrap and error check validation templates.
-		for (ValidationEntity entity : validationEntityMap.values()) {
-			
-			// unwrap template references hiding in rules...
-			for (ValidationRule rule : entity.getRules()) {
-				unwrapValidationRuleTemplateReferences(rule, new Stack<String>(), "", validationTemplateMap);
-			}
-			
-			// unwrap base level template references.
-			for (ValidationTemplateReference templateReference : entity.getTemplateReferences()) {
-				unwrapTemplateReference(templateReference, entity.getRules(), 
-						new Stack<String>(), "", validationTemplateMap);
-			}
-		}
-	}
-	
-	protected void unwrapTemplateReference(ValidationTemplateReference templateReference, 
-			List<ValidationRule> dumpTo, Stack<String> usedNames, String baseName,
-			Map<String, ValidationTemplate> validationTemplateMap) {
-		
-		// illegal recursion check.
-		if (usedNames.contains(templateReference.getTemplateName())) {
-			usedNames.push(templateReference.getTemplateName());
-			throw new CircularValidationTemplateReferenceException(
-				"Recursive validation template definition: " + usedNames);
-		} else {
-			usedNames.push(templateReference.getTemplateName());
-		}
-		
-		// get template
-		ValidationTemplate template = validationTemplateMap.get(templateReference.getTemplateName());
-		
-		// unwrap any template references referenced by this template.
-		// dump these unwrapped references into the original rule list.
-		for (ValidationTemplateReference subTemplateReference : template.getTemplateReferences()) {
-			subTemplateReference.setFormConstraints(templateReference.getFormConstraints());
-			unwrapTemplateReference(subTemplateReference, dumpTo, usedNames, 
-				PathUtils.appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
-		}
-		
-		// adapt template rules:
-		// check them for template references
-		// clone with basename subpath.
-		// apply form constraints.
-		for (ValidationRule rule : template.getRules()) {
-			ValidationRule adaptedRule = rule.cloneWithBasePath(PathUtils.appendPath(baseName, templateReference.getBasePath()));
-			adaptedRule.setFormConstraints(templateReference.getFormConstraints());
-			unwrapValidationRuleTemplateReferences(adaptedRule, usedNames, 
-					PathUtils.appendPath(baseName, templateReference.getBasePath()), validationTemplateMap);
-			dumpTo.add(adaptedRule);
-		}
-		
-		// end illegal recursion check.
-		usedNames.pop();
-	}
-	
-	protected void unwrapValidationRuleTemplateReferences(ValidationRule rule, 
-			Stack<String> usedNames, String baseName, Map<String, ValidationTemplate> validationTemplateMap) {
-
-		// unwrap template references into sub rules.
-		for (ValidationTemplateReference subTemplateReference : rule.getTemplateReferences()) {
-			unwrapTemplateReference(subTemplateReference, rule.getRules(), usedNames, baseName, validationTemplateMap);
-		}
-		
-		// recursively unwrap any templates within sub rules.
-		if (rule.getRules() != null) {
-			for (ValidationRule subRule : rule.getRules()) { 
-				unwrapValidationRuleTemplateReferences(subRule, usedNames, baseName, validationTemplateMap);
-			}
-		}
-		
-		// Don't re-evaluate these template references.
-		rule.getTemplateReferences().clear();
-	}
-
-	/**
-	 * Retrieves rules stored for a given class.
-	 * @param clazz The class to retrieve rules for.
-	 * @param form A string describing the form which the context
-	 *  rules are to apply to.
-	 * @return the list of validation rules applying to the form and class.
-	 */
-	public List<ValidationRule> getRules(Class<?> clazz, String form) {
-		ValidationEntity entity = getValidationEntity(clazz);
-		if (entity != null) {
-			return getValidationEntity(clazz).getValidationRules(form);
-		} else {
-			return new ArrayList<ValidationRule>();
 		}
 	}
 	
@@ -351,5 +249,14 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 
 	public void setIncludeAnnotations(List<Class<?>> includeAnnotations) {
 		this.includeAnnotations = includeAnnotations;
+	}
+
+	public Map<String, ValidationTemplate> getValidationTemplateMap() {
+		return validationTemplateMap;
+	}
+
+	public void setValidationTemplateMap(
+			Map<String, ValidationTemplate> validationTemplateMap) {
+		this.validationTemplateMap = validationTemplateMap;
 	}
 }

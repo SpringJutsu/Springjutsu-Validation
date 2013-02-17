@@ -21,22 +21,17 @@ public class ValidationRuleTest {
 	}
 
 	@Test
-	public void testCloneWithPath() {
-		ValidationRule rule = new ValidationRule("test", "type", "value");
-		ValidationRule clone = rule.cloneWithPath("newPath");
-		assertEquals("newPath", clone.getPath());
-		assertEquals("type", clone.getType());
-		assertEquals("value", clone.getValue());
-		assertNotNull(clone.getRules());
-		assertEquals(0, clone.getRules().size());
-		
-	}
-
-	@Test
 	public void testHasChildren() {
 		ValidationRule rule = new ValidationRule("test", "type", "value");
 		assertFalse(rule.hasChildren());
-		rule.addRule(new ValidationRule("subRule", "subRuleType", "subRuleValue"));
+		
+		rule.getRules().add(new ValidationRule("subRule", "subRuleType", "subRuleValue"));
+		assertTrue(rule.hasChildren());
+		
+		rule.getRules().clear();
+		assertFalse(rule.hasChildren());
+		
+		rule.getTemplateReferences().add(new ValidationTemplateReference("path", "name"));
 		assertTrue(rule.hasChildren());
 	}
 

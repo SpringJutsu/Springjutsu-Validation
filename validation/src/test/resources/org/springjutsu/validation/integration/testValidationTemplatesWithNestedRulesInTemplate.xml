@@ -8,31 +8,24 @@
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
+	<context:annotation-config />
+
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
 	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<rule path="lastName" type="notEmpty">
-			<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
-			<template-ref basePath="copayer" templateName="secondaryAddressedCustomer"/>
-		</rule>
-		<form path="mockFlow:mockState">
-			<rule path="firstName" type="notEmpty">
-				<template-ref basePath="address" templateName="unitedStatesAddress"/>
-				<template-ref basePath="referredBy" templateName="secondaryAddressedCustomer"/>
-			</rule>
+		<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
+		<form path="/foo/new">
+			<template-ref basePath="address" templateName="unitedStatesAddress"/>
 		</form>
-		<template name="secondaryAddressedCustomer">
-			<rule path="lastName" type="notEmpty">
-				<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
-			</rule>
-		</template>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Address">
 		<template name="unitedStatesAddress">
-			<rule path="zipCode" type="exactLength" value="5"/>
+			<rule path="lineTwo" type="notEmpty">
+				<rule path="lineOne" type="required"/>
+			</rule>
 		</template>
 	</entity>
 	

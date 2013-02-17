@@ -25,7 +25,7 @@ import java.util.List;
  * @author Clark Duplichien
  *
  */
-public class ValidationTemplate {
+public class ValidationTemplate implements RuleHolder {
 
 	/**
 	 * The name of this validation template.

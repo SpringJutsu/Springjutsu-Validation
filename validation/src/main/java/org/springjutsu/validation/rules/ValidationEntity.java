@@ -41,7 +41,7 @@ import org.springjutsu.validation.namespace.ValidationEntityDefinitionParser;
  *@see ValidationEntityDefinitionParser
  *@see ValidationRulesContainer
  */
-public class ValidationEntity {
+public class ValidationEntity implements RuleHolder {
 	
 	private Map<String, List<ValidationRule>> formRuleCache;
 	
@@ -113,26 +113,6 @@ public class ValidationEntity {
 	 */
 	public void addValidationTemplate(ValidationTemplate template) {
 		this.validationTemplates.add(template);
-	}
-	
-	/**
-	 * Return the context rules for the given string path.
-	 * Cache results.
-	 * @param form String representing form to get rules for.
-	 * @return List of validation rules specific to the form.
-	 */
-	public List<ValidationRule> getValidationRules(String form) {
-		if (formRuleCache.containsKey(form)) {
-			return formRuleCache.get(form);
-		}
-		List<ValidationRule> formApplicableRules = new ArrayList<ValidationRule>();
-		for (ValidationRule rule : rules) {
-			if (rule.appliesToForm(form)) {
-				formApplicableRules.add(rule);
-			}
-		}
-		formRuleCache.put(form, formApplicableRules);
-		return formApplicableRules;
 	}
 
 	/**

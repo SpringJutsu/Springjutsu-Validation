@@ -8,14 +8,28 @@
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
+	<context:annotation-config />
+
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
-	<!-- Test template having wrong class for target -->
+	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<form path="mockFlow:mockState">
-			<template-ref basePath="favoriteColor" templateName="unitedStatesAddress"/>
+		<rule path="lastName" type="notEmpty">
+			<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
+			<template-ref basePath="copayer" templateName="secondaryAddressedCustomer"/>
+		</rule>
+		<form path="/foo/new">
+			<rule path="firstName" type="notEmpty">
+				<template-ref basePath="address" templateName="unitedStatesAddress"/>
+				<template-ref basePath="referredBy" templateName="secondaryAddressedCustomer"/>
+			</rule>
 		</form>
+		<template name="secondaryAddressedCustomer">
+			<rule path="lastName" type="notEmpty">
+				<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
+			</rule>
+		</template>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Address">

@@ -58,18 +58,5 @@ public class BasicRuleIntegrationTest extends ValidationIntegrationTest {
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.alphabetic", errors.getGlobalError().getCode());
 	}
-	
-	@Test
-	public void testValidationTemplates() {
-		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/foo/new");
-		request.setServletPath("/foo/new");
-		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
-		Customer customer = new Customer();
-		Errors errors = doValidate("testValidationTemplates.xml", customer).errors;
-		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("address.lineOne").getCode());
-		assertEquals("errors.required", errors.getFieldError("address.city").getCode());
-		assertEquals("errors.required", errors.getFieldError("secondaryAddress.city").getCode());
-	}
 
 }

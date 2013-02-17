@@ -62,39 +62,5 @@ public class ValidationEntityTest {
 		entity.addValidationTemplate(template);
 		Mockito.verify(validationTemplates, Mockito.atLeastOnce()).add(template);
 	}
-	
-	@Test
-	public void testGetCachedRulesForForm() {
-		String formName = "foo";
-		Mockito.when(formRuleCache.containsKey(formName)).thenReturn(true);
-		entity.getValidationRules(formName);
-		Mockito.verify(formRuleCache, Mockito.atLeastOnce()).get(formName);
-	}
-	
-	@Test
-	public void testGetValidationRulesChecksAppliesToForm() {
-		String formName = "foo";
-		List<ValidationRule> mockRules = new ArrayList<ValidationRule>();
-		ValidationRule applicableRule = Mockito.mock(ValidationRule.class);
-		Mockito.when(applicableRule.appliesToForm(formName)).thenReturn(true);
-		mockRules.add(applicableRule);
-		ValidationRule nonApplicableRule = Mockito.mock(ValidationRule.class);
-		Mockito.when(nonApplicableRule.appliesToForm(formName)).thenReturn(false);
-		mockRules.add(nonApplicableRule);
-		Mockito.when(rules.iterator()).thenReturn(mockRules.iterator());
-		List<ValidationRule> applicableRules = entity.getValidationRules(formName);
-		assertTrue(applicableRules.contains(applicableRule));
-		assertFalse(applicableRules.contains(nonApplicableRule));
-	}
-	
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testDiscoveredRulesForFormAreCached() {
-		String formName = "foo";
-		List<ValidationRule> mockRules = new ArrayList<ValidationRule>();
-		Mockito.when(rules.iterator()).thenReturn(mockRules.iterator());
-		entity.getValidationRules(formName);
-		Mockito.verify(formRuleCache, Mockito.atLeastOnce()).put(Mockito.anyString(), Mockito.anyList());
-	}
 
 }

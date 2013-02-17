@@ -23,7 +23,7 @@ public class ValidationEntityDefinitionParserTest {
 	 */
 	@Test
 	public void testParseUninstantiable() {
-		assertFalse(rulesContainer.getRules(Customer.class, null).isEmpty());
+		assertFalse(rulesContainer.getValidationEntity(Customer.class).getRules().isEmpty());
 	}
 	
 }

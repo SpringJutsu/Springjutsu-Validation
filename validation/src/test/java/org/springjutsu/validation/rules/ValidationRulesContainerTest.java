@@ -3,7 +3,6 @@ package org.springjutsu.validation.rules;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -43,8 +42,6 @@ public class ValidationRulesContainerTest {
 		rules.add(validationRule);
 		
 		Mockito.when(validationEntity.getValidationClass()).thenReturn(List.class);
-		Mockito.when(validationEntity.getValidationRules("supportedState")).thenReturn(rules);
-		Mockito.when(validationEntity.getValidationRules(null)).thenReturn(rules);
 		Mockito.when(validationEntity.getRules()).thenReturn(rules);
 
 		Mockito.when(beanFactory.getBeansOfType(ValidationEntity.class)).thenReturn(entities);
@@ -57,29 +54,7 @@ public class ValidationRulesContainerTest {
 	}
 
 	@Test
-	public void testGetFormSpecificRules() {
-		assertNotNull(container.getRules(List.class, "supportedState"));
-		assertFalse(container.getRules(List.class, "supportedState").isEmpty());
-		assertEquals(validationRule, container.getRules(List.class, "supportedState").get(0));
-		assertNotNull(container.getRules(List.class, "unSupportedState"));
-		assertTrue(container.getRules(List.class, "unSupportedState").isEmpty());
-		assertNotNull(container.getRules(String.class, "supportedState"));
-		assertTrue(container.getRules(String.class, "supportedState").isEmpty());
-		assertNotNull(container.getRules(String.class, "unSupportedState"));
-		assertTrue(container.getRules(String.class, "unSupportedState").isEmpty());
-	}
-
-	@Test
-	public void testGetBaseRules() {
-		assertNotNull(container.getRules(List.class, null));
-		assertFalse(container.getRules(List.class, null).isEmpty());
-		assertEquals(validationRule, container.getRules(List.class, null).get(0));
-		assertNotNull(container.getRules(String.class, null));
-		assertTrue(container.getRules(String.class, null).isEmpty());
-	}
-
-	@Test
-	public void testHasModelRulesForClass() {
+	public void testHasRulesForClass() {
 		assertTrue(container.hasRulesForClass(List.class));
 		assertFalse(container.hasRulesForClass(String.class));
 	}

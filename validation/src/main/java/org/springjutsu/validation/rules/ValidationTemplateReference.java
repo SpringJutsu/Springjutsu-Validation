@@ -39,6 +39,29 @@ public class ValidationTemplateReference {
 		this.templateName = templateName;
 		this.formConstraints = new ArrayList<String>();
 	}
+	
+	/** Returns true if the rule applies to the current form.
+	 * Replace any REST variable wildcards with wildcard regex.
+	 * Replace ant path wildcards with wildcard regexes as well.
+	 * Iterate through possible form names to find the first match.
+	 */
+	public boolean appliesToForm(String form) {
+		if (form == null || form.isEmpty()) {
+			return true;
+		}
+		boolean appliesToForm = formConstraints.isEmpty();
+		for (String formName : formConstraints) {
+			String formPattern = 
+				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
+				.replaceAll("\\*\\*/?", "(*/?)+")
+				.replace("*", "[^/]+");
+			if (form.matches(formPattern)) {
+				appliesToForm = true;
+				break;
+			}			
+		}
+		return appliesToForm;
+	}
 
 	/**
 	 * @return the basePath

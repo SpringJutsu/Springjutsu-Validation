@@ -49,6 +49,9 @@ public class PathUtils {
 	 * @return class for path.
 	 */
 	public static Class<?> getClassForPath(Class<?> clazz, String path, boolean unwrapFinalCollectionType) {
+		if (path == null || path.isEmpty()) {
+			return clazz;
+		}
 		Class<?>[] pathClasses = getClassesForPathTokens(clazz, path, unwrapFinalCollectionType);
 		return pathClasses == null ? null : pathClasses[pathClasses.length - 1];
 	}

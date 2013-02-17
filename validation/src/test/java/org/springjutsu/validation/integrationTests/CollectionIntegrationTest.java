@@ -3,8 +3,6 @@ package org.springjutsu.validation.integrationTests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.util.ArrayList;
-
 import org.junit.Test;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.Errors;

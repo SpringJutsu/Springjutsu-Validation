@@ -18,9 +18,6 @@ package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
-
-import org.springjutsu.validation.util.PathUtils;
 
 /**
  * Java representation of an XML validation rule.
@@ -28,7 +25,7 @@ import org.springjutsu.validation.util.PathUtils;
  * @author Taylor Wicksell
  *
  */
-public class ValidationRule {
+public class ValidationRule implements RuleHolder {
 	
 	/**
 	 * Path to the field to validate.
@@ -108,57 +105,11 @@ public class ValidationRule {
 	}
 	
 	/**
-	 * Straight up clone.
-	 * @return cloned rule
-	 */
-	public ValidationRule clone() {
-		return cloneWithPath(getPath());
-	}
-	
-	/**
-	 * Clones this validation rule but with a different path
-	 * Used within validation logic of @link{ValidationManager}
-	 * @param path The new path to apply to the cloned rule
-	 * @return A cloned rule with the new path.
-	 */
-	public ValidationRule cloneWithPath(String path) {
-		ValidationRule newRule = new ValidationRule(path, this.type, this.value);
-		newRule.setErrorPath(this.errorPath);
-		newRule.setCollectionStrategy(this.collectionStrategy);
-		newRule.setMessage(this.message);
-		for (ValidationRule childRule : rules) {
-			newRule.getRules().add(childRule.clone());
-		}
-		newRule.getTemplateReferences().addAll(this.templateReferences);
-		newRule.setFormConstraints(this.formConstraints);
-		return newRule;
-	}
-	
-	/**
-	 * Clones this validation rule but with a different base path
-	 * Used within validation logic of @link{ValidationManager}
-	 * The base path is also applied to all sub rules recursively.
-	 * @param path The new path to apply to the cloned rule
-	 * @return A cloned rule with the new path.
-	 */
-	public ValidationRule cloneWithBasePath(String basePath) {
-		String newPath = PathUtils.appendPath(basePath, path);
-		ValidationRule newRule = cloneWithPath(newPath);
-		if (newRule.getErrorPath() != null && !newRule.getErrorPath().isEmpty()) {
-			newRule.setErrorPath(PathUtils.appendPath(basePath, newRule.getErrorPath()));
-		}
-		newRule.getRules().clear();
-		for (ValidationRule rule : this.rules) {
-			newRule.getRules().add(rule.cloneWithBasePath(basePath));
-		}
-		return newRule;
-	}
-	
-	/**
 	 * @return true if there are nested validation rules.
 	 */
 	public boolean hasChildren() {
-		return this.rules != null && !this.rules.isEmpty();
+		return (this.rules != null && !this.rules.isEmpty())
+			|| (this.templateReferences != null && !this.templateReferences.isEmpty());
 	}
 	
 	/**
@@ -197,6 +148,9 @@ public class ValidationRule {
 	 * Iterate through possible form names to find the first match.
 	 */
 	public boolean appliesToForm(String form) {
+		if (form == null || form.isEmpty()) {
+			return true;
+		}
 		boolean appliesToForm = formConstraints.isEmpty();
 		for (String formName : formConstraints) {
 			String formPattern = 
@@ -209,27 +163,6 @@ public class ValidationRule {
 			}			
 		}
 		return appliesToForm;
-	}
-	
-	public void addFormConstraint(String form) {
-		this.formConstraints.add(form);
-	}
-	
-	/**
-	 * Adds a rule to the nested validation rules.
-	 * @param rule The rule to add.
-	 */
-	public void addRule(ValidationRule rule)
-	{
-		this.rules.add(rule);
-	}
-	
-	/**
-	 * Adds a template ref to the nested validation template references.
-	 * @param templateReference The template reference to add.
-	 */
-	public void addTemplateReference(ValidationTemplateReference templateReference) {
-		this.templateReferences.add(templateReference);
 	}
 	
 	/**

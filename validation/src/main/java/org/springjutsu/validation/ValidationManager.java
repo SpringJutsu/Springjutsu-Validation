@@ -40,9 +40,12 @@ import org.springframework.webflow.execution.RequestContextHolder;
 import org.springjutsu.validation.executors.RuleExecutor;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.rules.CollectionStrategy;
+import org.springjutsu.validation.rules.RuleHolder;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
+import org.springjutsu.validation.rules.ValidationTemplate;
+import org.springjutsu.validation.rules.ValidationTemplateReference;
 import org.springjutsu.validation.util.PathUtils;
 import org.springjutsu.validation.util.RequestUtils;
 
@@ -105,13 +108,6 @@ public class ValidationManager extends CustomValidatorBean {
 	@Autowired
 	protected MessageSource messageSource;
 	
-	/**
-	 * We delegate to rule container executor,
-	 * in order to see if rules have been mapped for this
-	 * class. If none have, then we don't support it.
-	 * @see #RuleExecutorContainer.supportsClass(Class)
-	 * @see #javax.validation.Validator.supports(Class)
-	 */
 	@Override
 	public boolean supports(Class<?> clazz) {
 		return rulesContainer.supportsClass(clazz);
@@ -153,11 +149,11 @@ public class ValidationManager extends CustomValidatorBean {
 				currentForm = getMVCFormName();
 			}
 		}
-		validateModel(new ValidationContext(model, errors, currentForm));
+		doValidate(new ValidationContext(model, errors, currentForm));
 	}
 
 	
-	protected void validateModel(ValidationContext context) {
+	protected void doValidate(ValidationContext context) {
 		if (log.isDebugEnabled()) {
 			String nestedPath = PathUtils.joinPathSegments(context.getNestedPath());
 			log.debug("Current recursion path is: " + (nestedPath.isEmpty() ? "root object" : nestedPath));
@@ -183,20 +179,14 @@ public class ValidationManager extends CustomValidatorBean {
 		} else {
 			context.markValidated(validateMe);
 		}
+		ValidationEntity validationEntity = rulesContainer.getValidationEntity(validateMe.getClass());
 		
-		List<ValidationRule> rules = rulesContainer.getRules(validateMe.getClass(), context.getCurrentForm());
-		if (log.isDebugEnabled()) {
-			log.debug("Found " + rules.size() + " rules");
-		}
-		
-		callRules(context, rules);
+		callRules(context, validationEntity);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
-		PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors(); 
+		PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors();		
 		for (PropertyDescriptor property : propertyDescriptors) {
-			
-			ValidationEntity validationEntity = rulesContainer.getValidationEntity(validateMe.getClass());
 			
 			if (!validationEntity.getIncludedPaths().isEmpty() 
 					&& !validationEntity.getIncludedPaths().contains(property.getName())) {
@@ -207,19 +197,19 @@ public class ValidationManager extends CustomValidatorBean {
 				continue;
 			}
 			
-			if (rulesContainer.supportsClass(property.getPropertyType())) {
+			Class pathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), false);
+			Class collectionPathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), true);
+			
+			if (rulesContainer.supportsClass(pathClass)) {
 				context.pushNestedPath(property.getName());
-				validateModel(context);
+				doValidate(context);
 				context.popNestedPath();
-			} else if (List.class.isAssignableFrom(property.getPropertyType()) || property.getPropertyType().isArray()) {
+			} else if (rulesContainer.supportsClass(collectionPathClass) && (List.class.isAssignableFrom(pathClass) || pathClass.isArray())) {
 				Object potentialList = subBeanWrapper.getPropertyValue(property.getName());
-				List<?> list = (List<?>) (property.getPropertyType().isArray() 
-					&& potentialList  != null ? Arrays.asList(potentialList) 
-					: potentialList);
+				List<?> list = (List<?>) (pathClass.isArray() && potentialList != null 
+					? Arrays.asList(potentialList) : potentialList);
 				
 				if (list == null || list.isEmpty()) {
-					continue;
-				} else if (list.get(0) == null || !supports(list.get(0).getClass())) {
 					continue;
 				}
 				
@@ -228,8 +218,9 @@ public class ValidationManager extends CustomValidatorBean {
 					if (log.isDebugEnabled()) {
 						log.debug("Pushing nested path: " + nestedPathSegment);
 					}
+					
 					context.pushNestedPath(nestedPathSegment);
-					validateModel(context);
+					doValidate(context);
 					context.popNestedPath();
 					log.debug("Done validating nested path: " + nestedPathSegment);
 				}
@@ -242,11 +233,12 @@ public class ValidationManager extends CustomValidatorBean {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected void callRules(ValidationContext context, List<ValidationRule> modelRules) {
-		if (modelRules == null) {
-			return;
-		}
-		for (ValidationRule rule : modelRules) {
+	protected void callRules(ValidationContext context, RuleHolder ruleHolder) {
+		for (ValidationRule rule : ruleHolder.getRules()) {
+			
+			if (!rule.appliesToForm(context.getCurrentForm())) {
+				continue;
+			}
 			
 			// skip form rules during sub-bean validation
 			if (!context.getNestedPath().isEmpty() && !context.getCurrentForm().isEmpty()) {
@@ -277,6 +269,16 @@ public class ValidationManager extends CustomValidatorBean {
 				}
 			}
 		}
+		for (ValidationTemplateReference templateReference : ruleHolder.getTemplateReferences()) {
+			if (!templateReference.appliesToForm(context.getCurrentForm())) {
+				continue;
+			}
+			ValidationTemplate actualTemplate = 
+				rulesContainer.getValidationTemplateMap().get(templateReference.getTemplateName());
+			context.pushTemplate(templateReference, actualTemplate);
+			callRules(context, actualTemplate);
+			context.popTemplate();
+		}
 	}
 	
 	protected void handleValidationRule(ValidationContext context, ValidationRule rule) {
@@ -288,7 +290,7 @@ public class ValidationManager extends CustomValidatorBean {
 				if (log.isDebugEnabled()) {
 					log.debug("Running " + rule.getRules().size() + " nested rules.");
 				}
-				callRules(context, rule.getRules());
+				callRules(context, rule);
 			}
 		} else {
 			// If the rule fails and it has children,
@@ -305,8 +307,8 @@ public class ValidationManager extends CustomValidatorBean {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private SingletonMap resolveCollectionPathReplacements(ValidationContext context, ValidationRule rule) {
-		String path = context.getLocalizedRulePath(rule.getPath());
+	protected SingletonMap resolveCollectionPathReplacements(ValidationContext context, ValidationRule rule) {
+		String path = context.localizePath(rule.getPath());
 		
 		// Do nothing with EL paths.
 		if (PathUtils.containsEL(path)) {
@@ -447,7 +449,7 @@ public class ValidationManager extends CustomValidatorBean {
 	protected boolean passes(ValidationRule rule, ValidationContext context) {
 		if (log.isDebugEnabled()) {
 			log.debug("Preparing to execute rule: " + rule);
-			log.debug("Actual rule path is " + context.getLocalizedRulePath(rule.getPath()));
+			log.debug("Actual rule path is " + context.localizePath(rule.getPath()));
 		}
 		
 		// get args
@@ -501,7 +503,7 @@ public class ValidationManager extends CustomValidatorBean {
 	 * @param errors standard Errors object to record error on.
 	 */
 	protected void logError(ValidationContext context, ValidationRule rule) {
-		String localizedRulePath = context.getLocalizedRulePath(rule.getPath());
+		String localizedRulePath = context.localizePath(rule.getPath());
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
                 errorMessageKey = (errorMessagePrefix != null  && !errorMessagePrefix.isEmpty() ? errorMessagePrefix + "." : "") + rule.getType();
@@ -519,7 +521,7 @@ public class ValidationManager extends CustomValidatorBean {
 		// get the local path to error, in case errors object is on nested path.
 		String errorMessagePath = rule.getErrorPath();
         if (errorMessagePath != null && !errorMessagePath.isEmpty()) {
-        	errorMessagePath = context.getLocalizedRulePath(errorMessagePath);
+        	errorMessagePath = context.localizePath(errorMessagePath);
         } else {
         	errorMessagePath = localizedRulePath;
         }
@@ -580,7 +582,7 @@ public class ValidationManager extends CustomValidatorBean {
 		} else {
 			if (resolveAsModel) {
 				// not an expression, just get the model message key.
-				return getModelMessageKey(context.getLocalizedRulePath(rulePath), context.getRootModel());
+				return getModelMessageKey(context.localizePath(rulePath), context.getRootModel());
 			} else {
 				// not an expression, return literal
 				return rulePath;

@@ -1,7 +1,6 @@
 package org.springjutsu.validation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +10,11 @@ import java.util.regex.Pattern;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.validation.Errors;
+import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
+import org.springjutsu.validation.exceptions.IllegalTemplateReferenceException;
 import org.springjutsu.validation.rules.ValidationRule;
+import org.springjutsu.validation.rules.ValidationTemplate;
+import org.springjutsu.validation.rules.ValidationTemplateReference;
 import org.springjutsu.validation.spel.WebContextSPELResolver;
 import org.springjutsu.validation.util.PathUtils;
 
@@ -22,6 +25,7 @@ public class ValidationContext {
 	private WebContextSPELResolver spelResolver;
 	private String currentForm;
 	private Stack<String> nestedPath;
+	private Stack<String> templateNames;
 	private Stack<String> templateBasePaths;
 	private Map<String, String> collectionPathReplacements;
 	
@@ -47,6 +51,7 @@ public class ValidationContext {
 		this.nestedPath = new Stack<String>();
 		this.checkedModelHashes = new Stack<List<Integer>>();
 		this.checkedModelHashes.push(new ArrayList<Integer>());
+		this.templateNames = new Stack<String>();
 		this.templateBasePaths = new Stack<String>();
 		this.collectionPathReplacements = new LinkedHashMap<String, String>(); 
 	}
@@ -88,7 +93,7 @@ public class ValidationContext {
 			result = spelResolver.resolveSPELString(rule.getPath());
 		} else {
 			BeanWrapperImpl beanWrapper = new BeanWrapperImpl(getRootModel());
-			String localizedRulePath = getLocalizedRulePath(rule.getPath());
+			String localizedRulePath = localizePath(rule.getPath());
 			// TODO: Why is this check here?
 			// Under what circumstances did we want this to return null
 			// instead of throwing an exception?
@@ -131,23 +136,47 @@ public class ValidationContext {
 		checkedModelHashes.pop();
 	}
 	
+	public void pushTemplate(ValidationTemplateReference templateReference, ValidationTemplate actualTemplate) {
+		if (templateNames.contains(templateReference.getTemplateName())) {
+			throw new CircularValidationTemplateReferenceException(
+				"Circular use of validation template named " + templateReference.getTemplateName());
+		}
+		String localizedTemplatePath = localizePath(templateReference.getBasePath());
+		Class templateTargetClass = PathUtils.getClassForPath(modelWrapper.getWrappedClass(), localizedTemplatePath, true);
+		if (!actualTemplate.getApplicableEntityClass().isAssignableFrom(templateTargetClass)) {
+			throw new IllegalTemplateReferenceException(
+				"Template named " + actualTemplate.getName() + 
+				" expects class " + actualTemplate.getApplicableEntityClass() +
+				" but got instance of " + templateTargetClass);
+		}
+		
+				
+		templateNames.push(templateReference.getTemplateName());
+		templateBasePaths.push(templateReference.getBasePath());
+	}
+	
+	public void popTemplate() {
+		templateNames.pop();
+		templateBasePaths.pop();
+	}
+	
 	/**
-	 * Performs the following operations to localize a rule path
-	 * to the current context:
+	 * Performs the following operations to localize a sub path
+	 * (e.g. rule path) to the current context:
 	 * 1) prepends with template base paths
-	 * 2) applies collection replacements
-	 * 3) prepends resultant path with nestedPath
-	 * @param rulePath
-	 * @return
+	 * 2) prepends resultant path with nestedPath
+	 * 3) applies collection replacements 
+	 * @param subPath the path to localize
+	 * @return currently localizedPath
 	 */
-	public String getLocalizedRulePath(String rulePath) {
-		if (PathUtils.containsEL(rulePath)) {
-			return rulePath;
+	public String localizePath(String subPath) {
+		if (PathUtils.containsEL(subPath)) {
+			return subPath;
 		}
 		String localizedPath = PathUtils.appendPath(
 				PathUtils.joinPathSegments(nestedPath),
 				PathUtils.joinPathSegments(templateBasePaths), 
-				rulePath);
+				subPath);
 		// Apply collection path replacements.
 		// Multiple collection paths may build off of one another,
 		// so it is important to run all possible path replacements.
@@ -210,6 +239,14 @@ public class ValidationContext {
 
 	public void setCheckedModelHashes(Stack<List<Integer>> checkedModelHashes) {
 		this.checkedModelHashes = checkedModelHashes;
+	}
+	
+	public Stack<String> getTemplateNames() {
+		return templateNames;
+	}
+
+	public void setTemplateNames(Stack<String> templateNames) {
+		this.templateNames = templateNames;
 	}
 
 	public Stack<String> getTemplateBasePaths() {
