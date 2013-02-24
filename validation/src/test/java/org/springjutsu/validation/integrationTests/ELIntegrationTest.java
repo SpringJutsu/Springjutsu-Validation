@@ -8,6 +8,11 @@ import org.springjutsu.validation.test.entities.Customer;
 
 public class ELIntegrationTest extends ValidationIntegrationTest {
 	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "elIntegrationTest";
+	}
+	
 	@Test
 	public void testSPELvsModelBean() {
 		Customer customer = new Customer();

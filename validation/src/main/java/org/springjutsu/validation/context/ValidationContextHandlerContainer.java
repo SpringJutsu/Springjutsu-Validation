@@ -26,6 +26,11 @@ public class ValidationContextHandlerContainer {
 	protected List<KeyedBeanRegistrant> beanRegistrants;
 	
 	/**
+	 * Can configure this to false if user doesn't want the default handlers. 
+	 */
+	protected boolean addDefaultContextHandlers = true;
+	
+	/**
 	 * Use the bean factory to look up annotated rule executors.
 	 */
 	@Autowired
@@ -38,7 +43,9 @@ public class ValidationContextHandlerContainer {
 	 */
 	@PostConstruct
 	public void registerContextHandlers() throws BeansException {
-		addDefaultContextHandlers();
+		if (addDefaultContextHandlers) {
+			addDefaultContextHandlers();
+		}
 		Map<String, Object> contextHandlerBeans = 
 			((ListableBeanFactory) beanFactory).getBeansWithAnnotation(ConfiguredContextHandler.class);
 
@@ -101,6 +108,14 @@ public class ValidationContextHandlerContainer {
 	protected void addDefaultContextHandlers() {
 		setCustomContextHandler("form", new MVCFormValidationContextHandler());
 		setCustomContextHandler("webflow", new WebflowValidationContextHandler());
+	}
+	
+	/**
+	 * Set to false if user does not want the default rule executors.
+	 * @param addDefaultRuleExecutors
+	 */
+	public void setAddDefaultContextHandlers(boolean addDefaultContextHandlers) {
+		this.addDefaultContextHandlers = addDefaultContextHandlers;
 	}
 	
 	/**

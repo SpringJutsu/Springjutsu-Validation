@@ -11,6 +11,11 @@ import org.springjutsu.validation.test.entities.Customer;
 
 public class CollectionIntegrationTest extends ValidationIntegrationTest {
 	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "collectionIntegrationTest";
+	}
+	
 	@Test
 	public void testCollectionRules() {
 		Company company = new Company();

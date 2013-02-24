@@ -34,6 +34,20 @@ public class WebflowValidationContextHandler implements ValidationContextHandler
 	}
 	
 	/**
+	 * Since form rules are rooted at form-backing object,
+	 * we should disable evaluation of form rules during
+	 * sub bean validation in order to prevent an object
+	 * of the same class as the form-backing object within
+	 * the form-backing object's sub beans from being
+	 * inadvertently used as the base for another application
+	 * of the form-specific rules.
+	 */
+	@Override
+	public boolean enableDuringSubBeanValidation() {
+		return false;
+	}
+	
+	/**
 	 * Gets a identifier of the current state that needs validating in
 	 * order to determine what rules to load from the validation definition.
 	 * For webflow, this is the flow ID appended with a colon, and then the 

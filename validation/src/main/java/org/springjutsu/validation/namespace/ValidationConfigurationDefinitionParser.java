@@ -103,17 +103,17 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		// Parse context configuration...
 		Element contextConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "context-config").item(0);
 		if (contextConfig != null) {
-			boolean addDefaultContextHandlers = Boolean.valueOf(rulesConfig.getAttribute("addDefaultContextHandlers"));
+			boolean addDefaultContextHandlers = Boolean.valueOf(contextConfig.getAttribute("addDefaultContextHandlers"));
 			contextHandlerContainerBuilder.addPropertyValue("addDefaultContextHandlers", addDefaultContextHandlers);
 			
 			List<KeyedBeanRegistrant> contextHandlers = new ArrayList<KeyedBeanRegistrant>();
-			NodeList contextHandlerNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "context-handler");
+			NodeList contextHandlerNodes = contextConfig.getElementsByTagNameNS(contextConfig.getNamespaceURI(), "context-handler");
 			for (int handlerNbr = 0; handlerNbr < contextHandlerNodes.getLength(); handlerNbr++) {
 				Element contextHandlerNode = (Element) contextHandlerNodes.item(handlerNbr);
 				BeanDefinitionBuilder handlerBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(contextHandlerNode.getAttribute("class"));
 				String ruleExecutorBeanName = registerInfrastructureBean(context, handlerBuilder);
-				contextHandlers.add(new KeyedBeanRegistrant(ruleExecutorBeanName, contextHandlerNode.getAttribute("name")));
+				contextHandlers.add(new KeyedBeanRegistrant(ruleExecutorBeanName, contextHandlerNode.getAttribute("type")));
 			}
 			contextHandlerContainerBuilder.addPropertyValue("contextHandlerBeanRegistrants", contextHandlers);
 		}

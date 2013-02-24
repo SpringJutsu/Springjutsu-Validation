@@ -184,19 +184,23 @@ public class ValidationManager extends CustomValidatorBean {
 		
 		callRules(context, validationEntity);
 		
-		// Check validation contexts if we're
-		// not performing recursive validation
-		if (context.getNestedPath().isEmpty()) {
-			for (ValidationContext validationContext : validationEntity.getValidationContexts()) {
-				ValidationContextHandler contextHandler = 
-					contextHandlerContainer.getContextHandlerForType(validationContext.getType());
-				// if the specified context is active
-				// initialize the spel resolver, run the rules, then reset the resolver
-				if (contextHandler.isActive(validationContext.getQualifiers())) {
-					contextHandler.initializeSPELResolver(context.getSpelResolver());
-					callRules(context, validationContext);
-					context.getSpelResolver().reset();
-				}
+		for (ValidationContext validationContext : validationEntity.getValidationContexts()) {
+			ValidationContextHandler contextHandler = 
+				contextHandlerContainer.getContextHandlerForType(validationContext.getType());
+			
+			// if we're performing sub bean validation,
+			// and the current context handler does not permit
+			// sub bean validation, then skip this context handler.
+			if (!context.getNestedPath().isEmpty() && !contextHandler.enableDuringSubBeanValidation()) {
+				continue;
+			}
+			
+			// if the specified context is active
+			// initialize the spel resolver, run the rules, then reset the resolver
+			if (contextHandler.isActive(validationContext.getQualifiers())) {
+				contextHandler.initializeSPELResolver(context.getSpelResolver());
+				callRules(context, validationContext);
+				context.getSpelResolver().reset();
 			}
 		}
 		 

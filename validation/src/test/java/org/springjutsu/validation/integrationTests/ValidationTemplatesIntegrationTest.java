@@ -12,6 +12,11 @@ import org.springjutsu.validation.test.entities.Customer;
 
 public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTest {
 	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "validationTemplatesIntegrationTest";
+	}
+	
 	@Test
 	public void testValidationTemplates() {
 		setCurrentFormPath("/foo/new");

@@ -6,13 +6,15 @@ import java.util.Locale;
 
 import org.junit.Test;
 import org.springframework.context.MessageSource;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.Errors;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springjutsu.validation.test.entities.Customer;
 
 public class BasicRuleIntegrationTest extends ValidationIntegrationTest {
+	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "basicRuleIntegrationTest";
+	}
 	
 	@Test
 	public void testBasicRules() {

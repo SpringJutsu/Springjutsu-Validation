@@ -11,15 +11,23 @@
 	<context:annotation-config />
 
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
-	<configuration validatorName="testValidationManagerName"/>
+	<configuration validatorName="testValidationManagerName">
+		<context-config>
+			<context-handler type="testName" 
+				class="org.springjutsu.validation.integrationTests.ContextIntegrationTest$TestNameContextHandler"/>
+		</context-config>
+	</configuration>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<form path="/foo/new,/**/foo/new,/foo/{id}/edit,/**/foo/{id}/edit,mockFlow:mockState">
-			<rule path="firstName" type="required" />
-		</form>
-		<form path="/foo/new">
-			<rule path="lastName" type="required" />
-		</form>
+		<!-- Not in context, so EL attribute shouldn't be available, should fail -->
+		<rule path="${jUnitTestName.methodName}" type="matches" value="testCustomContextELEnrichment" errorPath="emailAddress"/>
+		
+		<context type="testName" qualifiers="testCustomContextELEnrichment">
+			<!-- In context, so EL attribute should be available, should pass -->
+			<rule path="${jUnitTestName.methodName}" type="matches" value="testCustomContextELEnrichment" errorPath="firstName"/>
+			<!-- Just plain doesn't match, should fail.-->
+			<rule path="${jUnitTestName.methodName}" type="matches" value="thisIsntMyMethodName" errorPath="lastName"/>
+		</context>
 	</entity>
 	
 	<!-- Include messages used by application -->

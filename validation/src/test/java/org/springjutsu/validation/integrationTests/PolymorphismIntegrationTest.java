@@ -19,11 +19,16 @@ import org.springjutsu.validation.test.entities.ValuedCustomer;
 
 public class PolymorphismIntegrationTest extends ValidationIntegrationTest {
 	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "polymorphismIntegrationTest";
+	}
+	
 	@Test
 	public void testRuleInheritance() {
 		ApplicationContext context =
 		    new ClassPathXmlApplicationContext(new String[] {
-		    	xmlDirectory + "testInheritance.xml"});
+		    	xmlDirectory + "polymorphismIntegrationTest/testInheritance.xml"});
 		ValidationRulesContainer container = context.getBean(ValidationRulesContainer.class);
 		assertEquals(1, container.getValidationEntity(Person.class).getRules().size());
 		assertEquals(1, container.getValidationEntity(Person.class).getValidationContexts().size());

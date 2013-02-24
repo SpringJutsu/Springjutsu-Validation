@@ -38,6 +38,25 @@ public class MVCFormValidationContextHandler implements ValidationContextHandler
 		}
 	}
 	
+	/**
+	 * Since form rules are rooted at form-backing object,
+	 * we should disable evaluation of form rules during
+	 * sub bean validation in order to prevent an object
+	 * of the same class as the form-backing object within
+	 * the form-backing object's sub beans from being
+	 * inadvertently used as the base for another application
+	 * of the form-specific rules.
+	 */
+	@Override
+	public boolean enableDuringSubBeanValidation() {
+		return false;
+	}
+	
+	/**
+	 * Initialize SPEL access to MVC scopes including
+	 * request parameters, request attributes and
+	 * session attributes.
+	 */
 	@Override
 	public void initializeSPELResolver(SPELResolver spelResolver) {
 		

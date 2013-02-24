@@ -1,6 +1,7 @@
 package org.springjutsu.validation.integrationTests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -12,12 +13,18 @@ import org.springjutsu.validation.test.entities.Customer;
 
 public class FormIntegrationTest extends ValidationIntegrationTest {
 	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "formIntegrationTest";
+	}
+	
 	@Test
 	public void testMultiSourceMVCFormRules() {
 		setCurrentFormPath("/foo/new");
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
-		assertEquals(2, errors.getErrorCount());
+		assertEquals(3, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
 	}
@@ -27,7 +34,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		setCurrentFormPath("/foo/1/edit");
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
-		assertEquals(1, errors.getErrorCount());
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
@@ -36,7 +44,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		setCurrentFormPath("/bar/1/foo/new");
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
-		assertEquals(1, errors.getErrorCount());
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
@@ -45,7 +54,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		setCurrentFormPath("/bar/1/foo/1/edit");
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
-		assertEquals(1, errors.getErrorCount());
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
@@ -56,8 +66,23 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		org.springframework.webflow.execution.RequestContextHolder.setRequestContext(mockRequestContext);
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
-		assertEquals(1, errors.getErrorCount());
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());	
+	}
+	
+	@Test
+	public void testSubPathRulesIgnoreFormRules() {
+		setCurrentFormPath("/foo/new");
+		Customer customer = new Customer();
+		customer.setFirstName("bob");
+		customer.setReferredBy(new Customer());
+		customer.getReferredBy().setFirstName("bob");
+		Errors errors = doValidate("testSubPathFormRulesIgnored.xml", customer).errors;
+		assertEquals(2, errors.getErrorCount());
+		assertNull(errors.getFieldError("firstName"));
+		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 
 }

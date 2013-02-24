@@ -18,10 +18,12 @@ public abstract class ValidationIntegrationTest {
 	protected TestResult doValidate(String configXml, Object validateMe) {
 		ApplicationContext context =
 		    new ClassPathXmlApplicationContext(new String[] {
-		    	xmlDirectory + configXml});
+		    	xmlDirectory + getXmlSubdirectory() + "/" + configXml});
 		ValidationManager manager = context.getBean(ValidationManager.class);
 		return new TestResult(manager.validate(validateMe), context.getBean(MessageSource.class));
 	}
+	
+	protected abstract String getXmlSubdirectory();
 	
 	protected class TestResult {
 		public Errors errors;

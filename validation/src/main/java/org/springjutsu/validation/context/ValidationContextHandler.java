@@ -32,6 +32,29 @@ public interface ValidationContextHandler {
 	boolean isActive(Set<String> qualifiers);
 	
 	/**
+	 * Allows the context handler to specify whether or not
+	 * rules under the context should be run during recursive 
+	 * sub bean validation. 
+	 * If your context is based entirely off of the root object 
+	 * being validated, for example validating the backing 
+	 * object of a form or web service endpoint, then it is 
+	 * advisable to disable the context when sub-beans are 
+	 * being evaluated, else the rules which were intended 
+	 * to be run for only the root object may be evaluated 
+	 * against a different object of the same class within
+	 * the sub bean paths. 
+	 * However, if the context is not intended to be evaluated
+	 * only against the root object, and instead implies some 
+	 * contextual condition for general application of rules 
+	 * throughout the object model, it would be preferable to
+	 * enable the context during recursive sub bean validation.
+	 * @return true if the validation rules contained in the
+	 * context declaration should be run for sub beans under
+	 * the root object passed to the validator.
+	 */
+	boolean enableDuringSubBeanValidation();
+	
+	/**
 	 * Allows the ValidationContextHandler to initialize the
 	 * SPELResolver with scope and parser customizations 
 	 * useful in evaluating the current context.

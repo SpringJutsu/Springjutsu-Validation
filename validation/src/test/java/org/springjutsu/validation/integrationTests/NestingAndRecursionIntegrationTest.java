@@ -14,25 +14,16 @@ import org.springjutsu.validation.test.entities.SkippablePerson;
 
 public class NestingAndRecursionIntegrationTest extends ValidationIntegrationTest {
 	
+	@Override
+	protected String getXmlSubdirectory() {
+		return "nestingAndRecursionIntegrationTest";
+	}
+	
 	@Test
 	public void testNestedRules() {
 		Customer customer = new Customer();
 		customer.setFirstName("bob");
 		Errors errors = doValidate("testNestedRules.xml", customer).errors;
-		assertEquals(2, errors.getErrorCount());
-		assertNull(errors.getFieldError("firstName"));
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-	}
-	
-	@Test
-	public void testSubPathRulesIgnoreFormRules() {
-		setCurrentFormPath("/foo/new");
-		Customer customer = new Customer();
-		customer.setFirstName("bob");
-		customer.setReferredBy(new Customer());
-		customer.getReferredBy().setFirstName("bob");
-		Errors errors = doValidate("testSubPathFormRulesIgnored.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
 		assertNull(errors.getFieldError("firstName"));
 		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
