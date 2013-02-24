@@ -140,6 +140,29 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			}
 		}
 		
+		NodeList contextNodes = entityNode.getElementsByTagNameNS(
+				entityNode.getNamespaceURI(), "context");
+		for (int contextNbr = 0; contextNbr < contextNodes.getLength(); contextNbr++) {
+			Element contextNode = (Element) contextNodes.item(contextNbr);
+			
+			// get form paths.
+			String contextQualifiers = contextNode.getAttribute("qualifiers");
+			Set<String> contextConstraints = new HashSet<String>();
+			for (String qualifier : contextQualifiers.split(",")) {
+				contextConstraints.add(qualifier.trim());
+			}
+			
+			ValidationContext context = new ValidationContext();
+			context.setType(contextNode.getAttribute("type"));
+			context.setQualifiers(contextConstraints);
+			
+			// get rules & templates.
+			ValidationStructure contextSpecificValidationStructure = parseNestedValidation(contextNode, modelClass);
+			context.setRules(contextSpecificValidationStructure.rules);
+			context.setTemplateReferences(contextSpecificValidationStructure.refs);
+			contexts.add(context);
+		}
+		
 		List<ValidationTemplate> templates = new ArrayList<ValidationTemplate>();
 		NodeList templateNodes = entityNode.getElementsByTagNameNS(
 				entityNode.getNamespaceURI(), "template");

@@ -4,7 +4,7 @@
 	xmlns:beans="http://www.springframework.org/schema/beans"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="
-	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.2.xsd
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.3.xsd
 	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 

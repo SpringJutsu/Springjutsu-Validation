@@ -20,7 +20,8 @@ import org.w3c.dom.NodeList;
 /**
  * Registers a @link{ValidationManager}, 
  * a @link{ValidationRulesContainer},
- * and a @link{ruleExecutorContainer}
+ * a @link{RuleExecutorContainer},
+ * and a @link{ValidationContextHandlerContainer}
  * with the user-specified configuration.
  * @author Clark Duplichien
  */
@@ -63,7 +64,7 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 				Element ruleExecutorNode = (Element) ruleExecutorNodes.item(executorNbr);
 				BeanDefinitionBuilder executorBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(ruleExecutorNode.getAttribute("class"));
-				String ruleExecutorBeanName = registerInfrastructureBean(configNode, context, executorBuilder);
+				String ruleExecutorBeanName = registerInfrastructureBean(context, executorBuilder);
 				ruleExecutors.add(new KeyedBeanRegistrant(ruleExecutorBeanName, ruleExecutorNode.getAttribute("name")));
 			}
 			ruleExecutorContainerBuilder.addPropertyValue("ruleExecutorBeanRegistrants", ruleExecutors);
@@ -99,19 +100,35 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			validationRulesContainerBuilder.addPropertyValue("includeAnnotations", includeAnnotations);
 		}
 		
+		// Parse context configuration...
+		Element contextConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "context-config").item(0);
+		if (contextConfig != null) {
+			boolean addDefaultContextHandlers = Boolean.valueOf(rulesConfig.getAttribute("addDefaultContextHandlers"));
+			contextHandlerContainerBuilder.addPropertyValue("addDefaultContextHandlers", addDefaultContextHandlers);
+			
+			List<KeyedBeanRegistrant> contextHandlers = new ArrayList<KeyedBeanRegistrant>();
+			NodeList contextHandlerNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "context-handler");
+			for (int handlerNbr = 0; handlerNbr < contextHandlerNodes.getLength(); handlerNbr++) {
+				Element contextHandlerNode = (Element) contextHandlerNodes.item(handlerNbr);
+				BeanDefinitionBuilder handlerBuilder = BeanDefinitionBuilder
+					.genericBeanDefinition(contextHandlerNode.getAttribute("class"));
+				String ruleExecutorBeanName = registerInfrastructureBean(context, handlerBuilder);
+				contextHandlers.add(new KeyedBeanRegistrant(ruleExecutorBeanName, contextHandlerNode.getAttribute("name")));
+			}
+			contextHandlerContainerBuilder.addPropertyValue("contextHandlerBeanRegistrants", contextHandlers);
+		}
+		
 		// Register them beans.
-		registerInfrastructureBean(configNode, context, validationRulesContainerBuilder);
-		registerInfrastructureBean(configNode, context, ruleExecutorContainerBuilder);
-		registerInfrastructureBean(configNode, context, contextHandlerContainerBuilder);
+		registerInfrastructureBean(context, validationRulesContainerBuilder);
+		registerInfrastructureBean(context, ruleExecutorContainerBuilder);
+		registerInfrastructureBean(context, contextHandlerContainerBuilder);
 		context.registerBeanComponent(new BeanComponentDefinition(
 			validationManagerBuilder.getBeanDefinition(), configNode.getAttribute("validatorName")));
 		
 		return null;
 	}
 	
-	private String registerInfrastructureBean(Element element, ParserContext context, 
-			BeanDefinitionBuilder componentBuilder) {
-		
+	private String registerInfrastructureBean(ParserContext context, BeanDefinitionBuilder componentBuilder) {
 		BeanDefinition definition = componentBuilder.getBeanDefinition();
 		String entityName = context.getReaderContext().registerWithGeneratedName(definition);
 		context.registerComponent(new BeanComponentDefinition(definition, entityName));

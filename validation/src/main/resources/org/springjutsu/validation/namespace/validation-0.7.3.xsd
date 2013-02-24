@@ -21,6 +21,14 @@
 						</xsd:documentation>
 					</xsd:annotation>
 				</xsd:element>
+				<xsd:element name="context-config" type="context-config" minOccurs="0" maxOccurs="1">
+					<xsd:annotation>
+						<xsd:documentation>
+							Handles configuration of validation contexts, including the 
+							registration of ValidationContextHandler instances.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
 				<xsd:element name="message-config" type="message-config" minOccurs="0" maxOccurs="1">
 					<xsd:annotation>
 						<xsd:documentation>
@@ -88,6 +96,32 @@
 			</xsd:annotation>
 		</xsd:attribute>
 	</xsd:complexType>
+	
+	<xsd:complexType name="context-config">
+		<xsd:sequence>
+			<xsd:element name="context-handler" type="context-handler" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						Registers a single context handler for a specific context type
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="addDefaultContextHandlers" type="xsd:boolean" use="optional" default="true">
+			<xsd:annotation>
+				<xsd:documentation>
+					Indicates whether or not the default context handlers 
+					packaged with springjutsu validation should be registered.
+					The user should understand that changing this to "false" will 
+					remove the MVC "form" and the Web Flow "flow" handlers, effectively
+					disabling the functionality of the &lt;form&gt; element.
+					However, this may be done intentionally if it is wished to
+					register handlers to override the behavior of the &lt;form&gt;
+					element. 
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
 
 	<xsd:complexType name="message-config">
 		<xsd:attribute name="enableSuperclassFieldLabelLookup" type="xsd:boolean" use="optional" default="true">
@@ -142,6 +176,24 @@
 			<xsd:annotation>
 				<xsd:documentation source="java:java.lang.Class">
 					The implementing class of the rule executor.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
+	<xsd:complexType name="context-handler">
+		<xsd:attribute name="type" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					The context type that this handler is responsible
+					for handling.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="class" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation source="java:java.lang.Class">
+					The implementing class of the context handler.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -212,6 +264,16 @@
 					</xsd:annotation>
 				</xsd:element>
 				<xsd:element name="form" type="form" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element name="context" type="context" minOccurs="0" maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>
+							A validation context indicates a specific event or occurrence which
+							requires additional or more specific validation to run. This allows the
+							user to define contextual validation. Each defined context type must
+							have a validation context handler registered to handle it.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
 				<xsd:element name="template" type="template" minOccurs="0" maxOccurs="unbounded">
 					<xsd:annotation>
 						<xsd:documentation>
@@ -286,6 +348,41 @@
 						e.g. /accounts/new,/accounts/{id}/edit 
 					For Spring Web Flow, use the format &lt;flowId>:&lt;stateName>, 
 					e.g. /accounts/create-account:accountForm,/accounts/edit-account:accountForm
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
+	<xsd:complexType name="context">
+		<xsd:sequence>
+			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						References a named validation template.
+						Applies all the rules in the template to the object
+						referenced by the base-path. 
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="type" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					The context type identifies the type of event or occurrance
+					which requires specific validation. This should match the 
+					context type that the associated ValidationContextHandler 
+					was registered for.  
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="qualifiers" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					A comma-delimited listing of qualifiers indicating the
+					identifiers for the specific event(s) or occurance(s) for
+					which the nested rules and template references should be
+					evaluated.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
