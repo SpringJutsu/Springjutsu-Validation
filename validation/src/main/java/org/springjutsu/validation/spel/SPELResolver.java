@@ -22,23 +22,12 @@ import java.util.regex.Pattern;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.webflow.context.ExternalContext;
-import org.springframework.webflow.context.servlet.ServletExternalContext;
-import org.springframework.webflow.execution.RequestContext;
-import org.springframework.webflow.execution.RequestContextHolder;
-import org.springframework.webflow.expression.spel.BeanFactoryPropertyAccessor;
-import org.springframework.webflow.expression.spel.FlowVariablePropertyAccessor;
-import org.springframework.webflow.expression.spel.MessageSourcePropertyAccessor;
-import org.springframework.webflow.test.MockRequestContext;
-import org.springjutsu.validation.util.RequestUtils;
 
 /**
- * A request-aware resolver of SPEL Expressions.
- * Evaluates SPEL expressions in a MVC & Web Flow aware context.
+ * A customizable resolver of SPEL Expressions.
  * @author Clark Duplichien
  */
-public class WebContextSPELResolver {
+public class SPELResolver {
 	
 	public static final String EXPRESSION_MATCHER = "\\$\\{(.(?!\\$\\{))+\\}";
 	
@@ -54,15 +43,31 @@ public class WebContextSPELResolver {
 	protected ExpressionParser expressionParser;
 	
 	/**
+	 * Core model object.
+	 */
+	protected Object model;
+	
+	/**
 	 * Initialize evaluation context and expression parser.
 	 * Initializes property accessors and contexts.
 	 * @param model the Model for this request 
 	 */
-	public WebContextSPELResolver(Object model) {
+	public SPELResolver(Object model) {
+		this.model = model;
+		reset();
+	}
+	
+	/**
+	 * Resets SPEL resolver to an initial state,
+	 * in order to clear any customization or contexts
+	 * added by validation contexts, etc.
+	 */
+	public void reset() {
 		scopedContext = new NamedScopeEvaluationContext();
 		expressionParser = new SpelExpressionParser();
-		initPropertyAccessors();
-		initContexts(model);
+		
+		// init named contexts
+		scopedContext.addContext("model", model);
 	}
 	
 	/**
@@ -123,65 +128,13 @@ public class WebContextSPELResolver {
 	public void setBySpel(String spel, Object object) {
 		expressionParser.parseExpression(spel).setValue(scopedContext, object);		
 	}
-	
-	/**
-	 * Either gets the current thread-bound Web Flow requestContext
-	 * instance, if this is a Web Flow request, or mocks a Web Flow 
-	 * request out of an MVC request, in order to standardize 
-	 * our web-scoped property access.
-	 * If neither a MVC or Web Flow request is active, return null.
-	 * @return RequestContext instance or null if no request
-	 */
-	protected RequestContext getOrMockRequestContext() {
-		RequestContext requestContext = null;	
-		if (RequestUtils.isWebflowRequest()) {
-			requestContext = RequestContextHolder.getRequestContext();
-		} else if (org.springframework.web.context.request.RequestContextHolder.getRequestAttributes() != null) {
-			requestContext = new MockRequestContext();
-			ServletRequestAttributes requestAttributes = (ServletRequestAttributes) 
-				org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-			ExternalContext externalContext = 
-				new ServletExternalContext(null, requestAttributes.getRequest(), null);
-			((MockRequestContext) requestContext).setExternalContext(externalContext);
-		}
-		return requestContext;
+
+	public NamedScopeEvaluationContext getScopedContext() {
+		return scopedContext;
 	}
-	
-	/**
-	 * Initialize property accessors.
-	 * Only add Web Flow variables if this is a Web Flow request.
-	 */
-	protected void initPropertyAccessors() {
-		scopedContext.addPropertyAccessor(new ReadCheckingMapAdaptablePropertyAccessor());
-		scopedContext.addPropertyAccessor(new MessageSourcePropertyAccessor());
-		if (RequestUtils.isWebflowRequest()) {
-			scopedContext.addPropertyAccessor(new FlowVariablePropertyAccessor());
-		}
-		scopedContext.addPropertyAccessor(new BeanFactoryPropertyAccessor());
-	}
-	
-	/**
-	 * Initialize Scopes to search within the Named Scope Context.
-	 * Only add Web Flow Scopes if this is a Web Flow Request.
-	 * @param model The validated model for this request.
-	 */
-	protected void initContexts(Object model) {
-		RequestContext requestContext = getOrMockRequestContext();
-		scopedContext.addContext("model", model);
-		if (requestContext != null) {
-			if (RequestUtils.isWebflowRequest()) {
-				scopedContext.addContext("requestScope", requestContext.getRequestScope());
-				scopedContext.addContext("flashScope", requestContext.getFlashScope());
-				if (requestContext.inViewState()) {
-					scopedContext.addContext("viewScope", requestContext.getViewScope());
-				}
-				scopedContext.addContext("flowScope", requestContext.getFlowScope());
-				scopedContext.addContext("conversationScope", requestContext.getConversationScope());
-			}
-			scopedContext.addContext("requestParameters", requestContext.getRequestParameters());
-			scopedContext.addContext("requestAttributes", requestContext.getExternalContext().getRequestMap());
-			scopedContext.addContext("session", requestContext.getExternalContext().getSessionMap());
-		}
+
+	public ExpressionParser getExpressionParser() {
+		return expressionParser;
 	}
 
 }

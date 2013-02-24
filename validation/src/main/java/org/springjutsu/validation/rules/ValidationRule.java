@@ -64,12 +64,6 @@ public class ValidationRule implements RuleHolder {
 	 * collection members, or to the collection object itself.
 	 */
 	protected CollectionStrategy collectionStrategy;
-	
-	/**
-	 * A list of form mappings, if provided, the rule will
-	 * only execute when the specified form(s) is/are loaded.
-	 */
-	protected List<String> formConstraints;
 
 	/**
 	 * These are any validation rules that were nested
@@ -100,7 +94,6 @@ public class ValidationRule implements RuleHolder {
 		this.type = type;
 		this.value = value;
 		this.rules = new ArrayList<ValidationRule>();
-		this.formConstraints = new ArrayList<String>();
 		this.templateReferences = new ArrayList<ValidationTemplateReference>();
 	}
 	
@@ -140,29 +133,6 @@ public class ValidationRule implements RuleHolder {
 		}
 		rule += "/>";
 		return rule;
-	}
-	
-	/** Returns true if the rule applies to the current form.
-	 * Replace any REST variable wildcards with wildcard regex.
-	 * Replace ant path wildcards with wildcard regexes as well.
-	 * Iterate through possible form names to find the first match.
-	 */
-	public boolean appliesToForm(String form) {
-		if (form == null || form.isEmpty()) {
-			return true;
-		}
-		boolean appliesToForm = formConstraints.isEmpty();
-		for (String formName : formConstraints) {
-			String formPattern = 
-				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
-				.replaceAll("\\*\\*/?", "(*/?)+")
-				.replace("*", "[^/]+");
-			if (form.matches(formPattern)) {
-				appliesToForm = true;
-				break;
-			}			
-		}
-		return appliesToForm;
 	}
 	
 	/**
@@ -255,14 +225,6 @@ public class ValidationRule implements RuleHolder {
 
 	public void setCollectionStrategy(CollectionStrategy collectionStrategy) {
 		this.collectionStrategy = collectionStrategy;
-	}
-
-	public List<String> getFormConstraints() {
-		return formConstraints;
-	}
-
-	public void setFormConstraints(List<String> formConstraints) {
-		this.formConstraints = formConstraints;
 	}
 
 	/**

@@ -35,6 +35,7 @@ import org.springjutsu.validation.executors.impl.MaxLengthRuleExecutor;
 import org.springjutsu.validation.executors.impl.MinLengthRuleExecutor;
 import org.springjutsu.validation.executors.impl.NumericRuleExecutor;
 import org.springjutsu.validation.executors.impl.RequiredRuleExecutor;
+import org.springjutsu.validation.namespace.KeyedBeanRegistrant;
 
 /**
  * Stores all discovered named rule executors, and makes them available
@@ -52,9 +53,9 @@ public class RuleExecutorContainer {
 	protected Map<String, RuleExecutor> ruleExecutors = new HashMap<String, RuleExecutor>();
 	
 	/**
-	 * A list of rule executors registered as beans by @see{}
+	 * A list of rule executors registered as beans
 	 */
-	protected List<RuleExecutorBeanRegistrant> beanRegistrants;
+	protected List<KeyedBeanRegistrant> beanRegistrants;
 	
 	/**
 	 * Can configure this to false if user doesn't want the default executors. 
@@ -69,10 +70,11 @@ public class RuleExecutorContainer {
 	
 	/**
 	 * Finds the annotated rule executors by searching the bean factory.
+	 * Also registers XML-configured rule executors.
 	 * @throws BeansException on a bad.
 	 */
 	@PostConstruct
-	public void discoverAnnotatedRuleExecutors() throws BeansException {
+	public void registerRuleExecutors() throws BeansException {
 		if (addDefaultRuleExecutors) {
 			addDefaultRuleExecutors();
 		}
@@ -85,9 +87,8 @@ public class RuleExecutorContainer {
 			setCustomRuleExecutor(ruleName, ruleExecutor);
 		}
 		if (beanRegistrants != null) {
-			for (RuleExecutorBeanRegistrant registrant : beanRegistrants) {
-				setCustomRuleExecutor(registrant.ruleName, 
-						(RuleExecutor) beanFactory.getBean(registrant.beanName));
+			for (KeyedBeanRegistrant registrant : beanRegistrants) {
+				setCustomRuleExecutor(registrant.getKey(), (RuleExecutor) beanFactory.getBean(registrant.getBeanName()));
 			}
 		}
 	}
@@ -160,21 +161,7 @@ public class RuleExecutorContainer {
 	 * Hook by which @see{ValidationConfigurationParser} registers XML defined rule executors
 	 * @param registrants @see{ValidationConfigurationParser} RuleExecutorBeanRegistrants to register.
 	 */
-	public void setRuleExecutorBeanRegistrants(List<RuleExecutorBeanRegistrant> registrants) {
+	public void setRuleExecutorBeanRegistrants(List<KeyedBeanRegistrant> registrants) {
 		this.beanRegistrants = registrants;
-	}
-	
-	/**
-	 * Used by @see{ValidationConfigurationParser} to register executors wired in the XML config.
-	 * Or at least until I figure out the "correct" way...
-	 * @author Clark Duplichien
-	 */
-	public static class RuleExecutorBeanRegistrant {
-		public String beanName;
-		public String ruleName;
-		public RuleExecutorBeanRegistrant(String beanName, String ruleName) {
-			this.beanName = beanName;
-			this.ruleName = ruleName;
-		}
 	}
 }

@@ -183,6 +183,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			
 			Set<ValidationRule> inheritableRules = new HashSet<ValidationRule>();
 			Set<ValidationTemplateReference> inheritableTemplateReferences = new HashSet<ValidationTemplateReference>();
+			Set<ValidationContext> inheritableContexts = new HashSet<ValidationContext>();
 			Set<String> inheritableExclusionPaths = new HashSet<String>();
 			Set<String> inheritableInclusionPaths = new HashSet<String>();
 			
@@ -190,6 +191,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				Class<?> clazz = classStack.pop();
 				if (supportsClass(clazz) && !inheritanceChecked.contains(clazz)) {
 					validationEntityMap.get(clazz).getRules().addAll(inheritableRules);
+					validationEntityMap.get(clazz).getValidationContexts().addAll(inheritableContexts);
 					validationEntityMap.get(clazz).getExcludedPaths().addAll(inheritableExclusionPaths);
 					validationEntityMap.get(clazz).getIncludedPaths().addAll(inheritableInclusionPaths);
 					validationEntityMap.get(clazz).getTemplateReferences().addAll(inheritableTemplateReferences);
@@ -198,6 +200,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 					inheritableRules.addAll(validationEntityMap.get(clazz).getRules());
 				}
 				if (supportsClass(clazz)) {
+					inheritableContexts.addAll(validationEntityMap.get(clazz).getValidationContexts());
 					inheritableExclusionPaths.addAll(validationEntityMap.get(clazz).getExcludedPaths());
 					inheritableInclusionPaths.addAll(validationEntityMap.get(clazz).getIncludedPaths());
 				}

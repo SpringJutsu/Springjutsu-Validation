@@ -1,7 +1,5 @@
 package org.springjutsu.validation.rules;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A java representation of an XML template-ref
@@ -24,12 +22,6 @@ public class ValidationTemplateReference {
 	protected String templateName;
 	
 	/**
-	 * A list of form mappings, if provided, the rule will
-	 * only execute when the specified form(s) is/are loaded.
-	 */
-	protected List<String> formConstraints;
-	
-	/**
 	 * Default constructor. Initialize.
 	 * @param basePath The Base path.
 	 * @param templateName The template name referenced.
@@ -37,30 +29,6 @@ public class ValidationTemplateReference {
 	public ValidationTemplateReference(String basePath, String templateName) {
 		this.basePath = basePath;
 		this.templateName = templateName;
-		this.formConstraints = new ArrayList<String>();
-	}
-	
-	/** Returns true if the rule applies to the current form.
-	 * Replace any REST variable wildcards with wildcard regex.
-	 * Replace ant path wildcards with wildcard regexes as well.
-	 * Iterate through possible form names to find the first match.
-	 */
-	public boolean appliesToForm(String form) {
-		if (form == null || form.isEmpty()) {
-			return true;
-		}
-		boolean appliesToForm = formConstraints.isEmpty();
-		for (String formName : formConstraints) {
-			String formPattern = 
-				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
-				.replaceAll("\\*\\*/?", "(*/?)+")
-				.replace("*", "[^/]+");
-			if (form.matches(formPattern)) {
-				appliesToForm = true;
-				break;
-			}			
-		}
-		return appliesToForm;
 	}
 
 	/**
@@ -89,14 +57,6 @@ public class ValidationTemplateReference {
 	 */
 	public void setTemplateName(String templateName) {
 		this.templateName = templateName;
-	}
-
-	public List<String> getFormConstraints() {
-		return formConstraints;
-	}
-
-	public void setFormConstraints(List<String> formConstraints) {
-		this.formConstraints = formConstraints;
 	}
 	
 }

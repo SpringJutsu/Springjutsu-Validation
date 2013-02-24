@@ -9,8 +9,8 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springjutsu.validation.ValidationManager;
+import org.springjutsu.validation.context.ValidationContextHandlerContainer;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
-import org.springjutsu.validation.executors.RuleExecutorContainer.RuleExecutorBeanRegistrant;
 import org.springjutsu.validation.rules.RecursiveValidationExclude;
 import org.springjutsu.validation.rules.RecursiveValidationInclude;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
@@ -35,6 +35,8 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			BeanDefinitionBuilder.genericBeanDefinition(ValidationManager.class);
 		BeanDefinitionBuilder ruleExecutorContainerBuilder = 
 			BeanDefinitionBuilder.genericBeanDefinition(RuleExecutorContainer.class);
+		BeanDefinitionBuilder contextHandlerContainerBuilder = 
+			BeanDefinitionBuilder.genericBeanDefinition(ValidationContextHandlerContainer.class);
 		BeanDefinitionBuilder validationRulesContainerBuilder =
 			BeanDefinitionBuilder.genericBeanDefinition(ValidationRulesContainer.class);
 		
@@ -55,15 +57,14 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			boolean addDefaultRules = Boolean.valueOf(rulesConfig.getAttribute("addDefaultRuleExecutors"));
 			ruleExecutorContainerBuilder.addPropertyValue("addDefaultRuleExecutors", addDefaultRules);
 			
-			List<RuleExecutorBeanRegistrant> ruleExecutors = new ArrayList<RuleExecutorBeanRegistrant>();
+			List<KeyedBeanRegistrant> ruleExecutors = new ArrayList<KeyedBeanRegistrant>();
 			NodeList ruleExecutorNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "rule-executor");
 			for (int executorNbr = 0; executorNbr < ruleExecutorNodes.getLength(); executorNbr++) {
 				Element ruleExecutorNode = (Element) ruleExecutorNodes.item(executorNbr);
 				BeanDefinitionBuilder executorBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(ruleExecutorNode.getAttribute("class"));
 				String ruleExecutorBeanName = registerInfrastructureBean(configNode, context, executorBuilder);
-				ruleExecutors.add(new RuleExecutorBeanRegistrant(
-					ruleExecutorBeanName, ruleExecutorNode.getAttribute("name")));
+				ruleExecutors.add(new KeyedBeanRegistrant(ruleExecutorBeanName, ruleExecutorNode.getAttribute("name")));
 			}
 			ruleExecutorContainerBuilder.addPropertyValue("ruleExecutorBeanRegistrants", ruleExecutors);
 			
@@ -101,6 +102,7 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		// Register them beans.
 		registerInfrastructureBean(configNode, context, validationRulesContainerBuilder);
 		registerInfrastructureBean(configNode, context, ruleExecutorContainerBuilder);
+		registerInfrastructureBean(configNode, context, contextHandlerContainerBuilder);
 		context.registerBeanComponent(new BeanComponentDefinition(
 			validationManagerBuilder.getBeanDefinition(), configNode.getAttribute("validatorName")));
 		

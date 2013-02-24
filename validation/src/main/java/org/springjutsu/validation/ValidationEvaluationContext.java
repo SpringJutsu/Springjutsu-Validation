@@ -15,15 +15,14 @@ import org.springjutsu.validation.exceptions.IllegalTemplateReferenceException;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationTemplate;
 import org.springjutsu.validation.rules.ValidationTemplateReference;
-import org.springjutsu.validation.spel.WebContextSPELResolver;
+import org.springjutsu.validation.spel.SPELResolver;
 import org.springjutsu.validation.util.PathUtils;
 
-public class ValidationContext {
+public class ValidationEvaluationContext {
 	
 	private Errors errors;
 	private BeanWrapper modelWrapper;
-	private WebContextSPELResolver spelResolver;
-	private String currentForm;
+	private SPELResolver spelResolver;
 	private Stack<String> nestedPath;
 	private Stack<String> templateNames;
 	private Stack<String> templateBasePaths;
@@ -43,11 +42,10 @@ public class ValidationContext {
 	 */
 	private Stack<List<Integer>> checkedModelHashes;
 	
-	public ValidationContext(Object model, Errors errors, String currentForm) {
+	public ValidationEvaluationContext(Object model, Errors errors) {
 		this.errors = errors;
 		this.modelWrapper = model == null ? null : new BeanWrapperImpl(model);
-		this.spelResolver = new WebContextSPELResolver(model);
-		this.currentForm = currentForm == null ? "" : currentForm;
+		this.spelResolver = new SPELResolver(model);
 		this.nestedPath = new Stack<String>();
 		this.checkedModelHashes = new Stack<List<Integer>>();
 		this.checkedModelHashes.push(new ArrayList<Integer>());
@@ -207,20 +205,12 @@ public class ValidationContext {
 		this.modelWrapper = modelWrapper;
 	}
 
-	public WebContextSPELResolver getSpelResolver() {
+	public SPELResolver getSpelResolver() {
 		return spelResolver;
 	}
 
-	public void setSpelResolver(WebContextSPELResolver spelResolver) {
+	public void setSpelResolver(SPELResolver spelResolver) {
 		this.spelResolver = spelResolver;
-	}
-
-	public String getCurrentForm() {
-		return currentForm;
-	}
-
-	public void setCurrentForm(String currentForm) {
-		this.currentForm = currentForm;
 	}
 
 	public Stack<String> getNestedPath() {

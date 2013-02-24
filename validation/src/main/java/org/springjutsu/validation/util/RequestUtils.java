@@ -43,29 +43,6 @@ public class RequestUtils {
 	 * A pattern describing a RESTful url variable
 	 */
 	public static final String PATH_VAR_PATTERN = "\\{[^\\}]+\\}";
-
-	/**
-	 * @return the current thread-bound HttpServletRequest
-	 */
-	public static HttpServletRequest getRequest() {
-		HttpServletRequest request = null;
-		if (isWebflowRequest()) {
-			request = (HttpServletRequest) org.springframework.webflow.execution.RequestContextHolder
-				.getRequestContext().getExternalContext().getNativeRequest();
-		} else if (RequestContextHolder.getRequestAttributes() != null){
-			RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
-			request = ((ServletRequestAttributes) attributes).getRequest(); 
-		}
-		return request;
-	}
-	
-	public static Map getRequestParameters() {
-		if (isWebflowRequest()) {
-			return org.springframework.webflow.execution.RequestContextHolder.getRequestContext().getRequestParameters().asMap();
-		} else {
-			return ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest().getParameterMap();
-		}
-	}
 	
 	/**
 	 * Used by successView and validationFailureView.
@@ -214,14 +191,6 @@ public class RequestUtils {
 			newPath = newPath.substring(0, newPath.length() - 1);
 		}
 		return newPath;
-	}
-	
-	/**
-	 * @return true if the current web request is associated
-	 * with Spring Web Flow.
-	 */
-	public static boolean isWebflowRequest() {
-		return org.springframework.webflow.execution.RequestContextHolder.getRequestContext() != null;
 	}
 	
 }

@@ -38,7 +38,7 @@ public class RuleExecutorContainerTest {
 
 	@Test
 	public void testDiscoverAnnotatedRuleExecutors() {
-		executorContainer.discoverAnnotatedRuleExecutors();
+		executorContainer.registerRuleExecutors();
 		assertEquals(executor, executorContainer.getRuleExecutorByName("testExecutor"));
 	}
 
@@ -62,14 +62,14 @@ public class RuleExecutorContainerTest {
 
 	@Test
 	public void testAddDefaultRuleExecutors() {
-		executorContainer.discoverAnnotatedRuleExecutors();
+		executorContainer.registerRuleExecutors();
 		assertNotNull(executorContainer.getRuleExecutorByName("required"));
 	}
 
 	@Test
 	public void testSetAddDefaultRuleExecutors() {
 		executorContainer.setAddDefaultRuleExecutors(false);
-		executorContainer.discoverAnnotatedRuleExecutors();
+		executorContainer.registerRuleExecutors();
 		try 
 		{
 			executorContainer.getRuleExecutorByName("required");

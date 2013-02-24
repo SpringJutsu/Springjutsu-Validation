@@ -25,10 +25,14 @@ public class PolymorphismIntegrationTest extends ValidationIntegrationTest {
 		    new ClassPathXmlApplicationContext(new String[] {
 		    	xmlDirectory + "testInheritance.xml"});
 		ValidationRulesContainer container = context.getBean(ValidationRulesContainer.class);
-		assertEquals(2, container.getValidationEntity(Person.class).getRules().size());
-		assertEquals(3, container.getValidationEntity(Developer.class).getRules().size());
-		assertEquals(3, container.getValidationEntity(Customer.class).getRules().size());
-		assertEquals(4, container.getValidationEntity(ValuedCustomer.class).getRules().size());
+		assertEquals(1, container.getValidationEntity(Person.class).getRules().size());
+		assertEquals(1, container.getValidationEntity(Person.class).getValidationContexts().size());
+		assertEquals(2, container.getValidationEntity(Developer.class).getRules().size());
+		assertEquals(1, container.getValidationEntity(Developer.class).getValidationContexts().size());
+		assertEquals(2, container.getValidationEntity(Customer.class).getRules().size());
+		assertEquals(1, container.getValidationEntity(Customer.class).getValidationContexts().size());
+		assertEquals(3, container.getValidationEntity(ValuedCustomer.class).getRules().size());
+		assertEquals(1, container.getValidationEntity(ValuedCustomer.class).getValidationContexts().size());
 	}
 	
 	/**

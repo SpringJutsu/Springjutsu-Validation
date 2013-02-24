@@ -36,18 +36,19 @@ import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
-import org.springframework.webflow.execution.RequestContextHolder;
+import org.springjutsu.validation.context.ValidationContextHandler;
+import org.springjutsu.validation.context.ValidationContextHandlerContainer;
 import org.springjutsu.validation.executors.RuleExecutor;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.rules.CollectionStrategy;
 import org.springjutsu.validation.rules.RuleHolder;
+import org.springjutsu.validation.rules.ValidationContext;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationRulesContainer;
 import org.springjutsu.validation.rules.ValidationTemplate;
 import org.springjutsu.validation.rules.ValidationTemplateReference;
 import org.springjutsu.validation.util.PathUtils;
-import org.springjutsu.validation.util.RequestUtils;
 
 /**
  * Registerable as a JSR-303 @link{CustomValidatorBean}, this 
@@ -101,6 +102,14 @@ public class ValidationManager extends CustomValidatorBean {
 	protected RuleExecutorContainer ruleExecutorContainer;
 	
 	/**
+	 * Holds the handlers for specific validation contexts
+	 * @see ValidationContextHandlerContainer
+	 * @see ValidationContext
+	 */
+	@Autowired
+	protected ValidationContextHandlerContainer contextHandlerContainer;
+	
+	/**
 	 * We'll load error message definitions from
 	 * the spring message source.
 	 * @see MessageSource
@@ -141,19 +150,11 @@ public class ValidationManager extends CustomValidatorBean {
 	 */
 	@Override
 	public void validate(Object model, Errors errors) {
-		String currentForm = null;
-		if (RequestUtils.getRequest() != null) {
-			if (RequestUtils.isWebflowRequest()) {
-				currentForm = getWebflowFormName();
-			} else {
-				currentForm = getMVCFormName();
-			}
-		}
-		doValidate(new ValidationContext(model, errors, currentForm));
+		doValidate(new ValidationEvaluationContext(model, errors));
 	}
 
 	
-	protected void doValidate(ValidationContext context) {
+	protected void doValidate(ValidationEvaluationContext context) {
 		if (log.isDebugEnabled()) {
 			String nestedPath = PathUtils.joinPathSegments(context.getNestedPath());
 			log.debug("Current recursion path is: " + (nestedPath.isEmpty() ? "root object" : nestedPath));
@@ -182,6 +183,22 @@ public class ValidationManager extends CustomValidatorBean {
 		ValidationEntity validationEntity = rulesContainer.getValidationEntity(validateMe.getClass());
 		
 		callRules(context, validationEntity);
+		
+		// Check validation contexts if we're
+		// not performing recursive validation
+		if (context.getNestedPath().isEmpty()) {
+			for (ValidationContext validationContext : validationEntity.getValidationContexts()) {
+				ValidationContextHandler contextHandler = 
+					contextHandlerContainer.getContextHandlerForType(validationContext.getType());
+				// if the specified context is active
+				// initialize the spel resolver, run the rules, then reset the resolver
+				if (contextHandler.isActive(validationContext.getQualifiers())) {
+					contextHandler.initializeSPELResolver(context.getSpelResolver());
+					callRules(context, validationContext);
+					context.getSpelResolver().reset();
+				}
+			}
+		}
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -197,8 +214,8 @@ public class ValidationManager extends CustomValidatorBean {
 				continue;
 			}
 			
-			Class pathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), false);
-			Class collectionPathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), true);
+			Class<?> pathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), false);
+			Class<?> collectionPathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), true);
 			
 			if (rulesContainer.supportsClass(pathClass)) {
 				context.pushNestedPath(property.getName());
@@ -233,20 +250,8 @@ public class ValidationManager extends CustomValidatorBean {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected void callRules(ValidationContext context, RuleHolder ruleHolder) {
+	protected void callRules(ValidationEvaluationContext context, RuleHolder ruleHolder) {
 		for (ValidationRule rule : ruleHolder.getRules()) {
-			
-			if (!rule.appliesToForm(context.getCurrentForm())) {
-				continue;
-			}
-			
-			// skip form rules during sub-bean validation
-			if (!context.getNestedPath().isEmpty() && !context.getCurrentForm().isEmpty()) {
-				if (log.isDebugEnabled()) {
-					log.debug("Skipping form rule during recursive validation: " + rule.toString());
-				}
-				continue;
-			}
 			
 			// break down any collections into indexed paths.
 			SingletonMap collectionReplacements = resolveCollectionPathReplacements(context, rule);
@@ -270,9 +275,6 @@ public class ValidationManager extends CustomValidatorBean {
 			}
 		}
 		for (ValidationTemplateReference templateReference : ruleHolder.getTemplateReferences()) {
-			if (!templateReference.appliesToForm(context.getCurrentForm())) {
-				continue;
-			}
 			ValidationTemplate actualTemplate = 
 				rulesContainer.getValidationTemplateMap().get(templateReference.getTemplateName());
 			context.pushTemplate(templateReference, actualTemplate);
@@ -281,7 +283,7 @@ public class ValidationManager extends CustomValidatorBean {
 		}
 	}
 	
-	protected void handleValidationRule(ValidationContext context, ValidationRule rule) {
+	protected void handleValidationRule(ValidationEvaluationContext context, ValidationRule rule) {
 		if (passes(rule, context)) {
 			// If the rule passes and it has children,
 			// it is a condition for nested elements.
@@ -307,7 +309,7 @@ public class ValidationManager extends CustomValidatorBean {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	protected SingletonMap resolveCollectionPathReplacements(ValidationContext context, ValidationRule rule) {
+	protected SingletonMap resolveCollectionPathReplacements(ValidationEvaluationContext context, ValidationRule rule) {
 		String path = context.localizePath(rule.getPath());
 		
 		// Do nothing with EL paths.
@@ -408,34 +410,7 @@ public class ValidationManager extends CustomValidatorBean {
 		return new SingletonMap(baseCollectionPath, collectionPaths);
 	}
 
-	/**
-	 * Just cleans up a Servlet path URL for rule resolving by
-	 * the rules container.
-	 * Restful URL paths may be used, with \{variable} path support.
-	 * As of 0.6.1, ant paths like * and ** may also be used.
-	 */
-	protected String getMVCFormName() {
-		return RequestUtils.removeLeadingAndTrailingSlashes(
-				RequestUtils.getRequest().getServletPath());
-	}
 	
-	/**
-	 * Gets a identifier of the current state that needs validating in
-	 * order to determine what rules to load from the validation definition.
-	 * For webflow, this is the flow ID appended with a colon, and then the 
-	 * state id.
-	 * For example /accounts/account-creation:basicInformation
-	 * @return the context rules associated with this identifier.
-	 */
-	protected String getWebflowFormName() {
-		StringBuffer flowStateId = new StringBuffer();
-		flowStateId.append(RequestContextHolder.getRequestContext().getCurrentState().getOwner().getId());
-		flowStateId.append(":");
-		flowStateId.append(RequestContextHolder.getRequestContext().getCurrentState().getId());
-		String flowStateIdString = RequestUtils.removeLeadingAndTrailingSlashes(
-				flowStateId.toString());
-		return flowStateIdString;
-	}
 	
 	/**
 	 * Determines if the validation rule passes
@@ -446,7 +421,7 @@ public class ValidationManager extends CustomValidatorBean {
 	 * @param rootModel The model to run the rule on.
 	 * @return
 	 */
-	protected boolean passes(ValidationRule rule, ValidationContext context) {
+	protected boolean passes(ValidationRule rule, ValidationEvaluationContext context) {
 		if (log.isDebugEnabled()) {
 			log.debug("Preparing to execute rule: " + rule);
 			log.debug("Actual rule path is " + context.localizePath(rule.getPath()));
@@ -502,7 +477,7 @@ public class ValidationManager extends CustomValidatorBean {
 	 * @param rootModel the root model (not failed bean)
 	 * @param errors standard Errors object to record error on.
 	 */
-	protected void logError(ValidationContext context, ValidationRule rule) {
+	protected void logError(ValidationEvaluationContext context, ValidationRule rule) {
 		String localizedRulePath = context.localizePath(rule.getPath());
 		String errorMessageKey = rule.getMessage();
         if (errorMessageKey == null || errorMessageKey.isEmpty()) {
@@ -554,7 +529,7 @@ public class ValidationManager extends CustomValidatorBean {
 	 * @return A string used to look up the message to resolve as the model
 	 * or argument of a failed validation rule, as determined by resolveAsModel. 
 	 */
-	protected String getMessageResolver(ValidationContext context, ValidationRule rule, boolean resolveAsModel) {
+	protected String getMessageResolver(ValidationEvaluationContext context, ValidationRule rule, boolean resolveAsModel) {
 		String rulePath = resolveAsModel ? rule.getPath() : rule.getValue();
 		// if there is no path, return.
 		if (rulePath == null || rulePath.length() < 1) {

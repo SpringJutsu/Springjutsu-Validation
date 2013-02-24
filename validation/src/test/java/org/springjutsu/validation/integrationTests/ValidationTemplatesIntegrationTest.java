@@ -86,10 +86,10 @@ public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTes
 		
 		Errors errors = doValidate("testValidationTemplatesWithRuleNestedTemplateUse.xml", customer).errors;
 		assertEquals(4, errors.getErrorCount());
-		assertEquals("errors.exactLength", errors.getFieldError("address.zipCode").getCode());
 		assertEquals("errors.exactLength", errors.getFieldError("secondaryAddress.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("referredBy.secondaryAddress.zipCode").getCode());
 		assertEquals("errors.exactLength", errors.getFieldError("copayer.secondaryAddress.zipCode").getCode());
+		assertEquals("errors.exactLength", errors.getFieldError("address.zipCode").getCode());
+		assertEquals("errors.exactLength", errors.getFieldError("referredBy.secondaryAddress.zipCode").getCode());
 	}
 	
 	@Test

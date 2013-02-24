@@ -17,9 +17,7 @@
 package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,8 +40,6 @@ import org.springjutsu.validation.namespace.ValidationEntityDefinitionParser;
  *@see ValidationRulesContainer
  */
 public class ValidationEntity implements RuleHolder {
-	
-	private Map<String, List<ValidationRule>> formRuleCache;
 	
 	/**
 	 * Log; for debugging purposes.
@@ -71,6 +67,11 @@ public class ValidationEntity implements RuleHolder {
 	private List<ValidationTemplateReference> templateReferences;
 	
 	/**
+	 * A list of contexts which conditionally apply additional rules.
+	 */
+	private List<ValidationContext> validationContexts;
+	
+	/**
 	 * A list of validation templates associated with
 	 * this entity class.
 	 */
@@ -88,7 +89,6 @@ public class ValidationEntity implements RuleHolder {
 		this.rules = new ArrayList<ValidationRule>();
 		this.templateReferences = new ArrayList<ValidationTemplateReference>();
 		this.validationTemplates = new ArrayList<ValidationTemplate>();
-		this.formRuleCache = new HashMap<String, List<ValidationRule>>();
 	}
 	
 	/**
@@ -127,6 +127,14 @@ public class ValidationEntity implements RuleHolder {
 	 */
 	public void setValidationClass(Class<?> validationClass) {
 		this.validationClass = validationClass;
+	}
+	
+	public List<ValidationContext> getValidationContexts() {
+		return validationContexts;
+	}
+
+	public void setValidationContexts(List<ValidationContext> validationContexts) {
+		this.validationContexts = validationContexts;
 	}
 
 	/**
