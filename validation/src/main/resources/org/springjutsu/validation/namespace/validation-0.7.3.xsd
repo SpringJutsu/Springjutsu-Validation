@@ -226,134 +226,147 @@
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element name="recursion-exclude" type="property" minOccurs="0" maxOccurs="unbounded">
-					<xsd:annotation>
-						<xsd:documentation>
-							Excludes a given sub bean path from recursive model validation.
-							This should reference a single property, i.e. should not be a nested path.
-							Class-level rules declared for the sub bean's class will not be evaluated against the sub bean.
-							Sub beans can also be excluded in the java class utilizing an annotation
-							configured through the recursion-exclude-annotation element of the rules-config.
-							When a recursion-include element is present, the excludes are processed secondarily,
-							only exlcuding from paths previously covered by an include.
-						</xsd:documentation>
-					</xsd:annotation>
-				</xsd:element>
-				<xsd:element name="recursion-include" type="property" minOccurs="0" maxOccurs="unbounded">
-					<xsd:annotation>
-						<xsd:documentation>
-							Includes a given sub bean path for recursive model validation.
-							This should reference a single property, i.e. should not be a nested path.
-							Class-level rules declared for the sub bean's class will be evaluated against the sub bean.
-							Sub beans can also be included in the java class utilizing an annotation
-							configured through the recursion-include-annotation element of the rules-config.
-							When an include is present, any field not included will be excluded. 
-							Excludes run secondarily and can override an include.
-						</xsd:documentation>
-					</xsd:annotation>
-				</xsd:element>
-				<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
-					<xsd:annotation>
-						<xsd:documentation>
-							References a named validation template.
-							Applies all the rules in the template to the object
-							referenced by the base-path. 
-						</xsd:documentation>
-					</xsd:annotation>
-				</xsd:element>
-				<xsd:element name="form" type="form" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element name="context" type="context" minOccurs="0" maxOccurs="unbounded">
-					<xsd:annotation>
-						<xsd:documentation>
-							A validation context indicates a specific event or occurrence which
-							requires additional or more specific validation to run. This allows the
-							user to define contextual validation. Each defined context type must
-							have a validation context handler registered to handle it.
-						</xsd:documentation>
-					</xsd:annotation>
-				</xsd:element>
-				<xsd:element name="template" type="template" minOccurs="0" maxOccurs="unbounded">
-					<xsd:annotation>
-						<xsd:documentation>
-							Validation templates are analagous to JSR-303 groups, except
-							more powerful. A validation template is a named set of nestable
-							rules and other templates refrences that allows a class member  
-							to be validated according to the rule set. 
-							These validation templates can be applied to a field path
-							on the object being validated.
-							Templates references are also nestable within rules, making it possible
-							to perform conditional evaluation of an entire template.
-							This element defines a validation template with the assigned name.
-							This group of rules can be referenced by template-ref in order
-							to apply a set of rules and/or sub templates to a base path.
-							Useful for applying repeated sets of validation rules to a form,
-							for instance a full address or short form address.
-						</xsd:documentation>
-					</xsd:annotation>
-				</xsd:element> 
-			</xsd:sequence>
-			<xsd:attribute name="class" type="xsd:string" use="required">
-				<xsd:annotation>
-					<xsd:documentation source="java:java.lang.Class">
-						The fully qualified name of the bean's class.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
+			<xsd:complexContent>
+				<xsd:extension base="rule-holder">
+					<xsd:sequence>
+						<xsd:element name="template" type="template" minOccurs="0" maxOccurs="unbounded">
+							<xsd:annotation>
+								<xsd:documentation>
+									Validation templates are analagous to JSR-303 groups, except
+									more powerful. A validation template is a named set of nestable
+									rules and other templates refrences that allows a class member  
+									to be validated according to the rule set. 
+									These validation templates can be applied to a field path
+									on the object being validated.
+									Templates references are also nestable within rules, making it possible
+									to perform conditional evaluation of an entire template.
+									This element defines a validation template with the assigned name.
+									This group of rules can be referenced by template-ref in order
+									to apply a set of rules and/or sub templates to a base path.
+									Useful for applying repeated sets of validation rules to a form,
+									for instance a full address or short form address.
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="recursion-exclude" type="property" minOccurs="0" maxOccurs="unbounded">
+							<xsd:annotation>
+								<xsd:documentation>
+									Excludes a given sub bean path from recursive model validation.
+									This should reference a single property, i.e. should not be a nested path.
+									Class-level rules declared for the sub bean's class will not be evaluated against the sub bean.
+									Sub beans can also be excluded in the java class utilizing an annotation
+									configured through the recursion-exclude-annotation element of the rules-config.
+									When a recursion-include element is present, the excludes are processed secondarily,
+									only exlcuding from paths previously covered by an include.
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="recursion-include" type="property" minOccurs="0" maxOccurs="unbounded">
+							<xsd:annotation>
+								<xsd:documentation>
+									Includes a given sub bean path for recursive model validation.
+									This should reference a single property, i.e. should not be a nested path.
+									Class-level rules declared for the sub bean's class will be evaluated against the sub bean.
+									Sub beans can also be included in the java class utilizing an annotation
+									configured through the recursion-include-annotation element of the rules-config.
+									When an include is present, any field not included will be excluded. 
+									Excludes run secondarily and can override an include.
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+					</xsd:sequence>
+					<xsd:attribute name="class" type="xsd:string" use="required">
+						<xsd:annotation>
+							<xsd:documentation source="java:java.lang.Class">
+								The fully qualified name of the bean's class.
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:extension>
+			</xsd:complexContent>
 		</xsd:complexType>
 	</xsd:element>
 	
 	<xsd:complexType name="template">
-		<xsd:sequence>
-			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
-				<xsd:annotation>
-					<xsd:documentation>
-						References a named validation template.
-						Applies all the rules in the template to the object
-						referenced by the base-path.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:element>
-		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" use="required">
-			<xsd:annotation>
-				<xsd:documentation>
-					The globally unique name for this validation template.
-					Referencable as the template-ref name.
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-	</xsd:complexType>
-	
-	<xsd:complexType name="form">
-		<xsd:sequence>
-			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
-				<xsd:annotation>
-					<xsd:documentation>
-						References a named validation template.
-						Applies all the rules in the template to the object
-						referenced by the base-path. 
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:element>
-		</xsd:sequence>
-		<xsd:attribute name="path" type="xsd:string" use="required">
-			<xsd:annotation>
-				<xsd:documentation>
-					A comma-delimited list of URI path suffixes to the validated resource.
-					For Spring MVC, utilize your restful path (which may include wildcards), 
-						e.g. /accounts/new,/accounts/{id}/edit 
-					For Spring Web Flow, use the format &lt;flowId>:&lt;stateName>, 
-					e.g. /accounts/create-account:accountForm,/accounts/edit-account:accountForm
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
+		<xsd:complexContent>
+			<xsd:extension base="rule-holder">
+				<xsd:attribute name="name" type="xsd:string" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							The globally unique name for this validation template.
+							Referencable as the template-ref name.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="context">
+		<xsd:complexContent>
+			<xsd:extension base="rule-holder">
+				<xsd:attribute name="type" type="xsd:string" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							The context type identifies the type of event or occurrance
+							which requires specific validation. This should match the 
+							context type that the associated ValidationContextHandler 
+							was registered for.  
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="qualifiers" type="xsd:string" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							A comma-delimited listing of qualifiers indicating the
+							identifiers for the specific event(s) or occurance(s) for
+							which the nested rules and template references should be
+							evaluated.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="form">
+		<xsd:complexContent>
+			<xsd:extension base="rule-holder">
+				<xsd:attribute name="path" type="xsd:string" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							A comma-delimited list of URI path suffixes to the validated resource.
+							For Spring MVC, utilize your restful path (which may include wildcards), 
+								e.g. /accounts/new,/accounts/{id}/edit 
+							For Spring Web Flow, use the format &lt;flowId>:&lt;stateName>, 
+							e.g. /accounts/create-account:accountForm,/accounts/edit-account:accountForm
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="group">
+		<xsd:complexContent>
+			<xsd:extension base="rule-holder">
+				<xsd:attribute name="qualifiers" type="xsd:string" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							A comma-delimited listing of JSR-303 group names,
+							or fully qualified class names of JSR-303 group
+							classes, which should match the qualifiers passed
+							as ValidationHints to the ValidationManager, or
+							the values of a @Validated annotation on an
+							@MVC-pattern controller method argument.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="rule-holder" abstract="true">
 		<xsd:sequence>
 			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
 			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
@@ -365,27 +378,29 @@
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
+			<xsd:element name="form" type="form" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="group" type="group" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						A JSR-303 validation group, activated from either the Spring
+						@Validated annotation within @MVC-pattern controller method
+						arguments, or by passing "validationHints" to the ValidationManager's
+						validate method. Use to specify validation rules which should be 
+						explicitly enabled on-demand by the validation invocation itself.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="context" type="context" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						A validation context indicates a specific event or occurrence which
+						requires additional or more specific validation to run. This allows the
+						user to define contextual validation. Each defined context type must
+						have a validation context handler registered to handle it.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
 		</xsd:sequence>
-		<xsd:attribute name="type" type="xsd:string" use="required">
-			<xsd:annotation>
-				<xsd:documentation>
-					The context type identifies the type of event or occurrance
-					which requires specific validation. This should match the 
-					context type that the associated ValidationContextHandler 
-					was registered for.  
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="qualifiers" type="xsd:string" use="required">
-			<xsd:annotation>
-				<xsd:documentation>
-					A comma-delimited listing of qualifiers indicating the
-					identifiers for the specific event(s) or occurance(s) for
-					which the nested rules and template references should be
-					evaluated.
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
 	</xsd:complexType>
 	
 	<xsd:complexType name="template-ref">
@@ -423,81 +438,73 @@
 	</xsd:complexType>
 		
 	<xsd:complexType name="rule">
-		<xsd:sequence>
-			<xsd:element name="rule" type="rule" minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="template-ref" type="template-ref" minOccurs="0" maxOccurs="unbounded">
+		<xsd:complexContent>
+			<xsd:extension base="rule-holder">
+				<xsd:attribute name="type" type="xsd:string" use="required">
 				<xsd:annotation>
 					<xsd:documentation>
-						References a named validation template.
-						Applies all the rules in the template to the object
-						referenced by the base-path, if the wrapping rule passes.
+						The type of rule you wish to apply.
+						This corresponds to the bean name 
+						of the validation rule to be referenced.
+						Rules not nested in a form elements are always on,
+						and always evaluated, regardless of whether or not 
+						the object specified by the rule's path is present 
+						in the current request, unless the rule's path is 
+						specified for exclusion from validation using an 
+						exclude element or annotation.
 					</xsd:documentation>
 				</xsd:annotation>
-			</xsd:element>
-		</xsd:sequence>
-		<xsd:attribute name="type" type="xsd:string" use="required">
-			<xsd:annotation>
-				<xsd:documentation>
-					The type of rule you wish to apply.
-					This corresponds to the bean name 
-					of the validation rule to be referenced.
-					Rules not nested in a form elements are always on,
-					and always evaluated, regardless of whether or not 
-					the object specified by the rule's path is present 
-					in the current request, unless the rule's path is 
-					specified for exclusion from validation using an 
-					exclude element or annotation.
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="value" type="xsd:string" use="optional">
-			<xsd:annotation>
-				<xsd:documentation>
-					The value to be passed to the rule parser.
+			</xsd:attribute>
+			<xsd:attribute name="value" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The value to be passed to the rule parser.
+						</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="path" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The path to the field this rule should check.
 					</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="path" type="xsd:string" use="optional">
-			<xsd:annotation>
-				<xsd:documentation>
-					The path to the field this rule should check.
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="message" type="xsd:string" use="optional">
-			<xsd:annotation>
-				<xsd:documentation>
-					The key to a message source entry, which will override the default associated with the rule type.
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="errorPath" type="xsd:string" use="optional">
-			<xsd:annotation>
-				<xsd:documentation>
-					The path to the field under which the error is to be logged, which will override the default given by "path".
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="collectionStrategy" use="optional" default="validateMembers">
-			<xsd:annotation>
-				<xsd:documentation>
-					When set to "validateMembers", the rule is applied to each member of the collection, iteratively.
-					When set to "validateCollectionObject", the collection object itself serves as the model for the rule.
-					Defaults to "validateMembers".
-					Applies only to a collection indicated by the last segment of the rule path, e.g. path="someCollection" or path="path.to.someCollection".
-					If the last segment of the rule path is not a collection, this attribute is ignored, and the default will be applied.
-					If it is desired to validate an attribute on a collection object itself, instead use a SPEL expression e.g. path="${model.collectionObject.length}"
-					If the rule path indicates a collection on a collection subpath (e.g. path="bean.collection.anotherCollection"),
-					then the specified collectionStrategy pertains only to the collection indicated by the last segment of the rule path,
-					and any prior collections will be iterated over in order to provide access to the collection object on each member.
-				</xsd:documentation>
-			</xsd:annotation>
-			<xsd:simpleType>
-				<xsd:restriction base="xsd:string">
-					<xsd:enumeration value="validateMembers" />
-					<xsd:enumeration value="validateCollectionObject" />
-				</xsd:restriction>
-			</xsd:simpleType>
-		</xsd:attribute>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="message" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The key to a message source entry, which will override the default associated with the rule type.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="errorPath" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The path to the field under which the error is to be logged, which will override the default given by "path".
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="collectionStrategy" use="optional" default="validateMembers">
+				<xsd:annotation>
+					<xsd:documentation>
+						When set to "validateMembers", the rule is applied to each member of the collection, iteratively.
+						When set to "validateCollectionObject", the collection object itself serves as the model for the rule.
+						Defaults to "validateMembers".
+						Applies only to a collection indicated by the last segment of the rule path, e.g. path="someCollection" or path="path.to.someCollection".
+						If the last segment of the rule path is not a collection, this attribute is ignored, and the default will be applied.
+						If it is desired to validate an attribute on a collection object itself, instead use a SPEL expression e.g. path="${model.collectionObject.length}"
+						If the rule path indicates a collection on a collection subpath (e.g. path="bean.collection.anotherCollection"),
+						then the specified collectionStrategy pertains only to the collection indicated by the last segment of the rule path,
+						and any prior collections will be iterated over in order to provide access to the collection object on each member.
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="validateMembers" />
+						<xsd:enumeration value="validateCollectionObject" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 </xsd:schema>

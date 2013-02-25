@@ -72,9 +72,9 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 	}
 	
 	public static class TestNameContextHandler implements ValidationContextHandler {
-
+		
 		@Override
-		public boolean isActive(Set<String> qualifiers) {
+		public boolean isActive(Set<String> qualifiers, Object rootModel, String[] validationHints) {
 			return ContextIntegrationTest.TEST_NAME != null
 				&& ContextIntegrationTest.TEST_NAME.getMethodName() != null
 				&& qualifiers.contains(ContextIntegrationTest.TEST_NAME.getMethodName());

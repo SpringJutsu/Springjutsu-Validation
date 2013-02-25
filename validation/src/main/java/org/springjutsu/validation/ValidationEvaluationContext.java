@@ -27,6 +27,7 @@ public class ValidationEvaluationContext {
 	private Stack<String> templateNames;
 	private Stack<String> templateBasePaths;
 	private Map<String, String> collectionPathReplacements;
+	private String[] validationHints;
 	
 	/**
 	 * Checked model hashes prevent infinite recursion.
@@ -42,16 +43,20 @@ public class ValidationEvaluationContext {
 	 */
 	private Stack<List<Integer>> checkedModelHashes;
 	
-	public ValidationEvaluationContext(Object model, Errors errors) {
-		this.errors = errors;
+	public ValidationEvaluationContext(Object model, Errors errors, Object... validationHints) {
 		this.modelWrapper = model == null ? null : new BeanWrapperImpl(model);
+		this.errors = errors;
+		this.validationHints = new String[validationHints.length];
+		for (int i = 0; i < validationHints.length; i++) {
+			this.validationHints[i] = String.valueOf(validationHints[i]);
+		}
 		this.spelResolver = new SPELResolver(model);
 		this.nestedPath = new Stack<String>();
 		this.checkedModelHashes = new Stack<List<Integer>>();
 		this.checkedModelHashes.push(new ArrayList<Integer>());
 		this.templateNames = new Stack<String>();
 		this.templateBasePaths = new Stack<String>();
-		this.collectionPathReplacements = new LinkedHashMap<String, String>(); 
+		this.collectionPathReplacements = new LinkedHashMap<String, String>();
 	}
 	
 	public Object getBeanAtNestedPath() {
@@ -59,11 +64,11 @@ public class ValidationEvaluationContext {
 		return joinedPath.isEmpty() ? getRootModel() : modelWrapper.getPropertyValue(joinedPath);
 	}
 	
-	public boolean previouslyValidated(Object bean) {
+	protected boolean previouslyValidated(Object bean) {
 		return checkedModelHashes.peek().contains(bean.hashCode());
 	}
 	
-	public void markValidated(Object bean) {
+	protected void markValidated(Object bean) {
 		checkedModelHashes.peek().add(bean.hashCode());
 	}
 	
@@ -79,7 +84,7 @@ public class ValidationEvaluationContext {
 	 * @param rule The rule for which to resolve the model
 	 * @return the resolved rule model
 	 */
-	public Object resolveRuleModel(ValidationRule rule) {
+	protected Object resolveRuleModel(ValidationRule rule) {
 		Object result = null;
 		if (rule.getPath() == null || rule.getPath().isEmpty()) {
 			return getRootModel();
@@ -110,7 +115,7 @@ public class ValidationEvaluationContext {
 	 * @param expression The string path expression for the model.
 	 * @return the Object to serve as a rule argument
 	 */
-	public Object resolveRuleArgument(ValidationRule rule) {
+	protected Object resolveRuleArgument(ValidationRule rule) {
 		Object result = null;
 		if (rule.getValue() == null || rule.getValue().isEmpty()) {
 			return null;
@@ -123,24 +128,24 @@ public class ValidationEvaluationContext {
 		return result;
 	}
 	
-	public Object pushNestedPath(String subPath) {
+	protected Object pushNestedPath(String subPath) {
 		nestedPath.push(subPath);
 		checkedModelHashes.push(new ArrayList<Integer>(checkedModelHashes.peek()));
 		return getBeanAtNestedPath();
 	}
 	
-	public void popNestedPath() {
+	protected void popNestedPath() {
 		nestedPath.pop();
 		checkedModelHashes.pop();
 	}
 	
-	public void pushTemplate(ValidationTemplateReference templateReference, ValidationTemplate actualTemplate) {
+	protected void pushTemplate(ValidationTemplateReference templateReference, ValidationTemplate actualTemplate) {
 		if (templateNames.contains(templateReference.getTemplateName())) {
 			throw new CircularValidationTemplateReferenceException(
 				"Circular use of validation template named " + templateReference.getTemplateName());
 		}
 		String localizedTemplatePath = localizePath(templateReference.getBasePath());
-		Class templateTargetClass = PathUtils.getClassForPath(modelWrapper.getWrappedClass(), localizedTemplatePath, true);
+		Class<?> templateTargetClass = PathUtils.getClassForPath(modelWrapper.getWrappedClass(), localizedTemplatePath, true);
 		if (!actualTemplate.getApplicableEntityClass().isAssignableFrom(templateTargetClass)) {
 			throw new IllegalTemplateReferenceException(
 				"Template named " + actualTemplate.getName() + 
@@ -153,7 +158,7 @@ public class ValidationEvaluationContext {
 		templateBasePaths.push(templateReference.getBasePath());
 	}
 	
-	public void popTemplate() {
+	protected void popTemplate() {
 		templateNames.pop();
 		templateBasePaths.pop();
 	}
@@ -167,7 +172,7 @@ public class ValidationEvaluationContext {
 	 * @param subPath the path to localize
 	 * @return currently localizedPath
 	 */
-	public String localizePath(String subPath) {
+	protected String localizePath(String subPath) {
 		if (PathUtils.containsEL(subPath)) {
 			return subPath;
 		}
@@ -188,72 +193,45 @@ public class ValidationEvaluationContext {
 		}
 		return localizedPath;
 	}
+	
+	public String getCurrentNestedPath() {
+		return localizePath("");
+	}
+	
+	public String[] getValidationHints() {
+		return validationHints;
+	}
 
 	public Errors getErrors() {
 		return errors;
-	}
-
-	public void setErrors(Errors errors) {
-		this.errors = errors;
 	}
 
 	public BeanWrapper getModelWrapper() {
 		return modelWrapper;
 	}
 
-	public void setModelWrapper(BeanWrapper modelWrapper) {
-		this.modelWrapper = modelWrapper;
-	}
-
 	public SPELResolver getSpelResolver() {
 		return spelResolver;
 	}
 
-	public void setSpelResolver(SPELResolver spelResolver) {
-		this.spelResolver = spelResolver;
-	}
-
-	public Stack<String> getNestedPath() {
+	protected Stack<String> getNestedPath() {
 		return nestedPath;
-	}
+	}	
 
-	public void setNestedPath(Stack<String> nestedPath) {
-		this.nestedPath = nestedPath;
-	}
-
-	
-
-	public Stack<List<Integer>> getCheckedModelHashes() {
+	protected Stack<List<Integer>> getCheckedModelHashes() {
 		return checkedModelHashes;
 	}
-
-	public void setCheckedModelHashes(Stack<List<Integer>> checkedModelHashes) {
-		this.checkedModelHashes = checkedModelHashes;
-	}
 	
-	public Stack<String> getTemplateNames() {
+	protected Stack<String> getTemplateNames() {
 		return templateNames;
 	}
 
-	public void setTemplateNames(Stack<String> templateNames) {
-		this.templateNames = templateNames;
-	}
-
-	public Stack<String> getTemplateBasePaths() {
+	protected Stack<String> getTemplateBasePaths() {
 		return templateBasePaths;
 	}
-
-	public void setTemplateBasePaths(Stack<String> templateBasePaths) {
-		this.templateBasePaths = templateBasePaths;
-	}
 	
-	public Map<String, String> getCollectionPathReplacements() {
+	protected Map<String, String> getCollectionPathReplacements() {
 		return collectionPathReplacements;
-	}
-
-	public void setCollectionPathReplacements(
-			Map<String, String> collectionPathReplacements) {
-		this.collectionPathReplacements = collectionPathReplacements;
 	}
 
 }

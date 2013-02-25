@@ -93,76 +93,6 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 		
 		ValidationStructure validationStructure = parseNestedValidation(entityNode, modelClass);
 		
-		List<ValidationContext> contexts = new ArrayList<ValidationContext>();
-		
-		NodeList forms = entityNode.getElementsByTagNameNS(
-				entityNode.getNamespaceURI(), "form");
-		for (int formNbr = 0; formNbr < forms.getLength(); formNbr++) {
-			Element formNode = (Element) forms.item(formNbr);
-			
-			// get form paths.
-			String formPaths = formNode.getAttribute("path");
-			Set<String> formConstraints = new HashSet<String>();
-			for (String formPath : formPaths.split(",")) {
-				String candidateFormPath = formPath.trim();
-				candidateFormPath = RequestUtils.removeLeadingAndTrailingSlashes(candidateFormPath).trim();
-				if (!candidateFormPath.isEmpty()) {
-					formConstraints.add(candidateFormPath);
-				}
-			}
-			
-			ValidationContext formContext = new ValidationContext();
-			formContext.setType("form");
-			
-			ValidationContext flowContext = new ValidationContext();
-			flowContext.setType("webflow");
-
-			for (String formConstraint : formConstraints) {
-				if (formConstraint.contains(":")) {
-					flowContext.getQualifiers().add(formConstraint);
-				} else {
-					formContext.getQualifiers().add(formConstraint);
-				}
-			}
-			
-			// get rules & templates.
-			ValidationStructure formSpecificValidationStructure = parseNestedValidation(formNode, modelClass);
-			formContext.setRules(formSpecificValidationStructure.rules);
-			formContext.setTemplateReferences(formSpecificValidationStructure.refs);
-			flowContext.setRules(formSpecificValidationStructure.rules);
-			flowContext.setTemplateReferences(formSpecificValidationStructure.refs);
-			
-			if (!formContext.getQualifiers().isEmpty()) {
-				contexts.add(formContext);
-			}
-			if (!flowContext.getQualifiers().isEmpty()) {
-				contexts.add(flowContext);
-			}
-		}
-		
-		NodeList contextNodes = entityNode.getElementsByTagNameNS(
-				entityNode.getNamespaceURI(), "context");
-		for (int contextNbr = 0; contextNbr < contextNodes.getLength(); contextNbr++) {
-			Element contextNode = (Element) contextNodes.item(contextNbr);
-			
-			// get form paths.
-			String contextQualifiers = contextNode.getAttribute("qualifiers");
-			Set<String> contextConstraints = new HashSet<String>();
-			for (String qualifier : contextQualifiers.split(",")) {
-				contextConstraints.add(qualifier.trim());
-			}
-			
-			ValidationContext context = new ValidationContext();
-			context.setType(contextNode.getAttribute("type"));
-			context.setQualifiers(contextConstraints);
-			
-			// get rules & templates.
-			ValidationStructure contextSpecificValidationStructure = parseNestedValidation(contextNode, modelClass);
-			context.setRules(contextSpecificValidationStructure.rules);
-			context.setTemplateReferences(contextSpecificValidationStructure.refs);
-			contexts.add(context);
-		}
-		
 		List<ValidationTemplate> templates = new ArrayList<ValidationTemplate>();
 		NodeList templateNodes = entityNode.getElementsByTagNameNS(
 				entityNode.getNamespaceURI(), "template");
@@ -178,7 +108,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 		
 		entityDefinition.getPropertyValues().add("rules", validationStructure.rules);
 		entityDefinition.getPropertyValues().add("templateReferences", validationStructure.refs);
-		entityDefinition.getPropertyValues().add("validationContexts", contexts);
+		entityDefinition.getPropertyValues().add("validationContexts", validationStructure.contexts);
 		entityDefinition.getPropertyValues().add("validationTemplates", templates);
 		entityDefinition.getPropertyValues().add("validationClass", modelClass);
 		entityDefinition.getPropertyValues().add("includedPaths", includePaths);
@@ -203,16 +133,8 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 		if (ruleNode == null) {
 			return structure;
 		}
-		
+
 		List<Element> validationRuleNodes = DomUtils.getChildElementsByTagName(ruleNode, "rule");
-		List<Element> validationTemplateReferenceNodes = 
-			DomUtils.getChildElementsByTagName(ruleNode, "template-ref");
-		
-		if ((validationRuleNodes == null || validationRuleNodes.isEmpty())
-			&& (validationTemplateReferenceNodes == null 
-					|| validationTemplateReferenceNodes.isEmpty())) {
-			return structure;
-		}
 		
 		if (validationRuleNodes != null) {
 			for (Element rule : validationRuleNodes) {
@@ -235,9 +157,13 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				ValidationStructure subStructure = parseNestedValidation(rule, modelClass);
 				validationRule.setRules(subStructure.rules);
 				validationRule.setTemplateReferences(subStructure.refs);
+				validationRule.setValidationContexts(subStructure.contexts);
 				structure.rules.add(validationRule);
 			}
 		}
+		
+		List<Element> validationTemplateReferenceNodes = 
+			DomUtils.getChildElementsByTagName(ruleNode, "template-ref");
 		
 		if (validationTemplateReferenceNodes != null) {
 			for (Element templateReference : validationTemplateReferenceNodes) {
@@ -254,6 +180,102 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				structure.refs.add(templateRef);
 			}
 		}
+		
+		List<Element> formNodes = DomUtils.getChildElementsByTagName(ruleNode, "form");
+		if (formNodes != null) {
+			for (Element formNode : formNodes) {
+				
+				// get form paths.
+				String formPaths = formNode.getAttribute("path");
+				Set<String> formConstraints = new HashSet<String>();
+				for (String formPath : formPaths.split(",")) {
+					String candidateFormPath = formPath.trim();
+					candidateFormPath = RequestUtils.removeLeadingAndTrailingSlashes(candidateFormPath).trim();
+					if (!candidateFormPath.isEmpty()) {
+						formConstraints.add(candidateFormPath);
+					}
+				}
+				
+				ValidationContext formContext = new ValidationContext();
+				formContext.setType("form");
+				
+				ValidationContext flowContext = new ValidationContext();
+				flowContext.setType("webflow");
+
+				for (String formConstraint : formConstraints) {
+					if (formConstraint.contains(":")) {
+						flowContext.getQualifiers().add(formConstraint);
+					} else {
+						formContext.getQualifiers().add(formConstraint);
+					}
+				}
+				
+				// get rules & templates.
+				ValidationStructure formSpecificValidationStructure = parseNestedValidation(formNode, modelClass);
+				formContext.setRules(formSpecificValidationStructure.rules);
+				formContext.setTemplateReferences(formSpecificValidationStructure.refs);
+				formContext.setValidationContexts(formSpecificValidationStructure.contexts);
+				flowContext.setRules(formSpecificValidationStructure.rules);
+				flowContext.setTemplateReferences(formSpecificValidationStructure.refs);
+				flowContext.setValidationContexts(formSpecificValidationStructure.contexts);
+				
+				if (!formContext.getQualifiers().isEmpty()) {
+					structure.contexts.add(formContext);
+				}
+				if (!flowContext.getQualifiers().isEmpty()) {
+					structure.contexts.add(flowContext);
+				}
+			}
+		}
+		
+		List<Element> groupNodes = DomUtils.getChildElementsByTagName(ruleNode, "group");
+		if (groupNodes != null) {
+			for (Element groupNode : groupNodes) {
+				
+				// get form paths.
+				String groupQualifiers = groupNode.getAttribute("qualifiers");
+				Set<String> groupConstraints = new HashSet<String>();
+				for (String qualifier : groupQualifiers.split(",")) {
+					groupConstraints.add(qualifier.trim());
+				}
+				
+				ValidationContext groupContext = new ValidationContext();
+				groupContext.setType("group");
+				groupContext.setQualifiers(groupConstraints);
+				
+				// get rules & templates.
+				ValidationStructure groupSpecificValidationStructure = parseNestedValidation(groupNode, modelClass);
+				groupContext.setRules(groupSpecificValidationStructure.rules);
+				groupContext.setTemplateReferences(groupSpecificValidationStructure.refs);
+				groupContext.setValidationContexts(groupSpecificValidationStructure.contexts);
+				structure.contexts.add(groupContext);
+			}
+		}
+		
+		List<Element> contextNodes = DomUtils.getChildElementsByTagName(ruleNode, "context");
+		if (contextNodes != null) {
+			for (Element contextNode : contextNodes) {
+				
+				// get form paths.
+				String contextQualifiers = contextNode.getAttribute("qualifiers");
+				Set<String> contextConstraints = new HashSet<String>();
+				for (String qualifier : contextQualifiers.split(",")) {
+					contextConstraints.add(qualifier.trim());
+				}
+				
+				ValidationContext context = new ValidationContext();
+				context.setType(contextNode.getAttribute("type"));
+				context.setQualifiers(contextConstraints);
+				
+				// get rules & templates.
+				ValidationStructure contextSpecificValidationStructure = parseNestedValidation(contextNode, modelClass);
+				context.setRules(contextSpecificValidationStructure.rules);
+				context.setTemplateReferences(contextSpecificValidationStructure.refs);
+				context.setValidationContexts(contextSpecificValidationStructure.contexts);
+				structure.contexts.add(context);
+			}
+		}
+		
 		return structure;
 	}
 	
@@ -279,6 +301,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 	protected class ValidationStructure {
 		public List<ValidationRule> rules = new ArrayList<ValidationRule>();
 		public List<ValidationTemplateReference> refs = new ArrayList<ValidationTemplateReference>();
+		public List<ValidationContext> contexts = new ArrayList<ValidationContext>();
 	}
 }
 

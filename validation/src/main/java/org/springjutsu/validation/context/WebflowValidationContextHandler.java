@@ -25,7 +25,7 @@ public class WebflowValidationContextHandler implements ValidationContextHandler
 	 * and state name of the current web flow request.
 	 */
 	@Override
-	public boolean isActive(Set<String> qualifiers) {
+	public boolean isActive(Set<String> qualifiers, Object rootModel, String[] validationHints) {
 		if (!isWebflowRequest()) {
 			return false;
 		} else {

@@ -30,7 +30,7 @@ public class MVCFormValidationContextHandler implements ValidationContextHandler
 	 * MVC request path.
 	 */
 	@Override
-	public boolean isActive(Set<String> qualifiers) {
+	public boolean isActive(Set<String> qualifiers, Object rootModel, String[] validationHints) {
 		if (!isMVCRequest()) {
 			return false;
 		} else {

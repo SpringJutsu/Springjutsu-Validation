@@ -18,10 +18,10 @@
 	</configuration>
 	
 	<entity class="org.springjutsu.validation.test.entities.SkippablePerson">
+		<rule path="name" type="required"/>
+	
 		<recursion-exclude propertyName="skipMeFromXml" />
 		<recursion-exclude propertyName="skipUsFromXml" />
-		
-		<rule path="name" type="required"/>
 	</entity>
 	
 	<!-- Include messages used by application -->

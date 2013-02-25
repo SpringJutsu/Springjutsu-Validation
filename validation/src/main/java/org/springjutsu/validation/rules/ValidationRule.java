@@ -17,7 +17,6 @@
 package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Java representation of an XML validation rule.
@@ -25,7 +24,7 @@ import java.util.List;
  * @author Taylor Wicksell
  *
  */
-public class ValidationRule implements RuleHolder {
+public class ValidationRule extends AbstractRuleHolder {
 	
 	/**
 	 * Path to the field to validate.
@@ -64,24 +63,6 @@ public class ValidationRule implements RuleHolder {
 	 * collection members, or to the collection object itself.
 	 */
 	protected CollectionStrategy collectionStrategy;
-
-	/**
-	 * These are any validation rules that were nested
-	 * within the current rule in XML. If nested rules exist
-	 * and this rule passed, the nested rules would be run.
-	 * If nested rules exist, an error is not recorded when
-	 * this rule fails.
-	 */
-	protected List<ValidationRule> rules;
-	
-	/**
-	 * These are any validation template references
-	 * that were nested within the current rule in XML.
-	 * If nested templates exist and this rule passed, the
-	 * nested templates would be run. If nested templates
-	 * exist, an error is not recorded when this rule fails.
-	 */
-	protected List<ValidationTemplateReference> templateReferences;
 	
 	/**
 	 * Default constructor, utilized by @link{ValidationDefinitionParser}
@@ -93,16 +74,17 @@ public class ValidationRule implements RuleHolder {
 		this.path = path;
 		this.type = type;
 		this.value = value;
-		this.rules = new ArrayList<ValidationRule>();
-		this.templateReferences = new ArrayList<ValidationTemplateReference>();
+		setRules(new ArrayList<ValidationRule>());
+		setTemplateReferences(new ArrayList<ValidationTemplateReference>());
+		setValidationContexts(new ArrayList<ValidationContext>());
 	}
 	
 	/**
 	 * @return true if there are nested validation rules.
 	 */
 	public boolean hasChildren() {
-		return (this.rules != null && !this.rules.isEmpty())
-			|| (this.templateReferences != null && !this.templateReferences.isEmpty());
+		return (getRules() != null && !getRules().isEmpty())
+			|| (getTemplateReferences() != null && !getTemplateReferences().isEmpty());
 	}
 	
 	/**
@@ -176,20 +158,6 @@ public class ValidationRule implements RuleHolder {
 	public void setValue(String value) {
 		this.value = value;
 	}
-
-	/**
-	 * @return the rules
-	 */
-	public List<ValidationRule> getRules() {
-		return rules;
-	}
-
-	/**
-	 * @param rules the rules to set
-	 */
-	public void setRules(List<ValidationRule> rules) {
-		this.rules = rules;
-	}
 	
 	/**
 	 * @return the message
@@ -225,21 +193,6 @@ public class ValidationRule implements RuleHolder {
 
 	public void setCollectionStrategy(CollectionStrategy collectionStrategy) {
 		this.collectionStrategy = collectionStrategy;
-	}
-
-	/**
-	 * @return the templateReferences
-	 */
-	public List<ValidationTemplateReference> getTemplateReferences() {
-		return templateReferences;
-	}
-
-	/**
-	 * @param templateReferences the templateReferences to set
-	 */
-	public void setTemplateReferences(
-			List<ValidationTemplateReference> templateReferences) {
-		this.templateReferences = templateReferences;
 	}
 
 }

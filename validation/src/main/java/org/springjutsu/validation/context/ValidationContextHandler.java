@@ -25,11 +25,16 @@ public interface ValidationContextHandler {
 	 * @param qualifiers A set of qualifiers indicating a 
 	 * specific event or occurrence of the type handled
 	 * by this ValidationContextHandler
+	 * @param rootModel The actual root object passed in
+	 * to be validated
+	 * @param validationHints The JSR-303 group identifiers,
+	 * or spring validation hints, which indicate the validation
+	 * groups specified to the validation manager.
 	 * @return true if any of the qualifiers represent an
 	 * event or occurrence which is ongoing and should have
 	 * the declared rules evaluated.
 	 */
-	boolean isActive(Set<String> qualifiers);
+	boolean isActive(Set<String> qualifiers, Object rootModel, String[] validationHints);
 	
 	/**
 	 * Allows the context handler to specify whether or not

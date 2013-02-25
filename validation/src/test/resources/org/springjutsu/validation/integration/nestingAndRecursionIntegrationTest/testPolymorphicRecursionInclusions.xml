@@ -18,10 +18,10 @@
 	</configuration>
 	
 	<entity class="org.springjutsu.validation.test.entities.LessSkippablePerson">
+		<rule path="name" type="required"/>
+	
 		<recursion-include propertyName="dontSkipMeFromXml" />
 		<recursion-include propertyName="dontSkipUsFromXml" />
-		
-		<rule path="name" type="required"/>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.SkippablePerson"/>

@@ -17,7 +17,6 @@
 package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -25,7 +24,7 @@ import java.util.List;
  * @author Clark Duplichien
  *
  */
-public class ValidationTemplate implements RuleHolder {
+public class ValidationTemplate extends AbstractRuleHolder {
 
 	/**
 	 * The name of this validation template.
@@ -38,41 +37,16 @@ public class ValidationTemplate implements RuleHolder {
 	protected Class<?> applicableEntityClass;
 	
 	/**
-	 * A list of rules specified for this template.
-	 */
-	protected List<ValidationRule> rules;
-	
-	/**
-	 * A list of sub templates specified for this template.
-	 */
-	protected List<ValidationTemplateReference> templateReferences;
-	
-	/**
 	 * Default constructor
 	 * @param name Name of this template
 	 * @param entityClass class this template applies to
 	 */
-	public ValidationTemplate(String name, Class entityClass) {
+	public ValidationTemplate(String name, Class<?> entityClass) {
 		this.name = name;
 		this.applicableEntityClass = entityClass;
-		this.rules = new ArrayList<ValidationRule>();
-		this.templateReferences = new ArrayList<ValidationTemplateReference>();
-	}
-	
-	/**
-	 * Adds a validation rule to the existing set of rules.
-	 * @param rule the rule to add.
-	 */
-	public void addValidationRule(ValidationRule rule) {
-		this.rules.add(rule);
-	}
-	
-	/**
-	 * Adds a validation template reference to the existing set of references.
-	 * @param templateReference the reference to add.
-	 */
-	public void addTemplateReference(ValidationTemplateReference templateReference) {
-		this.templateReferences.add(templateReference);
+		setRules(new ArrayList<ValidationRule>());
+		setTemplateReferences(new ArrayList<ValidationTemplateReference>());
+		setValidationContexts(new ArrayList<ValidationContext>());
 	}
 	
 	/**
@@ -99,29 +73,5 @@ public class ValidationTemplate implements RuleHolder {
 	public void setApplicableEntityClass(Class<?> applicableEntityClass) {
 		this.applicableEntityClass = applicableEntityClass;
 	}
-	/**
-	 * @return the rules
-	 */
-	public List<ValidationRule> getRules() {
-		return rules;
-	}
-	/**
-	 * @param rules the rules to set
-	 */
-	public void setRules(List<ValidationRule> rules) {
-		this.rules = rules;
-	}
-	/**
-	 * @return the templateReferences
-	 */
-	public List<ValidationTemplateReference> getTemplateReferences() {
-		return templateReferences;
-	}
-	/**
-	 * @param templateReferences the templateReferences to set
-	 */
-	public void setTemplateReferences(
-			List<ValidationTemplateReference> templateReferences) {
-		this.templateReferences = templateReferences;
-	}	
+	
 }

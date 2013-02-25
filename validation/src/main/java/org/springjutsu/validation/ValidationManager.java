@@ -197,7 +197,8 @@ public class ValidationManager extends CustomValidatorBean {
 			
 			// if the specified context is active
 			// initialize the spel resolver, run the rules, then reset the resolver
-			if (contextHandler.isActive(validationContext.getQualifiers())) {
+			if (contextHandler.isActive(validationContext.getQualifiers(), 
+					context.getRootModel(), context.getValidationHints())) {
 				contextHandler.initializeSPELResolver(context.getSpelResolver());
 				callRules(context, validationContext);
 				context.getSpelResolver().reset();

@@ -15,9 +15,6 @@
 	
 	<!-- Test basic template unwrapping -->
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<recursion-exclude propertyName="copayer"/>
-		<recursion-exclude propertyName="referredBy"/>
-	
 		<rule path="lastName" type="notEmpty">
 			<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
 			<template-ref basePath="copayer" templateName="secondaryAddressedCustomer"/>
@@ -28,11 +25,15 @@
 				<template-ref basePath="referredBy" templateName="secondaryAddressedCustomer"/>
 			</rule>
 		</form>
+		
 		<template name="secondaryAddressedCustomer">
 			<rule path="lastName" type="notEmpty">
 				<template-ref basePath="secondaryAddress" templateName="unitedStatesAddress"/>
 			</rule>
 		</template>
+		
+		<recursion-exclude propertyName="copayer"/>
+		<recursion-exclude propertyName="referredBy"/>
 	</entity>
 	
 	<entity class="org.springjutsu.validation.test.entities.Address">

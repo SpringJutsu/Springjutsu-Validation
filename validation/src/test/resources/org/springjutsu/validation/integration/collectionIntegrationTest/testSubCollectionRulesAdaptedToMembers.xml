@@ -18,13 +18,14 @@
 			In this test, rather than recurse, enforce rules on sub collections.
 			This is a ludicrous example, but it gets the job done.
 		-->
-		<recursion-exclude propertyName="acquisitions"/>
 		<rule path="acquisitions.name" type="notEmpty">
 			<rule path="acquisitions.acquisitions.name" type="notEmpty">
 				<rule path="acquisitions.acquisitions.customers.lastName" type="required"/>
 			</rule>
 			<rule path="acquisitions.customers.lastName" type="required"/>
 		</rule>
+		
+		<recursion-exclude propertyName="acquisitions"/>
 	</entity>
 	
 	<!-- Include messages used by application -->

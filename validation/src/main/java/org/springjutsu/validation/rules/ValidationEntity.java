@@ -39,7 +39,7 @@ import org.springjutsu.validation.namespace.ValidationEntityDefinitionParser;
  *@see ValidationEntityDefinitionParser
  *@see ValidationRulesContainer
  */
-public class ValidationEntity implements RuleHolder {
+public class ValidationEntity extends AbstractRuleHolder {
 	
 	/**
 	 * Log; for debugging purposes.
@@ -55,21 +55,6 @@ public class ValidationEntity implements RuleHolder {
 	 * A list of paths configured for inclusion into recursive validation.
 	 */
 	private List<String> includedPaths;
-
-	/**
-	 * A list of validation rules to evaluate on the model object.
-	 */
-	private List<ValidationRule> rules;
-	
-	/**
-	 * A list of template references to evaluate on the model object.
-	 */
-	private List<ValidationTemplateReference> templateReferences;
-	
-	/**
-	 * A list of contexts which conditionally apply additional rules.
-	 */
-	private List<ValidationContext> validationContexts;
 	
 	/**
 	 * A list of validation templates associated with
@@ -80,45 +65,22 @@ public class ValidationEntity implements RuleHolder {
 	/**
 	 * The class this set of rules was entered for.
 	 */
-	private Class validationClass;
+	private Class<?> validationClass;
 	
 	/**
 	 * Default constructor. Initializes collections.
 	 */
 	public ValidationEntity() {
-		this.rules = new ArrayList<ValidationRule>();
-		this.templateReferences = new ArrayList<ValidationTemplateReference>();
-		this.validationTemplates = new ArrayList<ValidationTemplate>();
+		setRules(new ArrayList<ValidationRule>());
+		setTemplateReferences(new ArrayList<ValidationTemplateReference>());
+		setValidationContexts(new ArrayList<ValidationContext>());
+		setValidationTemplates(new ArrayList<ValidationTemplate>());
 	}
 	
-	/**
-	 * Adds a rule.
-	 * @param rule The model rule to add.
-	 */
-	public void addRule(ValidationRule rule) {
-		this.rules.add(rule);
-	}
-	
-	/**
-	 * Add a template reference.
-	 * @param reference The template reference to add.
-	 */
-	public void addTemplateReference(ValidationTemplateReference reference) {
-		this.templateReferences.add(reference);
-	}
-	
-	/**
-	 * Adds a validation template
-	 * @param template the tempalte to add.
-	 */
-	public void addValidationTemplate(ValidationTemplate template) {
-		this.validationTemplates.add(template);
-	}
-
 	/**
 	 * @return The class these rules are for.
 	 */
-	public Class getValidationClass() {
+	public Class<?> getValidationClass() {
 		return validationClass;
 	}
 
@@ -127,14 +89,6 @@ public class ValidationEntity implements RuleHolder {
 	 */
 	public void setValidationClass(Class<?> validationClass) {
 		this.validationClass = validationClass;
-	}
-	
-	public List<ValidationContext> getValidationContexts() {
-		return validationContexts;
-	}
-
-	public void setValidationContexts(List<ValidationContext> validationContexts) {
-		this.validationContexts = validationContexts;
 	}
 
 	/**
@@ -149,35 +103,6 @@ public class ValidationEntity implements RuleHolder {
 	 */
 	public void setValidationTemplates(List<ValidationTemplate> validationTemplates) {
 		this.validationTemplates = validationTemplates;
-	}
-
-	/**
-	 * @return the templateReferences
-	 */
-	public List<ValidationTemplateReference> getTemplateReferences() {
-		return templateReferences;
-	}
-
-	/**
-	 * @param templateReferences the templateReferences to set
-	 */
-	public void setTemplateReferences(
-			List<ValidationTemplateReference> templateReferences) {
-		this.templateReferences = templateReferences;
-	}
-
-	/**
-	 * @return all of this entity's validation rules.
-	 */
-	public List<ValidationRule> getRules() {
-		return rules;
-	}
-	
-	/**
-	 * @param rules the rules to set
-	 */
-	public void setRules(List<ValidationRule> rules) {
-		this.rules = rules;
 	}
 	
 	public List<String> getExcludedPaths() {

@@ -34,6 +34,7 @@ public class ValidationRulesContainerTest {
 	ValidationRule validationRule;
 	
 	@Before
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setup()
 	{
 		HashMap<String, ValidationEntity> entities = new HashMap<String, ValidationEntity>();
@@ -41,7 +42,7 @@ public class ValidationRulesContainerTest {
 		ArrayList<ValidationRule> rules = new ArrayList<ValidationRule>();
 		rules.add(validationRule);
 		
-		Mockito.when(validationEntity.getValidationClass()).thenReturn(List.class);
+		Mockito.when(validationEntity.getValidationClass()).thenReturn((Class) List.class);
 		Mockito.when(validationEntity.getRules()).thenReturn(rules);
 
 		Mockito.when(beanFactory.getBeansOfType(ValidationEntity.class)).thenReturn(entities);

@@ -1,7 +1,7 @@
 package org.springjutsu.validation.rules;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -17,7 +17,7 @@ import java.util.Set;
  * @author Clark Duplichien
  *
  */
-public class ValidationContext implements RuleHolder {
+public class ValidationContext extends AbstractRuleHolder {
 	
 	/**
 	 * The context type should identify the type of
@@ -38,22 +38,14 @@ public class ValidationContext implements RuleHolder {
 	 * logically separate rule groups for specific
 	 * events.
 	 */
-	private Set<String> qualifiers = new HashSet<String>();
+	private Set<String> qualifiers;
 	
-	/**
-	 * The validation rules that should be run when
-	 * this event is handled by the associated 
-	 * ValidationContextHandler.
-	 */
-	private List<ValidationRule> rules;
-	
-	/**
-	 * The validation template references that
-	 * should be evaluated when this event is 
-	 * handled by the associated
-	 * ValidationContextHandler.
-	 */
-	private List<ValidationTemplateReference> templateReferences;
+	public ValidationContext() {
+		this.qualifiers = new HashSet<String>();
+		setRules(new ArrayList<ValidationRule>());
+		setTemplateReferences(new ArrayList<ValidationTemplateReference>());
+		setValidationContexts(new ArrayList<ValidationContext>());
+	}
 
 	public String getType() {
 		return type;
@@ -70,22 +62,5 @@ public class ValidationContext implements RuleHolder {
 	public void setQualifiers(Set<String> qualifiers) {
 		this.qualifiers = qualifiers;
 	}
-
-	public List<ValidationRule> getRules() {
-		return rules;
-	}
-
-	public void setRules(List<ValidationRule> rules) {
-		this.rules = rules;
-	}
-
-	public List<ValidationTemplateReference> getTemplateReferences() {
-		return templateReferences;
-	}
-
-	public void setTemplateReferences(
-			List<ValidationTemplateReference> templateReferences) {
-		this.templateReferences = templateReferences;
-	}
-
+	
 }
