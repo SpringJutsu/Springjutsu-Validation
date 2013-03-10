@@ -128,11 +128,27 @@ public class ValidationManager extends CustomValidatorBean {
 	 * manage errors.
 	 */
 	public Errors validate(Object target) {
+		return validate(target, new Object[]{});
+	}
+	
+	/**
+	 * Hook point to perform validation without a web request,
+	 * but with specific JSR-303 groups.
+	 */
+	public Errors validate(Object target, Object... validationHints) {
 		Errors errors = new BeanPropertyBindingResult(target, "validationTarget");
-		validate(target, errors);
+		validate(target, errors, validationHints);
 		return errors;
 	}
 	
+	/**
+	 * Validation entry point defined in SpringValidatorAdapter
+	 */
+	@Override
+	public void validate(Object target, Errors errors) {
+		validate(target, errors, new Object[]{});
+	}
+
 	/**
 	 * Validation entry point defined in SpringValidatorAdapter
 	 * Validation Hints are really a JSR-303 construct for validation groups,
@@ -142,17 +158,8 @@ public class ValidationManager extends CustomValidatorBean {
 	 */
 	@Override
 	public void validate(Object target, Errors errors, Object... validationHints) {
-		validate(target, errors);
+		doValidate(new ValidationEvaluationContext(target, errors, validationHints));
 	}
-	
-	/**
-	 * Validation entry point defined in SpringValidatorAdapter
-	 */
-	@Override
-	public void validate(Object model, Errors errors) {
-		doValidate(new ValidationEvaluationContext(model, errors));
-	}
-
 	
 	protected void doValidate(ValidationEvaluationContext context) {
 		if (log.isDebugEnabled()) {

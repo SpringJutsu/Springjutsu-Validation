@@ -48,7 +48,10 @@ public class ValidationEvaluationContext {
 		this.errors = errors;
 		this.validationHints = new String[validationHints.length];
 		for (int i = 0; i < validationHints.length; i++) {
-			this.validationHints[i] = String.valueOf(validationHints[i]);
+			this.validationHints[i] = 
+				(validationHints[i] instanceof Class<?>) ? 
+					((Class<?>) validationHints[i]).getCanonicalName() :
+						String.valueOf(validationHints[i]);
 		}
 		this.spelResolver = new SPELResolver(model);
 		this.nestedPath = new Stack<String>();

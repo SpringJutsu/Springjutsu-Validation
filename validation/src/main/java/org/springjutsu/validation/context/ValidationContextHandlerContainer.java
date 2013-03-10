@@ -108,6 +108,7 @@ public class ValidationContextHandlerContainer {
 	protected void addDefaultContextHandlers() {
 		setCustomContextHandler("form", new MVCFormValidationContextHandler());
 		setCustomContextHandler("webflow", new WebflowValidationContextHandler());
+		setCustomContextHandler("group", new ValidationGroupContextHandler());
 	}
 	
 	/**

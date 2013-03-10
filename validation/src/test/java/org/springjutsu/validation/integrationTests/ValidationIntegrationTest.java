@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -21,6 +22,16 @@ public abstract class ValidationIntegrationTest {
 		    	xmlDirectory + getXmlSubdirectory() + "/" + configXml});
 		ValidationManager manager = context.getBean(ValidationManager.class);
 		return new TestResult(manager.validate(validateMe), context.getBean(MessageSource.class));
+	}
+	
+	protected TestResult doValidate(String configXml, Object validateMe, Object[] groups) {
+		ApplicationContext context =
+		    new ClassPathXmlApplicationContext(new String[] {
+		    	xmlDirectory + getXmlSubdirectory() + "/" + configXml});
+		ValidationManager manager = context.getBean(ValidationManager.class);
+		Errors errors = new BeanPropertyBindingResult(validateMe, "validationTarget");
+		manager.validate(validateMe, errors, groups);
+		return new TestResult(errors, context.getBean(MessageSource.class));
 	}
 	
 	protected abstract String getXmlSubdirectory();
