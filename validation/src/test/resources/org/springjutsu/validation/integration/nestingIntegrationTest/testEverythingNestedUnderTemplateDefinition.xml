@@ -19,13 +19,25 @@
 	</configuration>
 	
 	<entity class="org.springjutsu.validation.test.entities.Customer">
-		<rule path="emailAddress" type="required" />
-		<context type="testName" qualifiers="testCustomContextRuleEvaluation">
+		<template-ref templateName="nestingTestTemplate"/>
+
+		<template name="nestingTestTemplate">
+			<rule path="firstName" type="required"/>
+			<template-ref templateName="firstNameRequired"/>
+			<form path="/foo/1/edit">
+				<rule path="firstName" type="required" />
+			</form>
+			<group qualifiers="matchingGroupName">
+				<rule path="firstName" type="required" />
+			</group>
+			<context type="testName" qualifiers="testEverythingNestedUnderTemplateDefinition">
+				<rule path="firstName" type="required" />
+			</context>
+		</template>
+		
+		<template name="firstNameRequired">
 			<rule path="firstName" type="required" />
-		</context>
-		<context type="testName" qualifiers="thisIsntMyMethodName">
-			<rule path="lastName" type="required" />
-		</context>
+		</template>
 	</entity>
 	
 	<!-- Include messages used by application -->

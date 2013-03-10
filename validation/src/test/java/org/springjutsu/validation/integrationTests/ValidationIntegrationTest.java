@@ -1,6 +1,10 @@
 package org.springjutsu.validation.integrationTests;
 
+import java.util.Set;
+
 import org.junit.After;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -10,8 +14,13 @@ import org.springframework.validation.Errors;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springjutsu.validation.ValidationManager;
+import org.springjutsu.validation.context.ValidationContextHandler;
+import org.springjutsu.validation.spel.SPELResolver;
 
 public abstract class ValidationIntegrationTest {
+	
+	@Rule
+	public static TestName TEST_NAME = new TestName();
 	
 	protected static final String xmlDirectory = 
 		"org/springjutsu/validation/integration/";
@@ -55,6 +64,27 @@ public abstract class ValidationIntegrationTest {
 		MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
 		request.setServletPath(path);
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
+	}
+	
+	public static class TestNameContextHandler implements ValidationContextHandler {
+		
+		@Override
+		public boolean isActive(Set<String> qualifiers, Object rootModel, String[] validationHints) {
+			return ContextIntegrationTest.TEST_NAME != null
+				&& ContextIntegrationTest.TEST_NAME.getMethodName() != null
+				&& qualifiers.contains(ContextIntegrationTest.TEST_NAME.getMethodName());
+		}
+
+		@Override
+		public boolean enableDuringSubBeanValidation() {
+			return false;
+		}
+
+		@Override
+		public void initializeSPELResolver(SPELResolver spelResolver) {
+			spelResolver.getScopedContext().addContext("jUnitTestName", ContextIntegrationTest.TEST_NAME);
+		}
+		
 	}
 	
 }

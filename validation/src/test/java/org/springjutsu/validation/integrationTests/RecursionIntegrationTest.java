@@ -12,22 +12,11 @@ import org.springjutsu.validation.test.entities.ExtendedSkippablePerson;
 import org.springjutsu.validation.test.entities.LessSkippablePerson;
 import org.springjutsu.validation.test.entities.SkippablePerson;
 
-public class NestingAndRecursionIntegrationTest extends ValidationIntegrationTest {
+public class RecursionIntegrationTest extends ValidationIntegrationTest {
 	
 	@Override
 	protected String getXmlSubdirectory() {
-		return "nestingAndRecursionIntegrationTest";
-	}
-	
-	@Test
-	public void testNestedRules() {
-		Customer customer = new Customer();
-		customer.setFirstName("bob");
-		Errors errors = doValidate("testNestedRules.xml", customer).errors;
-		assertEquals(2, errors.getErrorCount());
-		assertNull(errors.getFieldError("firstName"));
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		return "recursionIntegrationTest";
 	}
 	
 	@Test

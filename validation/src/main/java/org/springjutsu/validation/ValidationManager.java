@@ -190,27 +190,6 @@ public class ValidationManager extends CustomValidatorBean {
 		ValidationEntity validationEntity = rulesContainer.getValidationEntity(validateMe.getClass());
 		
 		callRules(context, validationEntity);
-		
-		for (ValidationContext validationContext : validationEntity.getValidationContexts()) {
-			ValidationContextHandler contextHandler = 
-				contextHandlerContainer.getContextHandlerForType(validationContext.getType());
-			
-			// if we're performing sub bean validation,
-			// and the current context handler does not permit
-			// sub bean validation, then skip this context handler.
-			if (!context.getNestedPath().isEmpty() && !contextHandler.enableDuringSubBeanValidation()) {
-				continue;
-			}
-			
-			// if the specified context is active
-			// initialize the spel resolver, run the rules, then reset the resolver
-			if (contextHandler.isActive(validationContext.getQualifiers(), 
-					context.getRootModel(), context.getValidationHints())) {
-				contextHandler.initializeSPELResolver(context.getSpelResolver());
-				callRules(context, validationContext);
-				context.getSpelResolver().reset();
-			}
-		}
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
@@ -292,6 +271,27 @@ public class ValidationManager extends CustomValidatorBean {
 			context.pushTemplate(templateReference, actualTemplate);
 			callRules(context, actualTemplate);
 			context.popTemplate();
+		}
+		
+		for (ValidationContext validationContext : ruleHolder.getValidationContexts()) {
+			ValidationContextHandler contextHandler = 
+				contextHandlerContainer.getContextHandlerForType(validationContext.getType());
+			
+			// if we're performing sub bean validation,
+			// and the current context handler does not permit
+			// sub bean validation, then skip this context handler.
+			if (!context.getNestedPath().isEmpty() && !contextHandler.enableDuringSubBeanValidation()) {
+				continue;
+			}
+			
+			// if the specified context is active
+			// initialize the spel resolver, run the rules, then reset the resolver
+			if (contextHandler.isActive(validationContext.getQualifiers(), 
+					context.getRootModel(), context.getValidationHints())) {
+				contextHandler.initializeSPELResolver(context.getSpelResolver());
+				callRules(context, validationContext);
+				context.getSpelResolver().reset();
+			}
 		}
 	}
 	

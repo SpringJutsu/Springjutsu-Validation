@@ -2,20 +2,11 @@ package org.springjutsu.validation.integrationTests;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Set;
-
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.springframework.validation.Errors;
-import org.springjutsu.validation.context.ValidationContextHandler;
-import org.springjutsu.validation.spel.SPELResolver;
 import org.springjutsu.validation.test.entities.Customer;
 
 public class ContextIntegrationTest extends ValidationIntegrationTest {
-	
-	@Rule
-	public static TestName TEST_NAME = new TestName();
 	
 	@Override
 	protected String getXmlSubdirectory() {
@@ -69,27 +60,6 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 		assertEquals(2, errors.getErrorCount());
 		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
 		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-	}
-	
-	public static class TestNameContextHandler implements ValidationContextHandler {
-		
-		@Override
-		public boolean isActive(Set<String> qualifiers, Object rootModel, String[] validationHints) {
-			return ContextIntegrationTest.TEST_NAME != null
-				&& ContextIntegrationTest.TEST_NAME.getMethodName() != null
-				&& qualifiers.contains(ContextIntegrationTest.TEST_NAME.getMethodName());
-		}
-
-		@Override
-		public boolean enableDuringSubBeanValidation() {
-			return false;
-		}
-
-		@Override
-		public void initializeSPELResolver(SPELResolver spelResolver) {
-			spelResolver.getScopedContext().addContext("jUnitTestName", ContextIntegrationTest.TEST_NAME);
-		}
-		
 	}
 	
 	public static class AlwaysActiveTestNameContextHandler extends TestNameContextHandler {

@@ -103,6 +103,7 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 			ValidationTemplate template = new ValidationTemplate(templateName, modelClass);
 			template.setRules(templateValidation.rules);
 			template.setTemplateReferences(templateValidation.refs);
+			template.setValidationContexts(templateValidation.contexts);
 			templates.add(template);
 		}
 		

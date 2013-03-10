@@ -14,7 +14,7 @@
 	<configuration validatorName="testValidationManagerName">
 		<context-config>
 			<context-handler type="testName" 
-				class="org.springjutsu.validation.integrationTests.ContextIntegrationTest$TestNameContextHandler"/>
+				class="org.springjutsu.validation.integrationTests.ValidationIntegrationTest$TestNameContextHandler"/>
 		</context-config>
 	</configuration>
 	
