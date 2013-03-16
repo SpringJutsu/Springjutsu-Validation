@@ -8,6 +8,7 @@ import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springjutsu.validation.ValidationErrorMessageHandler;
 import org.springjutsu.validation.ValidationManager;
 import org.springjutsu.validation.context.ValidationContextHandlerContainer;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
@@ -34,6 +35,8 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		
 		BeanDefinitionBuilder validationManagerBuilder = 
 			BeanDefinitionBuilder.genericBeanDefinition(ValidationManager.class);
+		BeanDefinitionBuilder validationErrorMessageHandlerBuilder = 
+			BeanDefinitionBuilder.genericBeanDefinition(ValidationErrorMessageHandler.class);
 		BeanDefinitionBuilder ruleExecutorContainerBuilder = 
 			BeanDefinitionBuilder.genericBeanDefinition(RuleExecutorContainer.class);
 		BeanDefinitionBuilder contextHandlerContainerBuilder = 
@@ -44,11 +47,11 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		// Parse message configuration...
 		Element messageConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "message-config").item(0);
 		if (messageConfig != null) {
-			validationManagerBuilder.addPropertyValue("errorMessagePrefix", 
+			validationErrorMessageHandlerBuilder.addPropertyValue("errorMessagePrefix", 
 					messageConfig.getAttribute("errorMessagePrefix"));
-			validationManagerBuilder.addPropertyValue("fieldLabelPrefix", 
+			validationErrorMessageHandlerBuilder.addPropertyValue("fieldLabelPrefix", 
 					messageConfig.getAttribute("fieldLabelPrefix"));
-			validationManagerBuilder.addPropertyValue("enableSuperclassFieldLabelLookup", 
+			validationErrorMessageHandlerBuilder.addPropertyValue("enableSuperclassFieldLabelLookup", 
 					messageConfig.getAttribute("enableSuperclassFieldLabelLookup"));
 		}
 		
@@ -122,6 +125,7 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		registerInfrastructureBean(context, validationRulesContainerBuilder);
 		registerInfrastructureBean(context, ruleExecutorContainerBuilder);
 		registerInfrastructureBean(context, contextHandlerContainerBuilder);
+		registerInfrastructureBean(context, validationErrorMessageHandlerBuilder);
 		context.registerBeanComponent(new BeanComponentDefinition(
 			validationManagerBuilder.getBeanDefinition(), configNode.getAttribute("validatorName")));
 		

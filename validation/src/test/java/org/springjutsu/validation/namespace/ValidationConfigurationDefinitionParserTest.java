@@ -10,6 +10,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springjutsu.validation.ValidationErrorMessageHandler;
 import org.springjutsu.validation.ValidationManager;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.executors.ValidWhenEmptyRuleExecutor;
@@ -31,6 +32,9 @@ public class ValidationConfigurationDefinitionParserTest {
 	
 	@Autowired(required=false)
 	private ValidationRulesContainer rulesContainer;
+	
+	@Autowired(required=false)
+	private ValidationErrorMessageHandler errorMessageHandler;
 	
 	/**
 	 * Ensure validation manager is registered.
@@ -54,9 +58,9 @@ public class ValidationConfigurationDefinitionParserTest {
 	 * Ensure message-config prefixes are set accordingly.
 	 */
 	@Test
-	public void testPrefixRegistration() {
-		assertEquals("testErrorsPrefix.", validationManager.getErrorMessagePrefix());
-		assertEquals("testFieldLabelPrefix.", validationManager.getFieldLabelPrefix());
+	public void testMessageConfiguration() {
+		assertEquals("testErrorsPrefix.", errorMessageHandler.getErrorMessagePrefix());
+		assertEquals("testFieldLabelPrefix.", errorMessageHandler.getFieldLabelPrefix());
 	}
 	
 	/**
