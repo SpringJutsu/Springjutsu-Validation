@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springjutsu.org/schema/validation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.3.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<context:annotation-config />
+
+	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
+	<configuration validatorName="testValidationManagerName"/>
+	
+	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<!-- check basic access -->
+		<rule path="${currentModel.emailAddress}" type="matches" value="bob@bob.bob" errorPath="emailAddress"/>
+		<!-- check that an unprefixed reference isn't overriden by the currentModel reference -->
+		<rule path="${firstName}" type="matches" value="${currentModel.firstName}" errorPath="firstName"/>
+		<!-- check that a model-prefixed reference isn't overriden by the currentModel reference -->
+		<rule path="${model.middleName}" type="matches" value="${currentModel.middleName}" errorPath="middleName"/>
+		<!--  check that unprefixed argument dereferences to root model by default -->
+		<rule path="${currentModel.lastName}" type="matches" value="${lastName}" errorPath="lastName"/>
+		<!--  check that null argument on root model doesn't fall back current model when readable -->
+		<rule path="${currentModel.favoriteColor}" type="matches" value="${favoriteColor}" errorPath="favoriteColor"/>
+	</entity>
+	
+	<!-- Include messages used by application -->
+	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>
+</beans:beans>

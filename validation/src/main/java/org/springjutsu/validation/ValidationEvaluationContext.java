@@ -15,6 +15,7 @@ import org.springjutsu.validation.exceptions.IllegalTemplateReferenceException;
 import org.springjutsu.validation.rules.ValidationRule;
 import org.springjutsu.validation.rules.ValidationTemplate;
 import org.springjutsu.validation.rules.ValidationTemplateReference;
+import org.springjutsu.validation.spel.CurrentModelPropertyAccessor;
 import org.springjutsu.validation.spel.SPELResolver;
 import org.springjutsu.validation.util.PathUtils;
 
@@ -54,6 +55,8 @@ public class ValidationEvaluationContext {
 						String.valueOf(validationHints[i]);
 		}
 		this.spelResolver = new SPELResolver(model);
+		this.spelResolver.getScopedContext().addPropertyAccessor(new CurrentModelPropertyAccessor());
+		this.spelResolver.getScopedContext().addContext("currentModel", this.new CurrentModelAccessor());
 		this.nestedPath = new Stack<String>();
 		this.checkedModelHashes = new Stack<List<Integer>>();
 		this.checkedModelHashes.push(new ArrayList<Integer>());
@@ -77,6 +80,15 @@ public class ValidationEvaluationContext {
 	
 	public Object getRootModel() {
 		return modelWrapper == null ? null : modelWrapper.getWrappedInstance();
+	}
+	
+	/**
+	 * @return the object currently under evaluation based
+	 * on any nested and/or template paths. 
+	 */
+	public Object getCurrentModel() {
+		String currentPath = getCurrentNestedPath();
+		return currentPath.isEmpty() ? getRootModel() : modelWrapper.getPropertyValue(currentPath);
 	}
 	
 	/**
@@ -235,6 +247,22 @@ public class ValidationEvaluationContext {
 	
 	protected Map<String, String> getCollectionPathReplacements() {
 		return collectionPathReplacements;
+	}
+	
+	/**
+	 * Used by @see CurrentModelPropertyAccessor to gain access
+	 * to the current model under validation, without exposing
+	 * the entirety of the current ValidationEvaluationContext
+	 * to SPEL expressions. 
+	 * @author Clark Duplichien
+	 *
+	 */
+	public class CurrentModelAccessor {
+		
+		public Object accessCurrentModel() {
+			return getCurrentModel();
+		}
+		
 	}
 
 }
