@@ -4,13 +4,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.springjutsu.validation.executors.RuleExecutor;
 
 public class AlphanumericRuleExecutorTest {
 
 	@Test
 	public void testValidate() throws Exception {
-		RuleExecutor executor = new AlphanumericRuleExecutor();
+		AlphanumericRuleExecutor executor = new AlphanumericRuleExecutor();
 		assertTrue(executor.validate(null, null));
 		assertTrue(executor.validate("abc", null));
 		assertTrue(executor.validate("JohnJoeBobSmith", null));

@@ -25,7 +25,7 @@ import org.springjutsu.validation.util.ValidationRulesUtils;
  * @author Taylor Wicksell
  *
  */
-public class RequiredRuleExecutor implements RuleExecutor {
+public class RequiredRuleExecutor implements RuleExecutor<Object, Object> {
 
 	public boolean validate(Object model, Object argument) throws Exception {
 		return !ValidationRulesUtils.isEmpty(model);

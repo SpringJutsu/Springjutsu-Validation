@@ -86,6 +86,8 @@ public class NamedScopeEvaluationContext extends StandardEvaluationContext {
 	 */
 	class ContextScope extends LinkedHashMap<String, Object> {
 		
+		private static final long serialVersionUID = 1L;
+		
 		/**
 		 * If a given property is found within a specific context,
 		 * we cache the property name and the context it's found in.
@@ -189,7 +191,7 @@ public class NamedScopeEvaluationContext extends StandardEvaluationContext {
 							|| accessor.getSpecificTargetClasses().length < 1) {
 							accessorApplicable = true;
 						} else {
-							for (Class clazz : accessor.getSpecificTargetClasses()) {
+							for (Class<?> clazz : accessor.getSpecificTargetClasses()) {
 								if (clazz.isAssignableFrom(
 										state.getRootContextObject().getValue().getClass())) {
 									accessorApplicable = true;

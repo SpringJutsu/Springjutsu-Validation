@@ -24,7 +24,7 @@ public class RuleExecutorContainerTest {
 	@Mock
 	ListableBeanFactory beanFactory;
 	
-	RuleExecutor executor;
+	RuleExecutor<?, ?> executor;
 	
 	@Before
 	public void setup()
@@ -46,7 +46,7 @@ public class RuleExecutorContainerTest {
 	@Test
 	public void testSetCustomRuleExecutorStringRuleExecutor() {
 		executor = new AnnotatedRuleExecutor();
-		HashMap<String, RuleExecutor> executors = new HashMap<String, RuleExecutor>();
+		HashMap<String, RuleExecutor<?,?>> executors = new HashMap<String, RuleExecutor<?,?>>();
 		executors.put("testExecutor", executor);
 		executorContainer.setCustomRuleExecutors(executors);
 		assertEquals(executor, executorContainer.getRuleExecutorByName("testExecutor"));
@@ -81,7 +81,7 @@ public class RuleExecutorContainerTest {
 	}
 
 	@ConfiguredRuleExecutor(name = "testExecutor")
-	private class AnnotatedRuleExecutor implements RuleExecutor
+	private class AnnotatedRuleExecutor implements RuleExecutor<Object, Object>
 	{
 		
 		@Override

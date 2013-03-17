@@ -25,11 +25,10 @@ import org.springjutsu.validation.util.ValidationRulesUtils;
  * @author Clark Duplichien
  *
  */
-public abstract class ValidWhenEmptyRuleExecutor implements RuleExecutor {
+public abstract class ValidWhenEmptyRuleExecutor<M, A> implements RuleExecutor<M, A> {
 
-	public boolean validate(Object model, Object argument) {
-		return ValidationRulesUtils.isEmpty(model) 
-		|| doValidate(model, argument);
+	public boolean validate(M model, A argument) {
+		return ValidationRulesUtils.isEmpty(model) || doValidate(model, argument);
 	}
 	
 	/**
@@ -38,6 +37,6 @@ public abstract class ValidWhenEmptyRuleExecutor implements RuleExecutor {
 	 * @param argument Argument to the rule
 	 * @return true if the rule passed.
 	 */
-	public abstract boolean doValidate(Object model, Object argument);
+	public abstract boolean doValidate(M model, A argument);
 	
 }

@@ -50,7 +50,7 @@ public class RuleExecutorContainer {
 	/**
 	 * A map of rule name to the executor.
 	 */
-	protected Map<String, RuleExecutor> ruleExecutors = new HashMap<String, RuleExecutor>();
+	protected Map<String, RuleExecutor<?, ?>> ruleExecutors = new HashMap<String, RuleExecutor<?, ?>>();
 	
 	/**
 	 * A list of rule executors registered as beans
@@ -82,13 +82,13 @@ public class RuleExecutorContainer {
 			((ListableBeanFactory) beanFactory).getBeansWithAnnotation(ConfiguredRuleExecutor.class);
 
 		for (String springName : ruleExecutorBeans.keySet()) {
-			RuleExecutor ruleExecutor = (RuleExecutor) ruleExecutorBeans.get(springName);
+			RuleExecutor<?, ?> ruleExecutor = (RuleExecutor<?, ?>) ruleExecutorBeans.get(springName);
 			String ruleName = ruleExecutor.getClass().getAnnotation(ConfiguredRuleExecutor.class).name();
 			setCustomRuleExecutor(ruleName, ruleExecutor);
 		}
 		if (beanRegistrants != null) {
 			for (KeyedBeanRegistrant registrant : beanRegistrants) {
-				setCustomRuleExecutor(registrant.getKey(), (RuleExecutor) beanFactory.getBean(registrant.getBeanName()));
+				setCustomRuleExecutor(registrant.getKey(), (RuleExecutor<?, ?>) beanFactory.getBean(registrant.getBeanName()));
 			}
 		}
 	}
@@ -97,7 +97,7 @@ public class RuleExecutorContainer {
 	 * Set custom rule executors with specific names.
 	 * @param customRuleExecutors the rules to set.
 	 */
-	public void setCustomRuleExecutors(Map<String, RuleExecutor> customRuleExecutors) {
+	public void setCustomRuleExecutors(Map<String, RuleExecutor<?, ?>> customRuleExecutors) {
 		for (String executorName : customRuleExecutors.keySet()) {
 			setCustomRuleExecutor(executorName, customRuleExecutors.get(executorName));
 		}
@@ -109,7 +109,7 @@ public class RuleExecutorContainer {
 	 * @param executorName Name of the rule to set
 	 * @param ruleExecutor The rule executor to set.
 	 */
-	public void setCustomRuleExecutor(String executorName, RuleExecutor ruleExecutor) {
+	public void setCustomRuleExecutor(String executorName, RuleExecutor<?, ?> ruleExecutor) {
 		if (ruleExecutors.containsKey(executorName)) {
 			throw new IllegalArgumentException(
 				"Implementation for rule name \"" + executorName 
@@ -125,7 +125,7 @@ public class RuleExecutorContainer {
 	 * @param executorName Name of the rule executor.
 	 * @return RuleExecutor with that name.
 	 */
-	public RuleExecutor getRuleExecutorByName(String executorName) {
+	public RuleExecutor<?, ?> getRuleExecutorByName(String executorName) {
 		if (ruleExecutors.containsKey(executorName)) {
 			return ruleExecutors.get(executorName);
 		}

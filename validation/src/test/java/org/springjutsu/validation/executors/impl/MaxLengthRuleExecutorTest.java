@@ -4,13 +4,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.springjutsu.validation.executors.RuleExecutor;
 
 public class MaxLengthRuleExecutorTest {
 
 	@Test
 	public void testValidate() throws Exception {
-		RuleExecutor executor = new MaxLengthRuleExecutor();
+		MaxLengthRuleExecutor executor = new MaxLengthRuleExecutor();
 		assertTrue(executor.validate(null, null));
 		assertTrue(executor.validate("test", 4));
 		assertTrue(executor.validate("1", 1));

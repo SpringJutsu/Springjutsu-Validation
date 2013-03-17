@@ -26,11 +26,11 @@ import org.springjutsu.validation.util.ValidationRulesUtils;
  * @author Taylor Wicksell
  *
  */
-public class MinLengthRuleExecutor extends ValidWhenEmptyRuleExecutor {
+public class MinLengthRuleExecutor extends ValidWhenEmptyRuleExecutor<Object, Integer> {
 	
 	@Override
-	public boolean doValidate(Object model, Object argument) {
-		return ValidationRulesUtils.getLength(model) >= Integer.valueOf(String.valueOf(argument));
+	public boolean doValidate(Object model, Integer argument) {
+		return ValidationRulesUtils.getLength(model) >= argument;
 	}
 
 }

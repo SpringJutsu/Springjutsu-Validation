@@ -16,8 +16,6 @@
 
 package org.springjutsu.validation.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Holds common functions, mostly to determine some
@@ -27,8 +25,6 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class ValidationRulesUtils {
-	
-	private static Log log = LogFactory.getLog(ValidationRulesUtils.class);
 	
 	//TODO: Make rules for these patterns or delete them.
 	public static final String DECIMAL_PATTERN = "[0-9]*\\.?[0-9]*";

@@ -21,7 +21,7 @@ package org.springjutsu.validation.executors;
  * Asserts a value is valid if it is empty, or matches a given regex.
  * @author Clark Duplichien
  */
-public abstract class RegexMatchRuleExecutor extends ValidWhenEmptyRuleExecutor {
+public abstract class RegexMatchRuleExecutor extends ValidWhenEmptyRuleExecutor<Object, Object> {
 
 	public boolean doValidate(Object model, Object argument) {
 		return  String.valueOf(model).matches(getRegularExpression());

@@ -25,9 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -57,6 +54,7 @@ public class RequestUtils {
 	 * @param request the request
 	 * @return a wildcard-substituted view name
 	 */
+	@SuppressWarnings("unchecked")
 	public static String replaceRestPathVariables(String viewName, Map<String, Object> model, HttpServletRequest request) {
 		String newViewName = viewName;
 		Matcher matcher = Pattern.compile(PATH_VAR_PATTERN).matcher(newViewName);
@@ -167,7 +165,7 @@ public class RequestUtils {
 	 * @param annotationClass The annotation to find.
 	 * @return The annotation, or null if not present.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Annotation findHandlerAnnotation(Class handlerClass, Class annotationClass) {
 		Class controllerClass = handlerClass;
 		while (controllerClass.getAnnotation(annotationClass) == null 

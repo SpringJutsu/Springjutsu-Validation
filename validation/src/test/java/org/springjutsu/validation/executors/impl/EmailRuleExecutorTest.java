@@ -4,13 +4,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.springjutsu.validation.executors.RuleExecutor;
 
 public class EmailRuleExecutorTest {
 
 	@Test
 	public void testValidate() throws Exception {
-		RuleExecutor executor = new EmailRuleExecutor();
+		EmailRuleExecutor executor = new EmailRuleExecutor();
 		assertTrue(executor.validate(null, null));
 		assertTrue(executor.validate("test@test.com", null));
 		assertTrue(executor.validate("test_test@test.net", null));

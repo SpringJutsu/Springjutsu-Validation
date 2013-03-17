@@ -108,7 +108,7 @@ public class ValidationConfigurationDefinitionParserTest {
 	/**
 	 * Used to test that bean properties are wired on context registered executors.
 	 */
-	public static class TestBeanPropertyRuleExecutor extends ValidWhenEmptyRuleExecutor {
+	public static class TestBeanPropertyRuleExecutor extends ValidWhenEmptyRuleExecutor<Object, Object> {
 		@Autowired(required=false) public BeanFactory beanFactory;		
 		@Override public boolean doValidate(Object model, Object argument) { return true; }		
 	}

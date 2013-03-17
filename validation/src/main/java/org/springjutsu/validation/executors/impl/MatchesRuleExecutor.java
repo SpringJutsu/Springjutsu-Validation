@@ -26,7 +26,7 @@ import org.springjutsu.validation.util.ValidationRulesUtils;
  * @author Taylor Wicksell
  * 
  */
-public class MatchesRuleExecutor implements RuleExecutor {
+public class MatchesRuleExecutor implements RuleExecutor<Object, Object> {
 
 	@Override
 	public boolean validate(Object model, Object argument) throws Exception {

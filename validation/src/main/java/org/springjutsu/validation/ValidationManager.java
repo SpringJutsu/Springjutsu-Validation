@@ -27,7 +27,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.SimpleTypeConverter;
+import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
@@ -97,6 +101,19 @@ public class ValidationManager extends CustomValidatorBean {
 	 */
 	@Autowired
 	protected ValidationErrorMessageHandler validationErrorMessageHandler;
+	
+	/**
+	 * Used by the TypeConverter to convert validation arguments
+	 * to the type specified by RuleExecutor parameterization.
+	 */
+	@Autowired(required=false)
+	protected ConversionService conversionService;
+	
+	/**
+	 * Used by the TypeConverter to convert validation arguments
+	 * to the type specified by RuleExecutor parameterization.
+	 */
+	protected TypeConverter typeConverter;
 	
 	@Override
 	public boolean supports(Class<?> clazz) {
@@ -412,6 +429,7 @@ public class ValidationManager extends CustomValidatorBean {
 	 * @param rootModel The model to run the rule on.
 	 * @return
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected boolean passes(ValidationRule rule, ValidationEvaluationContext context) {
 		if (log.isDebugEnabled()) {
 			log.debug("Preparing to execute rule: " + rule);
@@ -433,12 +451,37 @@ public class ValidationManager extends CustomValidatorBean {
 		boolean isValid;
 		RuleExecutor executor = ruleExecutorContainer.getRuleExecutorByName(rule.getType());
 		try {
-			isValid = executor.validate(ruleModel, ruleArg);
+			// perform conversion on argument
+			Object convertedRuleArg = convertRuleArgument(ruleArg, executor);
+			isValid = executor.validate(ruleModel, convertedRuleArg);
 		} catch (Exception ve) {
 			throw new RuntimeException("Error occured during validation: ", ve);
 		}
 		log.debug("Rule executor returned " + isValid);
 		return isValid;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public Object convertRuleArgument(Object ruleArg, RuleExecutor executor) {
+		Object convertedRuleArg = ruleArg;
+		if (ruleArg != null) {
+			Class<?>[] parameterizedTypes = GenericTypeResolver.resolveTypeArguments(executor.getClass(), RuleExecutor.class);
+			convertedRuleArg = getTypeConverter().convertIfNecessary(ruleArg, parameterizedTypes[1]);
+		}
+		return convertedRuleArg;
+	}
+	
+	/**
+	 * Return the underlying TypeConverter.
+	 */
+	protected TypeConverter getTypeConverter() {
+		if (this.typeConverter == null) {
+			this.typeConverter = new SimpleTypeConverter();
+			if (this.conversionService != null) {
+				((SimpleTypeConverter) this.typeConverter).setConversionService(this.conversionService);
+			}
+		}
+		return this.typeConverter;
 	}
 
 }

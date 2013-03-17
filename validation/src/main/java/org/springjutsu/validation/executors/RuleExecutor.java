@@ -19,8 +19,14 @@ package org.springjutsu.validation.executors;
 /**
  * Performs validation for a given rule.
  * @author Clark Duplichien
+ *
+ * @param <M> The type of the model being validated. If the provided model
+ *  is not of the requested type, an exception will be thrown.
+ * @param <A> The type of the Argument passed to the validation rule. The 
+ * configured PropertyEditor and Conversion service beans will be used by
+ * a conversion attempt during argument resolution.
  */
-public interface RuleExecutor {
+public interface RuleExecutor<M, A> {
 	
 	/**
 	 * Validate the given rule
@@ -32,6 +38,6 @@ public interface RuleExecutor {
 	 * @return true if valid
 	 * @throws Exception any exception to be handled by the parent framework.
 	 */
-	public boolean validate(Object model, Object argument) throws Exception;
+	public boolean validate(M model, A argument) throws Exception;
 
 }
