@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
@@ -96,55 +97,29 @@ public class RequestUtils {
 	}
 
 	/**
-	 * Since successView and validationFailureView can contain
-	 * multiple possible redirection paths using the format
-	 * incomingRequestPath=outgoingRedirectPath, we'll need to 
-	 * identify which incomingRequestPath best matches the 
-	 * request that generated this validation, and then return
-	 * the view name (outgoingRedirectPath) associated with that
-	 * path.
-	 * This is made simple by looking for the bestMatchingPattern
-	 * that spring has already kindly exposed in the request 
-	 * attributes.
-	 * @param candidateViewNames The possible views
-	 * @param controllerPaths The base path(s) from the controller
-	 * @param request the request
-	 * @return the best matching view name to redirect to.
+	 * 
 	 */
-	public static String findMatchingRestPath(String[] candidateViewNames, 
+	public static String findFirstMatchingRestPath(String[] candidateViewNames, 
 			String[] controllerPaths, HttpServletRequest request) {
-		String bestMatch = null;
-		String requestBestMatchingPattern = 
-			(String) request.getAttribute("org.springframework.web.servlet.HandlerMapping.bestMatchingPattern");
-		String preferredPath = requestBestMatchingPattern != null ? 
-				requestBestMatchingPattern
-				.replaceAll(PATH_VAR_PATTERN, "VAR") : null;
-		for (String candidate : candidateViewNames) {
-			if (!candidate.contains("=") && bestMatch == null) {
-				bestMatch = candidate;
-			} else if (preferredPath != null && candidate.contains("=")) {
-				String candidatePath = candidate.substring(0, candidate.indexOf("="))
-				.replaceAll(PATH_VAR_PATTERN, "VAR")
-				.replaceAll("\\*\\*/?", "(*/?)+")
-				.replace("*", "[^/]+");
-				if ((controllerPaths == null || candidatePath.startsWith("/"))&& preferredPath.matches(candidatePath)) {
-					return candidate.substring(candidate.indexOf("=") + 1);
-				} else if (controllerPaths != null) {
-					for (String controllerPath : controllerPaths) {
-						String controllerPathRegex = 
-							controllerPath
-							.replaceAll(PATH_VAR_PATTERN, "VAR")
-							.replaceAll("\\*\\*/?", "(*/?)+")
-							.replace("*", "[^/]+");
-						String testPath = ( controllerPathRegex + "/" + candidatePath).replace("//", "/");
-						if (preferredPath.matches(testPath)) {
-							return candidate.substring(candidate.indexOf("=") + 1);
-						}
+		
+		String pathWithinHandlerMapping = removeLeadingAndTrailingSlashes(
+			(String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE));
+		
+		AntPathMatcher antPathMatcher = new AntPathMatcher();
+		for (String candidatePath : candidateViewNames) {
+			if ((controllerPaths == null || candidatePath.startsWith("/")) 
+					&& antPathMatcher.match(removeLeadingAndTrailingSlashes(candidatePath), pathWithinHandlerMapping)) {
+				return candidatePath;
+			} else if (controllerPaths != null) {
+				for (String controllerPath : controllerPaths) {
+					String testPath = (controllerPath + "/" + candidatePath).replace("//", "/");
+					if (antPathMatcher.match(removeLeadingAndTrailingSlashes(testPath), pathWithinHandlerMapping)) {
+						return candidatePath;
 					}
 				}
 			}
 		}
-		return bestMatch;
+		return null;
 	}
 	
 	/**

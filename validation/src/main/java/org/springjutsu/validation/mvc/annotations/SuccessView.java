@@ -22,23 +22,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * When annotating a controller method, the value
- * is a string that indicates the view that should follow
- * a successful completion of the method, overriding any previously
- * evaluated view names.
- * Useful when you want your service and controller methods to be synonomous,
- * because it allows a preferred view to be set regardless of return type.
- * View name may contain restful variable syntax, where "{foo}" will be replaced
- * by by some property named "foo" from the model and view object. 
- * If a single controller method handles multiple request paths, the success view can
- * be wired dependent on the path by specifying "someInputPath=someSuccessPath", in an array.
- * As of 0.6.1, the "someInputPath" path string may contain * and ** ant path strings.
- * Requires that AnnotatedDefaultViewSettingHandlerInterceptor be a wired bean.
  * @author Clark Duplichien
- *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface SuccessView {	
-	public String[] value();
+public @interface SuccessView {
+	
 }

@@ -17,6 +17,9 @@
 
 package org.springjutsu.validation.mvc;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,6 +28,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 import org.springjutsu.validation.mvc.annotations.ValidationFailureView;
+import org.springjutsu.validation.mvc.annotations.ValidationFailureViews;
 import org.springjutsu.validation.util.RequestUtils;
 
 /**
@@ -45,26 +49,55 @@ public class ValidationFailureViewHandlerExceptionResolver implements HandlerExc
 	 */
 	public ModelAndView resolveException(HttpServletRequest request,
 			HttpServletResponse response, Object handler, Exception ex) {
+		
+		if (!(ex instanceof BindException)) {
+			return null;
+		}
+		
+		if (!(handler instanceof HandlerMethod)) {
+			return null;
+		}
+		
 		ModelAndView mav = null;
-		if (ex instanceof BindException) {
-			ValidationFailureView failView = null; 
-			if (handler instanceof HandlerMethod) {
-				failView = (ValidationFailureView) ((HandlerMethod) handler).getMethodAnnotation(ValidationFailureView.class);
+		ValidationFailureViews failViews = (ValidationFailureViews) ((HandlerMethod) handler).getMethodAnnotation(ValidationFailureViews.class);
+		ValidationFailureView failView = (ValidationFailureView) ((HandlerMethod) handler).getMethodAnnotation(ValidationFailureView.class);
+		String viewName = null;
+		
+		if (failView != null) {
+			viewName = failView.targetUrl();
+		} else if (failViews != null) {
+			String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
+			viewName = findMatchingTargetUrl(failViews.value(), controllerPaths, request);
+		}
+		
+		if (viewName == null) {
+			return null;
+		}
+		
+		viewName = RequestUtils.replaceRestPathVariables(viewName, ((BindException)ex).getModel(), request);
+		mav = new ModelAndView(viewName, ((BindException)ex).getModel());
+		
+		return mav;
+	}
+
+	protected String findMatchingTargetUrl(ValidationFailureView[] failViews, String[] controllerPaths, HttpServletRequest request) {
+		Map<String, String> sourceTargetMap = new HashMap<String, String>();
+		for (ValidationFailureView failView : failViews) {
+			if (failView.sourceUrl().isEmpty()) {
+				throw new IllegalArgumentException("sourceUrl is required when specifying multiple success or failure views.");
 			}
 			
-			if (failView == null) {
-				return null;
+			if (sourceTargetMap.containsKey(failView.sourceUrl())) {
+				throw new IllegalArgumentException("duplicate sourceUrl when specifying multiple success or failure views: " + failView.sourceUrl());
 			}
-			String[] candidateViewNames = failView.value();
-			String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
-			String viewName = RequestUtils.findMatchingRestPath(candidateViewNames, controllerPaths, request);
-			if (viewName == null) {
-				return null;
-			}
-			viewName = RequestUtils.replaceRestPathVariables(viewName, ((BindException)ex).getModel(), request);
-			mav = new ModelAndView(viewName, ((BindException)ex).getModel());
+			
+			sourceTargetMap.put(failView.sourceUrl(), failView.targetUrl());
 		}
-		return mav;
+		
+		String matchingSourceUrl = RequestUtils.findFirstMatchingRestPath(
+				sourceTargetMap.keySet().toArray(new String[sourceTargetMap.size()]), controllerPaths, request);
+		
+		return matchingSourceUrl == null ? null : sourceTargetMap.get(matchingSourceUrl);		
 	}
 	
 }
