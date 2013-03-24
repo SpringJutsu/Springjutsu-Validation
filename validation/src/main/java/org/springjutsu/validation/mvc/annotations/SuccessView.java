@@ -27,5 +27,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface SuccessView {
-	
+	public String sourceUrl() default "";
+	public String targetUrl();
 }

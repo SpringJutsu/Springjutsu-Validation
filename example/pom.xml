@@ -134,7 +134,7 @@
 		<dependency>
 			<groupId>org.springjutsu</groupId>
 			<artifactId>validation</artifactId>
-			<version>0.6.1-SNAPSHOT</version>
+			<version>0.6.1-RELEASE</version>
 		</dependency>
         
 		<dependency>

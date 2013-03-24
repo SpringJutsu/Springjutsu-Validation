@@ -16,6 +16,9 @@
 
 package org.springjutsu.validation.mvc;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -23,6 +26,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springjutsu.validation.mvc.annotations.SuccessView;
+import org.springjutsu.validation.mvc.annotations.SuccessViews;
 import org.springjutsu.validation.util.RequestUtils;
 
 /**
@@ -49,24 +53,46 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 			HttpServletResponse response, Object handler,
 			ModelAndView modelAndView) throws Exception {
 		
-		SuccessView successView = null;
-		if (handler instanceof HandlerMethod) {
-			successView = (SuccessView)((HandlerMethod) handler).getMethodAnnotation(SuccessView.class);
-		}
-		
-		if (successView == null) {
+		if (!(handler instanceof HandlerMethod)) {
 			return;
 		}
-				
-		String[] candidateViewNames = successView.value();
-		String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
-		String viewName = RequestUtils.findMatchingRestPath(candidateViewNames, controllerPaths, request);
 		
+		SuccessViews successViews = (SuccessViews) ((HandlerMethod) handler).getMethodAnnotation(SuccessViews.class);
+		SuccessView successView = (SuccessView) ((HandlerMethod) handler).getMethodAnnotation(SuccessView.class);
+		String viewName = null;
+
+		if (successView != null) {
+			viewName = successView.targetUrl();
+		} else if (successViews != null) {
+			String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
+			viewName = findMatchingTargetUrl(successViews.value(), controllerPaths, request);
+		}
+				
 		if (viewName == null) {
 			return;
 		}
 		
 		viewName = RequestUtils.replaceRestPathVariables(viewName, modelAndView.getModel(),  request);
 		modelAndView.setViewName(viewName);
+	}
+	
+	protected String findMatchingTargetUrl(SuccessView[] successViews, String[] controllerPaths, HttpServletRequest request) {
+		Map<String, String> sourceTargetMap = new HashMap<String, String>();
+		for (SuccessView successView : successViews) {
+			if (successView.sourceUrl().isEmpty()) {
+				throw new IllegalArgumentException("sourceUrl is required when specifying multiple success or failure views.");
+			}
+			
+			if (sourceTargetMap.containsKey(successView.sourceUrl())) {
+				throw new IllegalArgumentException("duplicate sourceUrl when specifying multiple success or failure views: " + successView.sourceUrl());
+			}
+			
+			sourceTargetMap.put(successView.sourceUrl(), successView.targetUrl());
+		}
+		
+		String matchingSourceUrl = RequestUtils.findFirstMatchingRestPath(
+				sourceTargetMap.keySet().toArray(new String[sourceTargetMap.size()]), controllerPaths, request);
+		
+		return matchingSourceUrl == null ? null : sourceTargetMap.get(matchingSourceUrl);		
 	}
 }
