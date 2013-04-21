@@ -26,12 +26,16 @@ public class RuleExecutorContainerTest {
 	
 	RuleExecutor<?, ?> executor;
 	
+	RuleExecutor<?, ?> proxiedRuleExecutor;
+	
 	@Before
 	public void setup()
 	{
 		executor = new AnnotatedRuleExecutor();
+		proxiedRuleExecutor = new ProxiedAnnotatedRuleExecutor();
 		HashMap<String, Object> executors = new HashMap<String, Object>();
 		executors.put("testExecutor", executor);
+		executors.put("proxiedExecutor", proxiedRuleExecutor);
 		Mockito.when(beanFactory.getBeansWithAnnotation(ConfiguredRuleExecutor.class)).thenReturn(executors);
 		executorContainer.beanFactory = beanFactory;
 	}
@@ -40,6 +44,7 @@ public class RuleExecutorContainerTest {
 	public void testDiscoverAnnotatedRuleExecutors() {
 		executorContainer.registerRuleExecutors();
 		assertEquals(executor, executorContainer.getRuleExecutorByName("testExecutor"));
+		assertEquals(proxiedRuleExecutor, executorContainer.getRuleExecutorByName("proxiedExecutor"));
 	}
 
 
@@ -88,5 +93,19 @@ public class RuleExecutorContainerTest {
 		public boolean validate(Object model, Object argument) throws Exception {
 			return false;
 		}
+	}
+	
+	@ConfiguredRuleExecutor(name = "proxiedExecutor")
+	private class ToBeProxiedAnnotatedRuleExecutor implements RuleExecutor<Object, Object>
+	{
+		
+		@Override
+		public boolean validate(Object model, Object argument) throws Exception {
+			return false;
+		}
+	}
+	
+	private class ProxiedAnnotatedRuleExecutor extends ToBeProxiedAnnotatedRuleExecutor {
+		
 	}
 }

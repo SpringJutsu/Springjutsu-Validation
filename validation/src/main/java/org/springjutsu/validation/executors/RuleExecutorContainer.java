@@ -26,6 +26,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springjutsu.validation.executors.impl.AlphabeticRuleExecutor;
 import org.springjutsu.validation.executors.impl.AlphanumericRuleExecutor;
 import org.springjutsu.validation.executors.impl.EmailRuleExecutor;
@@ -83,7 +84,7 @@ public class RuleExecutorContainer {
 
 		for (String springName : ruleExecutorBeans.keySet()) {
 			RuleExecutor<?, ?> ruleExecutor = (RuleExecutor<?, ?>) ruleExecutorBeans.get(springName);
-			String ruleName = ruleExecutor.getClass().getAnnotation(ConfiguredRuleExecutor.class).name();
+			String ruleName = AnnotationUtils.findAnnotation(ruleExecutor.getClass(), ConfiguredRuleExecutor.class).name();
 			setCustomRuleExecutor(ruleName, ruleExecutor);
 		}
 		if (beanRegistrants != null) {

@@ -10,6 +10,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springjutsu.validation.namespace.KeyedBeanRegistrant;
 
 public class ValidationContextHandlerContainer {
@@ -51,7 +52,7 @@ public class ValidationContextHandlerContainer {
 
 		for (String springName : contextHandlerBeans.keySet()) {
 			ValidationContextHandler handler = (ValidationContextHandler) contextHandlerBeans.get(springName);
-			String contextType = handler.getClass().getAnnotation(ConfiguredContextHandler.class).type();
+			String contextType = AnnotationUtils.findAnnotation(handler.getClass(), ConfiguredContextHandler.class).type();
 			setCustomContextHandler(contextType, handler);
 		}
 		if (beanRegistrants != null) {

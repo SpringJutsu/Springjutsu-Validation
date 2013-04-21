@@ -16,7 +16,6 @@
 
 package org.springjutsu.validation.util;
 
-import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +23,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
@@ -127,24 +127,8 @@ public class RequestUtils {
 	 * @return the controller request paths.
 	 */
 	public static String[] getControllerRequestPaths(HandlerMethod handler) {
-		RequestMapping requestMapping = (RequestMapping) findHandlerAnnotation(handler.getMethod().getDeclaringClass(), RequestMapping.class);
+		RequestMapping requestMapping = AnnotationUtils.findAnnotation(handler.getMethod().getDeclaringClass(), RequestMapping.class);
 		return requestMapping == null ? null : requestMapping.value();
-	}
-	
-	/**
-	 * Find an annotation on the possibly proxied handler.
-	 * @param handler The handler / controller
-	 * @param annotationClass The annotation to find.
-	 * @return The annotation, or null if not present.
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Annotation findHandlerAnnotation(Class handlerClass, Class annotationClass) {
-		Class controllerClass = handlerClass;
-		while (controllerClass.getAnnotation(annotationClass) == null 
-				&& controllerClass.getSuperclass() != null) {
-			controllerClass = controllerClass.getSuperclass();
-		}
-		return controllerClass.getAnnotation(annotationClass);		
 	}
 	
 	/**
