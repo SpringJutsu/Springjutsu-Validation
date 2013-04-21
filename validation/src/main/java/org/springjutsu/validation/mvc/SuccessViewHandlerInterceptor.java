@@ -51,7 +51,7 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 	@Override
 	public void postHandle(HttpServletRequest request,
 			HttpServletResponse response, Object handler,
-			ModelAndView modelAndView) throws Exception {
+			ModelAndView modelAndView) {
 		
 		if (!(handler instanceof HandlerMethod)) {
 			return;

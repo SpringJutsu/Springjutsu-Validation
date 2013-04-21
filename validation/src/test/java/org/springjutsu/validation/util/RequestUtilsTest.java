@@ -2,11 +2,15 @@ package org.springjutsu.validation.util;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springjutsu.validation.test.entities.Person;
 
 public class RequestUtilsTest {
 	
@@ -169,5 +173,92 @@ public class RequestUtilsTest {
 		String matchingRestPath = RequestUtils.findFirstMatchingRestPath(candidateViewNames, controllerPaths, request);
 		assertEquals("/{id}/new", matchingRestPath);
     }
+	
+	@Test
+	public void testReplacePathVariablesNoReplacements() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(uriTemplateVariables);
+		String replaced = RequestUtils.replaceRestPathVariables("/foo/list", model, request);
+		assertEquals("/foo/list", replaced);
+	}
+	
+	@Test
+	public void testReplacePathVariablesFromUriTemplateVariables() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("id", 4);
+		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();
+		uriTemplateVariables.put("id", 5);
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(uriTemplateVariables);
+		String replaced = RequestUtils.replaceRestPathVariables("/foo/{id}", model, request);
+		assertEquals("/foo/5", replaced);
+	}
+	
+	@Test
+	public void testReplacePathVariablesFromModelWhenNotInUriVariables() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("id", 4);
+		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(uriTemplateVariables);
+		String replaced = RequestUtils.replaceRestPathVariables("/foo/{id}", model, request);
+		assertEquals("/foo/4", replaced);
+	}
+	
+	@Test
+	public void testReplacePathVariablesFromModelNullUriVariables() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("id", 4);
+		Map<String, Object> uriTemplateVariables = null;
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(uriTemplateVariables);
+		String replaced = RequestUtils.replaceRestPathVariables("/foo/{id}", model, request);
+		assertEquals("/foo/4", replaced);
+	}
+	
+	@Test
+	public void testReplacePathVariablesFromNestedModelPath() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		Person person = new Person();
+		person.setId(4L);
+		model.put("person", person);
+		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(uriTemplateVariables);
+		String replaced = RequestUtils.replaceRestPathVariables("/person/{person.id}", model, request);
+		assertEquals("/person/4", replaced);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testReplacePathVariablesMissingVariable() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RequestUtils.replaceRestPathVariables("/foo/{id}", model, request);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testReplacePathVariablesMissingVariableOnNestedPath() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		Person person = new Person();
+		model.put("person", person);
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RequestUtils.replaceRestPathVariables("/person/{person.id}", model, request);
+	}
+	
+	@Test
+	public void testReplacePathVariablesMultipleTimes() {
+		Map<String, Object> model = new HashMap<String, Object>();
+		Person person = new Person();
+		person.setId(4L);
+		model.put("person", person);
+		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();
+		uriTemplateVariables.put("id", 5);
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE)).thenReturn(uriTemplateVariables);
+		String replaced = RequestUtils.replaceRestPathVariables("/record/{id}/person/{person.id}", model, request);
+		assertEquals("/record/5/person/4", replaced);
+	}
 
 }

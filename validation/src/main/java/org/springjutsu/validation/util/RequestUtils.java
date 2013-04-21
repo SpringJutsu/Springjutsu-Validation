@@ -72,8 +72,9 @@ public class RequestUtils {
 			}
 			Map<String, String> uriTemplateVariables = 
 				(Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-			if (!uriTemplateVariables.containsKey(varName))
-			{
+			if (uriTemplateVariables != null && uriTemplateVariables.containsKey(varName)) {
+				newViewName = newViewName.replace(match, String.valueOf(uriTemplateVariables.get(varName)));
+			} else {
 				Object resolvedObject = model.get(baseVarName);
 				if (resolvedObject == null) {
 					throw new IllegalArgumentException(varName + " is not present in model.");
@@ -85,11 +86,7 @@ public class RequestUtils {
 				if (resolvedObject == null) {
 					throw new IllegalArgumentException(varName + " is not present in model.");
 				}
-				newViewName = newViewName.replace(match, resolvedObject.toString());
-			}
-			else
-			{
-				newViewName = newViewName.replace(match, uriTemplateVariables.get(varName));
+				newViewName = newViewName.replace(match, String.valueOf(resolvedObject));
 			}
 			matcher.reset(newViewName);
 		}
