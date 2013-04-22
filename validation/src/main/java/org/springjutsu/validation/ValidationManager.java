@@ -159,6 +159,14 @@ public class ValidationManager extends CustomValidatorBean {
 		doValidate(new ValidationEvaluationContext(target, errors, validationHints));
 	}
 	
+	/**
+	 * Method responsible for actually executing validation rules.
+	 * Invokes contextual rules, then performs recursive sub-bean validation
+	 * on eligible sub bean validation paths by calling itself recursively
+	 * after pushing the sub bean path onto the ValidationEvaluationContext.
+	 * @param context the current context object indicating which path is currently
+	 * being validated.
+	 */
 	protected void doValidate(ValidationEvaluationContext context) {
 		if (log.isDebugEnabled()) {
 			String nestedPath = PathUtils.joinPathSegments(context.getNestedPath());
@@ -238,6 +246,15 @@ public class ValidationManager extends CustomValidatorBean {
 		}
 	}
 	
+	/**
+	 * Responsible for invoking all validation rules within the given rule holder.
+	 * Invokes non-scoped validation rules, template-scoped validation rules,
+	 * and then context-scoped validation rules in turn.
+	 * @param context The validation context object which indicates the current object
+	 * against which the rules should be evaluated. 
+	 * @param ruleHolder could be the base validation entity, a validation rule that passed,
+	 * a validation template, or a validation context.
+	 */
 	@SuppressWarnings("unchecked")
 	protected void callRules(ValidationEvaluationContext context, RuleHolder ruleHolder) {
 		for (ValidationRule rule : ruleHolder.getRules()) {
@@ -293,6 +310,13 @@ public class ValidationManager extends CustomValidatorBean {
 		}
 	}
 	
+	/**
+	 * Runs the provided rule, and on success either executes the child rules 
+	 * (if present) or just continued (if no children present) or on failure
+	 * skips the child rules (if present) or logs an error (if no children present).
+	 * @param context The current validation context indicating the object being validated
+	 * @param rule The validation rule to execute
+	 */
 	protected void handleValidationRule(ValidationEvaluationContext context, ValidationRule rule) {
 		if (passes(rule, context)) {
 			// If the rule passes and it has children,
@@ -318,6 +342,16 @@ public class ValidationManager extends CustomValidatorBean {
 		}
 	}
 	
+	/**
+	 * Determines all the indexed collection paths which can be
+	 * derived from the current path, which should be passed to
+	 * the rule being evaluated, based on the rule's given strategy 
+	 * for handling collections.
+	 * @param context The current validation context indicating the object being validated
+	 * @param rule The rule for which any collections will be handled.
+	 * @return a mapping of the deepest possible nested collection path 
+	 * to a list of indexed collection path replacements.
+	 */
 	@SuppressWarnings("rawtypes")
 	protected SingletonMap resolveCollectionPathReplacements(ValidationEvaluationContext context, ValidationRule rule) {
 		String path = context.localizePath(rule.getPath());
@@ -461,6 +495,14 @@ public class ValidationManager extends CustomValidatorBean {
 		return isValid;
 	}
 	
+	/**
+	 * Converts the given validation rule argument into the 
+	 * type requested in the validation rule executor's parameterized
+	 * argument type 
+	 * @param ruleArg the rule argument to convert
+	 * @param executor the validation rule executor
+	 * @return the converted argument
+	 */
 	@SuppressWarnings("rawtypes")
 	public Object convertRuleArgument(Object ruleArg, RuleExecutor executor) {
 		Object convertedRuleArg = ruleArg;

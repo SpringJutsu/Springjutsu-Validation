@@ -235,31 +235,62 @@ public class ValidationErrorMessageHandler {
 		return buildMessageKey(parentType, fieldPath);
 	}
 	
+	/**
+	 * Constructs the actual model message key for a field label.
+	 * @param parentType the class of the bean on which the field path is found
+	 * @param fieldPath the path of the field for which a message is being resolved
+	 * @return the constructed message key, prefixed with a configured field label prefix
+	 */
 	protected String buildMessageKey(Class<?> parentType, String fieldPath) {
 		return (fieldLabelPrefix != null && !fieldLabelPrefix.isEmpty() ? fieldLabelPrefix + "." : "")
 		+ StringUtils.uncapitalize(parentType.getSimpleName()) + "." + fieldPath;
 	}
 	
+	/**
+	 * @return The configured error message prefix
+	 */
 	public String getErrorMessagePrefix() {
 		return errorMessagePrefix;
 	}
 
+	/**
+	 * Sets the error message prefix.
+	 * Sets empty string if passed null.
+	 * @param errorMessagePrefix The message prefix for resolved error messages
+	 */
 	public void setErrorMessagePrefix(String errorMessagePrefix) {
 		this.errorMessagePrefix = errorMessagePrefix == null ? "" : errorMessagePrefix;
 	}
 
+	/**
+	 * @return the configured field label prefix
+	 */
 	public String getFieldLabelPrefix() {
 		return fieldLabelPrefix;
 	}
 
+	/**
+	 * Sets the field label prefix.
+	 * Sets empty string if passed null
+	 * @param fieldLabelPrefix The message prefix for resolved field labels
+	 */
 	public void setFieldLabelPrefix(String fieldLabelPrefix) {
 		this.fieldLabelPrefix = fieldLabelPrefix == null ? "" : fieldLabelPrefix;
 	}
 	
+	/**
+	 * @return a boolean indicating whether or not super classes are searched
+	 * for a field on which an error occurs in the generation of field label message codes.
+	 */
 	public boolean getEnableSuperclassFieldLabelLookup() {
 		return enableSuperclassFieldLabelLookup;
 	}
 
+	/**
+	 * Sets whether or not super classes are searched
+	 * for a field on which an error occurs in the generation of field label message codes.
+	 * @param enableSuperclassFieldLabelLookup the boolean value to set
+	 */
 	public void setEnableSuperclassFieldLabelLookup(
 			boolean enableSuperclassFieldLabelLookup) {
 		this.enableSuperclassFieldLabelLookup = enableSuperclassFieldLabelLookup;
