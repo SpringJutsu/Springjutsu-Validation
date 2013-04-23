@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -68,7 +69,8 @@ public class ValidationContextHandlerContainer {
 
 		for (String springName : contextHandlerBeans.keySet()) {
 			ValidationContextHandler handler = (ValidationContextHandler) contextHandlerBeans.get(springName);
-			String contextType = AnnotationUtils.findAnnotation(handler.getClass(), ConfiguredContextHandler.class).type();
+			String contextType = AnnotationUtils.findAnnotation(
+					AopUtils.getTargetClass(handler), ConfiguredContextHandler.class).type();
 			setCustomContextHandler(contextType, handler);
 		}
 		if (beanRegistrants != null) {

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -84,7 +85,8 @@ public class RuleExecutorContainer {
 
 		for (String springName : ruleExecutorBeans.keySet()) {
 			RuleExecutor<?, ?> ruleExecutor = (RuleExecutor<?, ?>) ruleExecutorBeans.get(springName);
-			String ruleName = AnnotationUtils.findAnnotation(ruleExecutor.getClass(), ConfiguredRuleExecutor.class).name();
+			String ruleName = AnnotationUtils.findAnnotation(
+					AopUtils.getTargetClass(ruleExecutor), ConfiguredRuleExecutor.class).name();
 			setCustomRuleExecutor(ruleName, ruleExecutor);
 		}
 		if (beanRegistrants != null) {

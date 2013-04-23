@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.AntPathMatcher;
@@ -127,7 +128,8 @@ public class RequestUtils {
 	 * @return the controller request paths.
 	 */
 	public static String[] getControllerRequestPaths(HandlerMethod handler) {
-		RequestMapping requestMapping = AnnotationUtils.findAnnotation(handler.getMethod().getDeclaringClass(), RequestMapping.class);
+		RequestMapping requestMapping = AnnotationUtils.findAnnotation(
+				AopUtils.getTargetClass(handler.getMethod().getDeclaringClass()), RequestMapping.class);
 		return requestMapping == null ? null : requestMapping.value();
 	}
 	
