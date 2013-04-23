@@ -63,7 +63,7 @@ public class ValidationFailureViewHandlerExceptionResolver implements HandlerExc
 		String viewName = null;
 		
 		if (failView != null) {
-			viewName = failView.targetUrl();
+			viewName = failView.value();
 		} else if (failViews != null) {
 			String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
 			viewName = findMatchingTargetUrl(failViews.value(), controllerPaths, request);
@@ -90,7 +90,7 @@ public class ValidationFailureViewHandlerExceptionResolver implements HandlerExc
 				throw new IllegalArgumentException("duplicate sourceUrl when specifying multiple success or failure views: " + failView.sourceUrl());
 			}
 			
-			sourceTargetMap.put(failView.sourceUrl(), failView.targetUrl());
+			sourceTargetMap.put(failView.sourceUrl(), failView.value());
 		}
 		
 		String matchingSourceUrl = RequestUtils.findFirstMatchingRestPath(

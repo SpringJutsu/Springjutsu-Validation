@@ -28,5 +28,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface SuccessView {
 	public String sourceUrl() default "";
-	public String targetUrl();
+	public String value();
 }

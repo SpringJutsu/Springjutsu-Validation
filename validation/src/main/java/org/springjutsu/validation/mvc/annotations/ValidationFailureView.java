@@ -29,5 +29,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface ValidationFailureView {
 	public String sourceUrl() default "";
-	public String targetUrl();
+	public String value();
 }

@@ -62,7 +62,7 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 		String viewName = null;
 
 		if (successView != null) {
-			viewName = successView.targetUrl();
+			viewName = successView.value();
 		} else if (successViews != null) {
 			String[] controllerPaths = RequestUtils.getControllerRequestPaths((HandlerMethod) handler);
 			viewName = findMatchingTargetUrl(successViews.value(), controllerPaths, request);
@@ -87,7 +87,7 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 				throw new IllegalArgumentException("duplicate sourceUrl when specifying multiple success or failure views: " + successView.sourceUrl());
 			}
 			
-			sourceTargetMap.put(successView.sourceUrl(), successView.targetUrl());
+			sourceTargetMap.put(successView.sourceUrl(), successView.value());
 		}
 		
 		String matchingSourceUrl = RequestUtils.findFirstMatchingRestPath(

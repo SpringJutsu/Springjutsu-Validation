@@ -64,7 +64,7 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	}
 	
 	@Test
-	@ValidationFailureView(targetUrl="/foo/new")
+	@ValidationFailureView("/foo/new")
 	public void testSingleAnnotation() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
 				ReflectionUtils.findMethod(getClass(), "testSingleAnnotation"));
@@ -73,7 +73,7 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	}
 	
 	@Test
-	@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/new")
+	@ValidationFailureView(sourceUrl="/foo/new", value="/foo/new")
 	public void testSourceUrlIgnoredForSingleAnnotation() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
 				ReflectionUtils.findMethod(getClass(), "testSourceUrlIgnoredForSingleAnnotation"));
@@ -83,8 +83,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@ValidationFailureView(targetUrl="/foo/new")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@ValidationFailureView("/foo/new")
 	})
 	public void testMultipleAnnotationsWithMissingSourceUrl() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
@@ -94,8 +94,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/new")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/new")
 	})
 	public void testMultipleAnnotationsWithDuplicateSourceUrl() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
@@ -105,8 +105,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@ValidationFailureView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@ValidationFailureView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testMultipleAnnotationsNoMatch() {
 		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/list");
@@ -118,8 +118,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/win"),
-		@ValidationFailureView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/lose")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/win"),
+		@ValidationFailureView(sourceUrl="/foo/{id}/edit", value="/foo/lose")
 	})
 	public void testMultipleAnnotations() {
 		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/new");
@@ -131,8 +131,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@ValidationFailureView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@ValidationFailureView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testRestPathVariableSubstitutionFromUriTemplateVariables() {
 		Map<String, Object> model = new HashMap<String, Object>();
@@ -150,8 +150,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@ValidationFailureView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@ValidationFailureView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testRestPathVariableSubstitutionFromModel() {
 		Map<String, Object> model = new HashMap<String, Object>();
@@ -169,8 +169,8 @@ public class ValidationFailureViewHandlerExceptionResolverTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	@ValidationFailureViews({
-		@ValidationFailureView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@ValidationFailureView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@ValidationFailureView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@ValidationFailureView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testRestPathVariableSubstitutionMissingVariable() {
 		Map<String, Object> model = new HashMap<String, Object>();

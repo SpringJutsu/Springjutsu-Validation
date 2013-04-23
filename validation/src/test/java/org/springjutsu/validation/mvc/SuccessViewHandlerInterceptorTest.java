@@ -51,7 +51,7 @@ public class SuccessViewHandlerInterceptorTest {
 	}
 	
 	@Test
-	@SuccessView(targetUrl="/foo/new")
+	@SuccessView("/foo/new")
 	public void testSingleAnnotation() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
 				ReflectionUtils.findMethod(getClass(), "testSingleAnnotation"));
@@ -60,7 +60,7 @@ public class SuccessViewHandlerInterceptorTest {
 	}
 	
 	@Test
-	@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/new")
+	@SuccessView(sourceUrl="/foo/new", value="/foo/new")
 	public void testSourceUrlIgnoredForSingleAnnotation() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
 				ReflectionUtils.findMethod(getClass(), "testSourceUrlIgnoredForSingleAnnotation"));
@@ -70,8 +70,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@SuccessView(targetUrl="/foo/new")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@SuccessView("/foo/new")
 	})
 	public void testMultipleAnnotationsWithMissingSourceUrl() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
@@ -81,8 +81,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/new")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@SuccessView(sourceUrl="/foo/new", value="/foo/new")
 	})
 	public void testMultipleAnnotationsWithDuplicateSourceUrl() {
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
@@ -92,8 +92,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@SuccessView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@SuccessView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testMultipleAnnotationsNoMatch() {
 		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/list");
@@ -105,8 +105,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/win"),
-		@SuccessView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/lose")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/win"),
+		@SuccessView(sourceUrl="/foo/{id}/edit", value="/foo/lose")
 	})
 	public void testMultipleAnnotations() {
 		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/new");
@@ -118,8 +118,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@SuccessView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@SuccessView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testRestPathVariableSubstitutionFromUriTemplateVariables() {
 		Map<String, Object> model = new HashMap<String, Object>();
@@ -137,8 +137,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@SuccessView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@SuccessView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testRestPathVariableSubstitutionFromModel() {
 		Map<String, Object> model = new HashMap<String, Object>();
@@ -156,8 +156,8 @@ public class SuccessViewHandlerInterceptorTest {
 	
 	@Test(expected=IllegalArgumentException.class)
 	@SuccessViews({
-		@SuccessView(sourceUrl="/foo/new", targetUrl="/foo/{id}"),
-		@SuccessView(sourceUrl="/foo/{id}/edit", targetUrl="/foo/{id}")
+		@SuccessView(sourceUrl="/foo/new", value="/foo/{id}"),
+		@SuccessView(sourceUrl="/foo/{id}/edit", value="/foo/{id}")
 	})
 	public void testRestPathVariableSubstitutionMissingVariable() {
 		Map<String, Object> model = new HashMap<String, Object>();
