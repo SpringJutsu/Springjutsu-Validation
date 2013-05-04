@@ -27,6 +27,9 @@ public abstract class RegexMatchRuleExecutor extends ValidWhenEmptyRuleExecutor<
 		return  String.valueOf(model).matches(getRegularExpression());
 	}
 	
+	/**
+	 * @return the regex which the string value of the model object must match
+	 */
 	public abstract String getRegularExpression();
 
 }

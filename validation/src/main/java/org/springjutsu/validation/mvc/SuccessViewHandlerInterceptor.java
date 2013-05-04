@@ -76,6 +76,17 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 		modelAndView.setViewName(viewName);
 	}
 	
+	/**
+	 * Given multiple possible view candidates, find the one whose sourceUrl
+	 * pattern best matches the current request url.
+	 * @param successViews An array of SuccessView candidate objects
+	 * @param controllerPaths RequestMapping mapped base paths for the controller
+	 * @param request The current request
+	 * @throws IllegalArgumentException if any SuccessView annotation does not
+	 * provide a sourceUrl value, or if multiple SuccessView annotations provide
+	 * the same sourceUrl value 
+	 * @return The view name mapped by the best matching SuccessView annotation
+	 */
 	protected String findMatchingTargetUrl(SuccessView[] successViews, String[] controllerPaths, HttpServletRequest request) {
 		Map<String, String> sourceTargetMap = new HashMap<String, String>();
 		for (SuccessView successView : successViews) {

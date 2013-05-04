@@ -22,6 +22,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * When applied to a method, and a SuccessViewHandlerInterceptor instance
+ * is configured with the application context, indicates the view name which
+ * should be applied after the successful completion of the method invocation.
+ * The sourceUrl object can be used to qualify multiple target view names based
+ * off of varying source urls by providing a single SuccessView annotation for
+ * each source url to view name mapping to the value of a SuccessViews annotation.
  * @author Clark Duplichien
  */
 @Retention(RetentionPolicy.RUNTIME)

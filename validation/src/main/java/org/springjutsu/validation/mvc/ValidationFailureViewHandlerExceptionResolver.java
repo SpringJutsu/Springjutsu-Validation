@@ -79,6 +79,17 @@ public class ValidationFailureViewHandlerExceptionResolver implements HandlerExc
 		return mav;
 	}
 
+	/**
+	 * Given multiple possible view candidates, find the one whose sourceUrl
+	 * pattern best matches the current request url.
+	 * @param validationFailureViews An array of ValidationFailureView candidate objects
+	 * @param controllerPaths RequestMapping mapped base paths for the controller
+	 * @param request The current request
+	 * @throws IllegalArgumentException if any ValidationFailureView annotation does not
+	 * provide a sourceUrl value, or if multiple ValidationFailureView annotations provide
+	 * the same sourceUrl value 
+	 * @return The view name mapped by the best matching ValidationFailureView annotation
+	 */
 	protected String findMatchingTargetUrl(ValidationFailureView[] failViews, String[] controllerPaths, HttpServletRequest request) {
 		Map<String, String> sourceTargetMap = new HashMap<String, String>();
 		for (ValidationFailureView failView : failViews) {

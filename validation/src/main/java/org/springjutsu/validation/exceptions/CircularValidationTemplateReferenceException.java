@@ -16,6 +16,12 @@
 
 package org.springjutsu.validation.exceptions;
 
+/**
+ * Indicates that a validation template referenced itself, 
+ * either directly, or within another nested reference. 
+ * @author Clark Duplichien
+ *
+ */
 public class CircularValidationTemplateReferenceException extends IllegalStateException {
 
 	private static final long serialVersionUID = 1L;

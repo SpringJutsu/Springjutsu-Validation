@@ -20,19 +20,34 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springjutsu.validation.spel.AbstractNamedAttributeAccessor;
 
+/**
+ * Provides Map-like SPEL access semantics for Request Attributes.
+ * @author Clark Duplichien
+ *
+ */
 public class HttpRequestAttributesNamedAttributeAccessor extends AbstractNamedAttributeAccessor {
 	
 	private HttpServletRequest request;
 	
+	/**
+	 * Default constructor
+	 * @param request The current request
+	 */
 	public HttpRequestAttributesNamedAttributeAccessor(HttpServletRequest request) {
 		this.request = request;
 	}
 
+	/**
+	 * Retreives a request attribute
+	 */
 	@Override
 	public Object get(String key) {
 		return request.getAttribute(key);
 	}
 
+	/**
+	 * Sets a request attribute
+	 */
 	@Override
 	public void set(String key, Object value) {
 		request.setAttribute(key, value);

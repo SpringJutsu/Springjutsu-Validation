@@ -36,28 +36,45 @@ public class CurrentModelPropertyAccessor implements PropertyAccessor {
 	
 	private ReflectivePropertyAccessor subPropertyAccessor = new ReflectivePropertyAccessor();
 
+	/**
+	 * Used to read the specialized CurrentModelAccessor object.
+	 */
 	@Override
 	@SuppressWarnings("rawtypes")
 	public Class[] getSpecificTargetClasses() {
 		return new Class[]{CurrentModelAccessor.class};
 	}
 
+	/**
+	 * Can read properties if they are accessible 
+	 * by reflective access
+	 */
 	@Override
 	public boolean canRead(EvaluationContext context, Object target, String name) throws AccessException {
 		return subPropertyAccessor.canRead(context, ((CurrentModelAccessor) target).accessCurrentModel(), name);
 	}
 
+	/**
+	 * Read a property using reflective access
+	 */
 	@Override
 	public TypedValue read(EvaluationContext context, Object target, String name)
 			throws AccessException {
 		return subPropertyAccessor.read(context, ((CurrentModelAccessor) target).accessCurrentModel(), name);
 	}
 
+	/**
+	 * Can write a property if it writable through
+	 * reflective access
+	 */
 	@Override
 	public boolean canWrite(EvaluationContext context, Object target, String name) throws AccessException {
 		return subPropertyAccessor.canWrite(context, ((CurrentModelAccessor) target).accessCurrentModel(), name);
 	}
 
+	/**
+	 * Write a property through reflective access
+	 */
 	@Override
 	public void write(EvaluationContext context, Object target, String name, Object newValue) throws AccessException {
 		subPropertyAccessor.write(context, ((CurrentModelAccessor) target).accessCurrentModel(), name, newValue);		

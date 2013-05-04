@@ -22,6 +22,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * When applied to a method, allows negotation between
+ * multiple SuccessView annotations based on which SuccessView
+ * annotation's sourceUrl best matches the current request url
  * @author Clark Duplichien
  */
 @Retention(RetentionPolicy.RUNTIME)

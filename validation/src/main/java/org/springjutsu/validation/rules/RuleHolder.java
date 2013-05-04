@@ -19,7 +19,7 @@ package org.springjutsu.validation.rules;
 import java.util.List;
 
 /**
- * Holds rules, and any other constructs that go with rules.
+ * Holds rules, and any other constructs that also hold rules.
  * @author Clark Duplichien
  *
  */

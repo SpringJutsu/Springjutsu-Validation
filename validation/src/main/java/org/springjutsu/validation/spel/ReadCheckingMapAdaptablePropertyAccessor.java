@@ -23,7 +23,7 @@ import org.springframework.webflow.expression.spel.MapAdaptablePropertyAccessor;
 
 /**
  * Workaround for SWF-1472: super.canRead always returns true.
- * @author Clark Duplichien *
+ * @author Clark Duplichien
  */
 public class ReadCheckingMapAdaptablePropertyAccessor 
 	extends MapAdaptablePropertyAccessor {

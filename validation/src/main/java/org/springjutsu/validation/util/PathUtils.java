@@ -25,8 +25,19 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.ReflectionUtils;
 
+/**
+ * Provides several utility methods for manipulating
+ * period-delimited bean property paths
+ * @author Clark Duplichien
+ *
+ */
 public class PathUtils {
 	
+	/**
+	 * Conjoins several individual segments into a single path
+	 * @param pathSegments the segments to join
+	 * @return The joined path
+	 */
 	public static String appendPath(String... pathSegments) {
 		String joinedPath = StringUtils.join(pathSegments, ".");
 		return removeExtraneousPathSeparators(joinedPath);
@@ -42,6 +53,14 @@ public class PathUtils {
 		return removeExtraneousPathSeparators(joinedPath);
 	}
 	
+	/**
+	 * Removes any extraneous or duplicate period path separators
+	 * inadvertently created during the path joining process,
+	 * for example if one of the given path segments for an append
+	 * already contained a period. 
+	 * @param path The path to clean
+	 * @return The cleaned path.
+	 */
 	public static String removeExtraneousPathSeparators(String path) {
 		return path == null ? null : path.replaceAll("\\.+", "\\.").replaceAll("^\\.|\\.$", "").trim();
 	}

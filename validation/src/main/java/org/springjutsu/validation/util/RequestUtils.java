@@ -95,7 +95,13 @@ public class RequestUtils {
 	}
 
 	/**
-	 * 
+	 * Identifies the view name pattern which best matches
+	 * the current request URL (path within handler mapping).
+	 * @param candidateViewNames The view name patterns to test
+	 * @param controllerPaths Possible request mapping prefixes 
+	 * from a controller-level RequestMapping annotation 
+	 * @param request the current request
+	 * @return the best matching view name.
 	 */
 	public static String findFirstMatchingRestPath(String[] candidateViewNames, 
 			String[] controllerPaths, HttpServletRequest request) {

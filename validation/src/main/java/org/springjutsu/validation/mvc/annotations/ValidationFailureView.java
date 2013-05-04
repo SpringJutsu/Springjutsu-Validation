@@ -23,6 +23,13 @@ import java.lang.annotation.Target;
 
 
 /**
+ * When applied to a method, and a ValidationFailureViewHandlerExceptionResolver
+ * instance is configured with the application context, indicates the view name 
+ * which should be applied after a validation failure occurs when validation is
+ * performed against a method argument annotated by the Valid or Valdiated annotations.
+ * The sourceUrl object can be used to qualify multiple target view names based
+ * off of varying source urls by providing a single ValidationFailureView annotation for
+ * each source url to view name mapping to the value of a ValidationFailureViews annotation.
  * @author Clark Duplichien
  */
 @Retention(RetentionPolicy.RUNTIME)

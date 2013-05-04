@@ -18,6 +18,10 @@ package org.springjutsu.validation.rules;
 
 import java.util.List;
 
+/**
+ * Base implementation of the RuleHolder interface
+ * @author Clark Duplichien
+ */
 public class AbstractRuleHolder implements RuleHolder {
 	
 	/**

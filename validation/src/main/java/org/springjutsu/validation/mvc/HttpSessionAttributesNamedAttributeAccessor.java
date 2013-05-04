@@ -20,24 +20,42 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springjutsu.validation.spel.AbstractNamedAttributeAccessor;
 
+/**
+ * Provides Map-like SPEL access semantics for Session Attributes.
+ * @author Clark Duplichien
+ *
+ */
 public class HttpSessionAttributesNamedAttributeAccessor extends AbstractNamedAttributeAccessor {
 
 	private HttpServletRequest request;
 	
+	/**
+	 * Default Constructor
+	 * @param request the current request
+	 */
 	public HttpSessionAttributesNamedAttributeAccessor(HttpServletRequest request) {
 		this.request = request;
 	}
 	
+	/**
+	 * Allow writing if the session has been initialized
+	 */
 	@Override
 	public boolean isWritable() {
 		return request.getSession(false) != null;
 	}
 	
+	/**
+	 * Return the value of the session attribute if the session has been initialized.
+	 */
 	@Override
 	public Object get(String key) {
 		return request.getSession(false) == null ? null : request.getSession(false).getAttribute(key);
 	}
 
+	/**
+	 * Set the value of the session attribute if the session has been initialized.
+	 */
 	@Override
 	public void set(String key, Object value) {
 		if (request.getSession(false) != null) {

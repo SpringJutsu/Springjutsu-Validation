@@ -21,8 +21,19 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.TypedValue;
 
+/**
+ * Property accessor which provides map like access
+ * to map like objects configured using the AbstractNamedAttributeAccessor
+ * base class.
+ * @author Clark Duplichien
+ *
+ */
 public class NamedAttributeAccessorPropertyAccessor implements PropertyAccessor {
 
+	/**
+	 * Applies specifically to objects whose class extend the
+	 * AbstractNamedAttributeAccessor class.
+	 */
 	@Override
 	@SuppressWarnings("rawtypes")
 	public Class[] getSpecificTargetClasses() {

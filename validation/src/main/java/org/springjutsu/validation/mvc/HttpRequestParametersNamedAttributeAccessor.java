@@ -20,19 +20,35 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springjutsu.validation.spel.AbstractNamedAttributeAccessor;
 
+/**
+ * Provides Map-like SPEL access semantics for Request Parameters.
+ * @author Clark Duplichien
+ *
+ */
 public class HttpRequestParametersNamedAttributeAccessor extends AbstractNamedAttributeAccessor {
 	
 	private HttpServletRequest request;
 	
+	/**
+	 * Default constructor
+	 * @param request The current request
+	 */
 	public HttpRequestParametersNamedAttributeAccessor(HttpServletRequest request) {
 		this.request = request;
 	}
 	
+	/**
+	 * Can't write request parameters.
+	 */
 	@Override
 	public boolean isWritable() {
 		return false;
 	}
 
+	/**
+	 * Get the string value of a request parameter, or the
+	 * string array of values if it has multiple.
+	 */
 	@Override
 	public Object get(String key) {
 		String[] paramValues = (request.getParameterValues(key));
@@ -43,6 +59,10 @@ public class HttpRequestParametersNamedAttributeAccessor extends AbstractNamedAt
 		}
 	}
 
+	/**
+	 * Can't write request parameters.
+	 * @throws UnsupportedOperationException like 100% always
+	 */
 	@Override
 	public void set(String key, Object value) {
 		throw new UnsupportedOperationException();

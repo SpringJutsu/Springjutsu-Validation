@@ -16,6 +16,11 @@
 
 package org.springjutsu.validation.exceptions;
 
+/**
+ * Indicates that a validation template cannot be applied to the selected context.
+ * This can occur when applying a template to an object of a class it was not defined for.
+ * @author Clark Duplichien
+ */
 public class IllegalTemplateReferenceException extends IllegalArgumentException {
 
 	private static final long serialVersionUID = 1L;
