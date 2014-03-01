@@ -11,7 +11,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -19,6 +21,8 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springjutsu.validation.mvc.annotations.SuccessView;
 import org.springjutsu.validation.mvc.annotations.SuccessViews;
 
+@Controller()
+@RequestMapping({"/foo", "/bar"})
 @RunWith(MockitoJUnitRunner.class)
 public class SuccessViewHandlerInterceptorTest {
 	
@@ -112,6 +116,45 @@ public class SuccessViewHandlerInterceptorTest {
 		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/new");
 		HandlerMethod handlerMethod = new HandlerMethod(this, 
 				ReflectionUtils.findMethod(getClass(), "testMultipleAnnotations"));
+		interceptor.postHandle(request, response, handlerMethod, modelAndView);
+		Mockito.verify(modelAndView).setViewName("/foo/win");
+	}
+	
+	@Test
+	@SuccessViews({
+		@SuccessView(sourceUrl="/new", value="/foo/{id}"),
+		@SuccessView(sourceUrl="/{id}/edit", value="/foo/{id}")
+	})
+	public void testMultipleAnnotationsWithControllerPathNoMatch() {
+		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/list");
+		HandlerMethod handlerMethod = new HandlerMethod(this, 
+				ReflectionUtils.findMethod(getClass(), "testMultipleAnnotationsWithControllerPathNoMatch"));
+		interceptor.postHandle(request, response, handlerMethod, modelAndView);
+		Mockito.verify(modelAndView, Mockito.never()).setViewName(Mockito.anyString());
+	}
+	
+	@Test
+	@SuccessViews({
+		@SuccessView(sourceUrl="/new", value="/foo/win"),
+		@SuccessView(sourceUrl="/{id}/edit", value="/foo/lose")
+	})
+	public void testMultipleAnnotationsWithControllerPath() {
+		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/foo/new");
+		HandlerMethod handlerMethod = new HandlerMethod(this, 
+				ReflectionUtils.findMethod(getClass(), "testMultipleAnnotationsWithControllerPath"));
+		interceptor.postHandle(request, response, handlerMethod, modelAndView);
+		Mockito.verify(modelAndView).setViewName("/foo/win");
+	}
+	
+	@Test
+	@SuccessViews({
+		@SuccessView(sourceUrl="/new", value="/bar/win"),
+		@SuccessView(sourceUrl="/{id}/edit", value="/bar/lose")
+	})
+	public void testMultipleAnnotationsWithMultiControllerPath() {
+		Mockito.when(request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE)).thenReturn("/bar/new");
+		HandlerMethod handlerMethod = new HandlerMethod(this, 
+				ReflectionUtils.findMethod(getClass(), "testMultipleAnnotationsWithControllerPath"));
 		interceptor.postHandle(request, response, handlerMethod, modelAndView);
 		Mockito.verify(modelAndView).setViewName("/foo/win");
 	}

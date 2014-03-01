@@ -138,7 +138,7 @@ public class RequestUtils {
 	 */
 	public static String[] getControllerRequestPaths(HandlerMethod handler) {
 		RequestMapping requestMapping = AnnotationUtils.findAnnotation(
-				AopUtils.getTargetClass(handler.getMethod().getDeclaringClass()), RequestMapping.class);
+				AopUtils.getTargetClass(handler.getBean()), RequestMapping.class);
 		return requestMapping == null ? null : requestMapping.value();
 	}
 	
