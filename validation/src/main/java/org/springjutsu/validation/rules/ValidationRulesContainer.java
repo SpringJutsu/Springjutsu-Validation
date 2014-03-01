@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.commons.collections.set.ListOrderedSet;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.BeanFactory;
@@ -171,6 +172,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	/**
 	 * Copy rules from parent classes into child classes.
 	 */
+	@SuppressWarnings("unchecked")
 	protected void initInheritance() {
 		Set<Class<?>> inheritanceChecked = new HashSet<Class<?>>();
 		for (ValidationEntity entity : validationEntityMap.values()) {
@@ -181,9 +183,9 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 				classStack.push(clazz);
 			}
 			
-			Set<ValidationRule> inheritableRules = new HashSet<ValidationRule>();
-			Set<ValidationTemplateReference> inheritableTemplateReferences = new HashSet<ValidationTemplateReference>();
-			Set<ValidationContext> inheritableContexts = new HashSet<ValidationContext>();
+			Set<ValidationRule> inheritableRules = new ListOrderedSet();
+			Set<ValidationTemplateReference> inheritableTemplateReferences = new ListOrderedSet();
+			Set<ValidationContext> inheritableContexts = new ListOrderedSet();
 			Set<String> inheritableExclusionPaths = new HashSet<String>();
 			Set<String> inheritableInclusionPaths = new HashSet<String>();
 			
