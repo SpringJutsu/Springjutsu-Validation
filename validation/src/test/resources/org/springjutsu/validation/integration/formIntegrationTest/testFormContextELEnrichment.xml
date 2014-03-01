@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springjutsu.org/schema/validation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="
+	http://www.springjutsu.org/schema/validation http://www.springjutsu.org/schema/validation-0.7.3.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<context:annotation-config />
+
+	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
+	<configuration validatorName="testValidationManagerName"/>
+	
+	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<form path="/foo/new,/foo/{blah}">
+			<rule path="${requestParameters.blah}" type="required" errorPath="id" />
+			<rule path="${pathVariables.blah}" type="required" errorPath="firstName" />
+			<rule path="${requestAttributes.blah}" type="required" errorPath="lastName" />
+			<rule path="${session.blah}" type="required" errorPath="emailAddress"/>
+		</form>
+	</entity>
+	
+	<!-- Include messages used by application -->
+	<beans:bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource"/>
+</beans:beans>

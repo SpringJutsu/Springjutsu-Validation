@@ -27,6 +27,9 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -139,12 +142,30 @@ public class RequestUtils {
 		return requestMapping == null ? null : requestMapping.value();
 	}
 	
+	public static HttpServletRequest getCurrentRequest() {
+		RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
+		if (attributes == null) {
+			return null;
+		}
+		return ((ServletRequestAttributes) attributes).getRequest();
+	}
+	
+	public static String getPathWithinHandlerMapping() {
+		HttpServletRequest request = getCurrentRequest();
+		String pathWithinHandlerMapping = request == null ? null : 
+			(String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+		return removeLeadingAndTrailingSlashes(pathWithinHandlerMapping);
+	}
+	
 	/**
 	 * Removes the leading and trailing slashes from a url path.
 	 * @param path the path
 	 * @return the path without leading and trailing slashes.
 	 */
 	public static String removeLeadingAndTrailingSlashes(String path) {
+		if (path == null) {
+			return null;
+		}
 		String newPath = path;
 		if (newPath.startsWith("/")) {
 			newPath = newPath.substring(1);
@@ -153,6 +174,5 @@ public class RequestUtils {
 			newPath = newPath.substring(0, newPath.length() - 1);
 		}
 		return newPath;
-	}
-	
+	}	
 }

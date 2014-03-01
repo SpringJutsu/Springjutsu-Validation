@@ -16,13 +16,17 @@
 
 package org.springjutsu.validation.context;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springjutsu.validation.mvc.HttpRequestAttributesNamedAttributeAccessor;
 import org.springjutsu.validation.mvc.HttpRequestParametersNamedAttributeAccessor;
 import org.springjutsu.validation.mvc.HttpSessionAttributesNamedAttributeAccessor;
@@ -39,6 +43,8 @@ import org.springjutsu.validation.util.RequestUtils;
  */
 public class MVCFormValidationContextHandler implements ValidationContextHandler {
 
+	private AntPathMatcher antPathMatcher = new AntPathMatcher();
+	
 	/**
 	 * Will return true if the current request is
 	 * a spring MVC request, and the given qualifier 
@@ -50,7 +56,7 @@ public class MVCFormValidationContextHandler implements ValidationContextHandler
 		if (!isMVCRequest()) {
 			return false;
 		} else {
-			return appliesToForm(getMVCFormName(), qualifiers);
+			return appliesToForm(RequestUtils.getPathWithinHandlerMapping(), qualifiers);
 		}
 	}
 	
@@ -70,10 +76,11 @@ public class MVCFormValidationContextHandler implements ValidationContextHandler
 	
 	/**
 	 * Initialize SPEL access to MVC scopes including
-	 * request parameters, request attributes and
-	 * session attributes.
+	 * request parameters, request attributes,
+	 * MVC Path Variables and session attributes.
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public void initializeSPELResolver(SPELResolver spelResolver) {
 		
 		// initialize property accessors
@@ -83,9 +90,17 @@ public class MVCFormValidationContextHandler implements ValidationContextHandler
 		RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
 		HttpServletRequest request = ((ServletRequestAttributes) attributes).getRequest();
 		
+		// get path variable map
+		Map<String, String> uriTemplateVars = 
+			(Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+		if (uriTemplateVars == null) {
+			uriTemplateVars = new HashMap<String, String>();
+		}
+		
 		// initialize named contexts
 		spelResolver.getScopedContext().addContext("requestParameters", 
 				new HttpRequestParametersNamedAttributeAccessor(request));
+		spelResolver.getScopedContext().addContext("pathVariables", uriTemplateVars);
 		spelResolver.getScopedContext().addContext("requestAttributes", 
 				new HttpRequestAttributesNamedAttributeAccessor(request));
 		spelResolver.getScopedContext().addContext("session", 
@@ -100,38 +115,22 @@ public class MVCFormValidationContextHandler implements ValidationContextHandler
 		return RequestContextHolder.getRequestAttributes() != null;
 	}
 	
-	/**
-	 * Just cleans up a Servlet path URL for rule resolving by
-	 * the rules container.
-	 * Restful URL paths may be used, with \{variable} path support.
-	 * As of 0.6.1, ant paths like * and ** may also be used.
-	 */
-	protected String getMVCFormName() {
-		RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
-		HttpServletRequest request = ((ServletRequestAttributes) attributes).getRequest();
-		return RequestUtils.removeLeadingAndTrailingSlashes(request.getServletPath());
-	}
-	
 	/** Returns true if the rule applies to the current form.
 	 * Replace any REST variable wildcards with wildcard regex.
 	 * Replace ant path wildcards with wildcard regexes as well.
 	 * Iterate through possible form names to find the first match.
 	 */
-	public boolean appliesToForm(String form, Set<String> candidateForms) {
-		if (form == null || form.isEmpty()) {
-			return true;
-		}
-		boolean appliesToForm = candidateForms.isEmpty();
+	public boolean appliesToForm(String rawForm, Set<String> candidateForms) {
+		String form = rawForm == null ? "" : rawForm;
+		boolean appliesToForm = false;
+		
 		for (String formName : candidateForms) {
-			String formPattern = 
-				formName.replaceAll("\\{[^\\}]*}", "[^/]+")
-				.replaceAll("\\*\\*/?", "(*/?)+")
-				.replace("*", "[^/]+");
-			if (form.matches(formPattern)) {
+			if (antPathMatcher.match(RequestUtils.removeLeadingAndTrailingSlashes(formName), form)) {
 				appliesToForm = true;
 				break;
-			}			
+			}
 		}
+		
 		return appliesToForm;
 	}
 

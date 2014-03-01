@@ -13,6 +13,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springjutsu.validation.ValidationManager;
 import org.springjutsu.validation.context.ValidationContextHandler;
 import org.springjutsu.validation.spel.SPELResolver;
@@ -62,6 +63,7 @@ public abstract class ValidationIntegrationTest {
 	
 	protected void setCurrentFormPath(String path) {
 		MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
+		request.setAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE, path);
 		request.setServletPath(path);
 		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request), true);
 	}
