@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.SimpleTypeConverter;
@@ -507,7 +508,8 @@ public class ValidationManager extends CustomValidatorBean {
 	public Object convertRuleArgument(Object ruleArg, RuleExecutor executor) {
 		Object convertedRuleArg = ruleArg;
 		if (ruleArg != null) {
-			Class<?>[] parameterizedTypes = GenericTypeResolver.resolveTypeArguments(executor.getClass(), RuleExecutor.class);
+			Class<?> unwrappedExecutorClass = AopUtils.getTargetClass(executor);
+			Class<?>[] parameterizedTypes = GenericTypeResolver.resolveTypeArguments(unwrappedExecutorClass, RuleExecutor.class);
 			convertedRuleArg = getTypeConverter().convertIfNecessary(ruleArg, parameterizedTypes[1]);
 		}
 		return convertedRuleArg;

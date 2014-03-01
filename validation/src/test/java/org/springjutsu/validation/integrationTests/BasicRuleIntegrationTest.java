@@ -60,5 +60,14 @@ public class BasicRuleIntegrationTest extends ValidationIntegrationTest {
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("errors.alphabetic", errors.getGlobalError().getCode());
 	}
+	
+	@Test
+	public void testProxiedRuleExecutor() {
+		Customer customer = new Customer();
+		customer.setFirstName("123456");
+		Errors errors = doValidate("testProxiedRuleExecutor.xml", customer).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals("errors.proxyMe", errors.getFieldError("firstName").getCode());
+	}
 
 }
