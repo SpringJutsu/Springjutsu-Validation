@@ -504,6 +504,24 @@
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
+			<xsd:attribute name="onFail" use="optional" default="default">
+				<xsd:annotation>
+					<xsd:documentation>
+						Affects the outcome and consequences of a rule failure.  
+						When set to "error", the rule produces an field error within the resultant spring Errors object 
+						When set to "skipChildren", the rule does not produce an error, instead only skipping the child rules, if specified.
+						When set to "default", it will act as though set to "error" if no child rules are present, or "skipChildren" if child rules are specified.
+						Defaults to "default".
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="default" />
+						<xsd:enumeration value="error" />
+						<xsd:enumeration value="skipChildren" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>

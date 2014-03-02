@@ -65,6 +65,13 @@ public class ValidationRule extends AbstractRuleHolder {
 	protected CollectionStrategy collectionStrategy;
 	
 	/**
+	 * Indicates an explicit failure mode for the validation rule,
+	 * e.g. to optionally allow the rule to produce an error even 
+	 * if it has children 
+	 */
+	protected RuleErrorMode onFail;
+	
+	/**
 	 * Default constructor, utilized by @link{ValidationDefinitionParser}
 	 * @param path See path docs.
 	 * @param type See type docs.
@@ -112,6 +119,9 @@ public class ValidationRule extends AbstractRuleHolder {
 		}
 		if (collectionStrategy != null) {
 			rule += "collectionStrategy=\"" + collectionStrategy.getXmlValue() + "\" ";
+		}
+		if (onFail != null) {
+			rule += "onFail=\"" + onFail.getXmlValue() + "\" ";
 		}
 		rule += "/>";
 		return rule;
@@ -193,6 +203,14 @@ public class ValidationRule extends AbstractRuleHolder {
 
 	public void setCollectionStrategy(CollectionStrategy collectionStrategy) {
 		this.collectionStrategy = collectionStrategy;
+	}
+
+	public RuleErrorMode getOnFail() {
+		return onFail;
+	}
+
+	public void setOnFail(RuleErrorMode onFail) {
+		this.onFail = onFail;
 	}
 
 }

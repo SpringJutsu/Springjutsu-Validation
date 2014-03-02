@@ -13,11 +13,8 @@
 	<!-- Create a springjutsu validation configuration, named springjutsuValidator -->
 	<configuration validatorName="testValidationManagerName"/>
 	
-	<entity class="org.springjutsu.validation.test.entities.Company">
-		<rule path="customers.firstName" type="notEmpty">
-			<rule path="customers.lastName" type="required"/>
-			<rule path="customers.emailAddress" type="required" errorPath="customers" message="emailRequired"/>
-		</rule>
+	<entity class="org.springjutsu.validation.test.entities.Customer">
+		<rule path="firstName" type="notEmpty" onFail="error"/>
 	</entity>
 	
 	<!-- Include messages used by application -->

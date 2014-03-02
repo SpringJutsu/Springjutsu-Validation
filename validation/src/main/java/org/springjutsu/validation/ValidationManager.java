@@ -41,6 +41,7 @@ import org.springjutsu.validation.context.ValidationContextHandlerContainer;
 import org.springjutsu.validation.executors.RuleExecutor;
 import org.springjutsu.validation.executors.RuleExecutorContainer;
 import org.springjutsu.validation.rules.CollectionStrategy;
+import org.springjutsu.validation.rules.RuleErrorMode;
 import org.springjutsu.validation.rules.RuleHolder;
 import org.springjutsu.validation.rules.ValidationContext;
 import org.springjutsu.validation.rules.ValidationEntity;
@@ -333,9 +334,9 @@ public class ValidationManager extends CustomValidatorBean {
 			// If the rule fails and it has children,
 			// it is a condition for nested elements.
 			// Skip nested elements.
-			if (rule.hasChildren()) {
+			if (rule.hasChildren() && rule.getOnFail() != RuleErrorMode.ERROR) {
 				return;
-			} else {
+			} else if (rule.getOnFail() != RuleErrorMode.SKIP_CHILDREN) {
 				// If the rule has no children and fails,
 				// perform fail action.
 				validationErrorMessageHandler.logError(context, rule);

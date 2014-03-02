@@ -79,5 +79,44 @@ public class NestingIntegrationTest extends ValidationIntegrationTest {
 		assertEquals(5, errors.getErrorCount());
 		assertEquals(5, errors.getFieldErrorCount("firstName"));
 	}
+	
+	@Test
+	public void testNoNestedRulesButOnFailSkipChildren() {
+		Customer customer = new Customer();
+		Errors errors = doValidate("testNoNestedRulesButOnFailSkipChildren.xml", customer).errors;
+		assertEquals(0, errors.getErrorCount());
+	}
+	
+	@Test
+	public void testNoNestedRulesButOnFailError() {
+		Customer customer = new Customer();
+		Errors errors = doValidate("testNoNestedRulesButOnFailError.xml", customer).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals(1, errors.getFieldErrorCount("firstName"));
+	}
+	
+	@Test
+	public void testNestedRulesAndOnFailSkipChildren() {
+		Customer customer = new Customer();
+		Errors errors = doValidate("testNestedRulesAndOnFailSkipChildren.xml", customer).errors;
+		assertEquals(0, errors.getErrorCount());
+	}
+	
+	@Test
+	public void testNestedRulesAndOnFailError() {
+		Customer customer = new Customer();
+		Errors errors = doValidate("testNestedRulesAndOnFailError.xml", customer).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals(1, errors.getFieldErrorCount("firstName"));
+	}
+	
+	@Test
+	public void testNestedRulesAndOnFailErrorWithoutFail() {
+		Customer customer = new Customer();
+		customer.setFirstName("bob");
+		Errors errors = doValidate("testNestedRulesAndOnFailError.xml", customer).errors;
+		assertEquals(1, errors.getErrorCount());
+		assertEquals(1, errors.getFieldErrorCount("emailAddress"));
+	}
 
 }
