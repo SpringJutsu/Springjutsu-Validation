@@ -16,7 +16,9 @@
 
 package org.springjutsu.validation.mvc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -89,7 +91,10 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 	 */
 	protected String findMatchingTargetUrl(SuccessView[] successViews, String[] controllerPaths, HttpServletRequest request) {
 		Map<String, String> sourceTargetMap = new HashMap<String, String>();
-		for (SuccessView successView : successViews) {
+		String[] sources = new String[successViews.length];
+		for (int i = 0; i < successViews.length; i++) {
+			SuccessView successView = successViews[i];
+			
 			if (successView.sourceUrl().isEmpty()) {
 				throw new IllegalArgumentException("sourceUrl is required when specifying multiple success or failure views.");
 			}
@@ -99,10 +104,10 @@ public class SuccessViewHandlerInterceptor extends HandlerInterceptorAdapter {
 			}
 			
 			sourceTargetMap.put(successView.sourceUrl(), successView.value());
+			sources[i] = successView.sourceUrl();
 		}
 		
-		String matchingSourceUrl = RequestUtils.findFirstMatchingRestPath(
-				sourceTargetMap.keySet().toArray(new String[sourceTargetMap.size()]), controllerPaths, request);
+		String matchingSourceUrl = RequestUtils.findFirstMatchingRestPath(sources, controllerPaths, request);
 		
 		return matchingSourceUrl == null ? null : sourceTargetMap.get(matchingSourceUrl);		
 	}
