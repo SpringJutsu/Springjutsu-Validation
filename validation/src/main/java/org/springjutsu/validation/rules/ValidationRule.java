@@ -72,6 +72,11 @@ public class ValidationRule extends AbstractRuleHolder {
 	protected RuleErrorMode onFail;
 	
 	/**
+	 * No-arg constructor, utilized by Fluent api @link{ValidationRuleBuilder}
+	 */
+	public ValidationRule() {}
+	
+	/**
 	 * Default constructor, utilized by @link{ValidationDefinitionParser}
 	 * @param path See path docs.
 	 * @param type See type docs.
