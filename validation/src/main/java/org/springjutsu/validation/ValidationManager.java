@@ -476,7 +476,11 @@ public class ValidationManager extends CustomValidatorBean {
 
 		// call method
 		boolean isValid;
-		RuleExecutor executor = ruleExecutorContainer.getRuleExecutorByName(rule.getType());
+		RuleExecutor executor = rule.getRuleExecutor();
+		if (executor == null) {
+			executor = ruleExecutorContainer.getRuleExecutorByName(rule.getType());
+		}
+		
 		try {
 			// perform conversion on argument
 			Object convertedRuleArg = convertRuleArgument(ruleArg, executor);

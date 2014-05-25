@@ -18,6 +18,8 @@ package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
 
+import org.springjutsu.validation.executors.RuleExecutor;
+
 /**
  * Java representation of an XML validation rule.
  * @author Clark Duplichien
@@ -36,6 +38,14 @@ public class ValidationRule extends AbstractRuleHolder {
 	 * type of rule to apply.
 	 */
 	protected String type;
+	
+	/**
+	 * An actual rule executor implementation,
+	 * as an optional replacement for a String type declaration.
+	 * Useful for creating rules whose logic is defined
+	 * in a lamda expression, or SPEL expression (future feature).
+	 */
+	protected RuleExecutor<?, ?> ruleExecutor;
 	
 	/**
 	 * This is the argument to be passed
@@ -158,6 +168,14 @@ public class ValidationRule extends AbstractRuleHolder {
 	 */
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public RuleExecutor<?, ?> getRuleExecutor() {
+		return ruleExecutor;
+	}
+
+	public void setRuleExecutor(RuleExecutor<?, ?> ruleExecutor) {
+		this.ruleExecutor = ruleExecutor;
 	}
 
 	/**
