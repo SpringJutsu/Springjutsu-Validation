@@ -1,5 +1,7 @@
 package org.springjutsu.validation.dsl;
 
+import org.springjutsu.validation.rules.RuleErrorMode;
+
 import com.fluentinterface.ReflectionBuilder;
 
 public class Validation {
@@ -10,7 +12,7 @@ public class Validation {
 	
 	public static ValidationRuleBuilder rule(String path, String type)
 	{
-		return ReflectionBuilder.implementationFor(ValidationRuleBuilder.class).create().forPath(path).usingType(type);
+		return ReflectionBuilder.implementationFor(ValidationRuleBuilder.class).create().forPath(path).usingType(type).behaviorOnFail(RuleErrorMode.ERROR);
 	}
 	
 	public static ValidationContextBuilder context(String type, String... qualifiers)

@@ -96,7 +96,7 @@ public class ValidationRule extends AbstractRuleHolder {
 	 */
 	public boolean hasChildren() {
 		return (getRules() != null && !getRules().isEmpty())
-			|| (getTemplateReferences() != null && !getTemplateReferences().isEmpty());
+			|| (getTemplateReferences() != null && !getTemplateReferences().isEmpty()) || (getValidationContexts() != null && !getValidationContexts().isEmpty());
 	}
 	
 	/**
