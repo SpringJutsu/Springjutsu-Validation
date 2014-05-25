@@ -94,7 +94,7 @@ public class ValidationErrorMessageHandler {
                 errorMessageKey = (errorMessagePrefix != null  && !errorMessagePrefix.isEmpty() ? errorMessagePrefix + "." : "") + rule.getType();
         }
         
-		String defaultError =  localizedRulePath + " " + rule.getType();
+		String defaultError = rule.getMessage() != null && !rule.getMessage().isEmpty() ? rule.getMessage() : localizedRulePath + " " + rule.getType();
 		String modelMessageKey = getMessageResolver(context, rule, true);
         String ruleArg = getMessageResolver(context, rule, false);
 		

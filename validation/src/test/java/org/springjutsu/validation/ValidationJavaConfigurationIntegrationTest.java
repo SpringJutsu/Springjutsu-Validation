@@ -14,7 +14,6 @@ import org.springjutsu.validation.executors.impl.RequiredRuleExecutor;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
-import org.springjutsu.validation.util.ValidationRulesUtils;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes=ValidationJavaConfigurationIntegrationTestConfig.class)
@@ -28,8 +27,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = validationManager.validate(customer);
 		Assert.assertEquals(1, errors.getErrorCount());
-		Assert.assertEquals("favoriteColor required", errors.getFieldErrors("favoriteColor").get(0).getDefaultMessage());
-		
+		Assert.assertEquals("favoriteColor.required", errors.getFieldErrors("favoriteColor").get(0).getDefaultMessage());
 	}
 	
 	@Test
@@ -38,7 +36,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = validationManager.validate(customer, "dave");
 		Assert.assertEquals(4, errors.getErrorCount());
-		Assert.assertEquals("errors.required", errors.getFieldErrors("favoriteColor").get(0).getCode());
+		Assert.assertEquals("favoriteColor.required", errors.getFieldErrors("favoriteColor").get(0).getCode());
 		Assert.assertEquals("blam", errors.getFieldErrors("firstName").get(0).getCode());
 		Assert.assertEquals("dizzam", errors.getFieldErrors("lastName").get(0).getCode());
 		Assert.assertEquals("doh", errors.getFieldErrors("address").get(0).getCode());
@@ -63,7 +61,7 @@ class ValidationJavaConfigurationIntegrationTestConfig
 	ValidationEntity personValidation()
 	{
 		return Validation.forEntity(Customer.class)
-				.havingRules(Validation.rule("favoriteColor", "required", new RequiredRuleExecutor()))
+				.havingRules(Validation.rule("favoriteColor", "favoriteColor.required", new RequiredRuleExecutor()))
 				.havingValidationContexts(Validation.context("group", "dave")
 					.havingRules(
 							Validation.rule("firstName", "required").withMessage("blam"),
