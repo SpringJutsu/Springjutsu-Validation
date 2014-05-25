@@ -32,6 +32,7 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
+import org.springjutsu.validation.util.PathUtils;
 
 /**
  * This serves as a container for all parsed validation rules.
@@ -93,6 +94,7 @@ public class ValidationRulesContainer {
 		initIncludePaths();
 		initExcludePaths();
 		initInheritance();
+		initRecursivePropertyPaths();
 	}
 	
 	/**
@@ -167,6 +169,39 @@ public class ValidationRulesContainer {
 					} catch (SecurityException se) {
 						throw new IllegalStateException("Unexpected error while checking for included properties", se);
 					}
+				}
+			}
+		}
+	}
+	
+	protected void initRecursivePropertyPaths() {
+		for (ValidationEntity entity : validationEntityMap.values()) {
+			
+			if (entity.getValidationClass().isInterface()) {
+				continue;
+			}
+			
+			BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(entity.getValidationClass());
+			PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors();
+			
+			for (PropertyDescriptor property : propertyDescriptors) {
+				
+				if (!entity.getIncludedPaths().isEmpty() 
+						&& !entity.getIncludedPaths().contains(property.getName())) {
+					continue;
+				}
+				
+				if (entity.getExcludedPaths().contains(property.getName())) {
+					continue;
+				}
+				
+				Class<?> pathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), false);
+				Class<?> collectionPathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), true);
+				
+				if (this.supportsClass(pathClass)|| 
+					(this.supportsClass(collectionPathClass) && 
+						(List.class.isAssignableFrom(pathClass) || pathClass.isArray()))) {
+					entity.getRecursivePropertyPaths().put(property.getName(), pathClass);
 				}
 			}
 		}

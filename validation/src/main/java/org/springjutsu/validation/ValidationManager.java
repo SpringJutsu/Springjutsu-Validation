@@ -16,11 +16,11 @@
 
 package org.springjutsu.validation;
 
-import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.logging.Log;
@@ -195,34 +195,19 @@ public class ValidationManager extends CustomValidatorBean {
 		} else {
 			context.markValidated(validateMe);
 		}
+		
 		ValidationEntity validationEntity = rulesContainer.getValidationEntity(validateMe.getClass());
 		
 		callRules(context, validationEntity);
 		 
 		// Get fields for subbeans and iterate
 		BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(validateMe);
-		PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors();		
-		for (PropertyDescriptor property : propertyDescriptors) {
+		
+		for (Map.Entry<String, Class<?>> recursionPath : validationEntity.getRecursivePropertyPaths().entrySet()) {
 			
-			if (!validationEntity.getIncludedPaths().isEmpty() 
-					&& !validationEntity.getIncludedPaths().contains(property.getName())) {
-				continue;
-			}
-			
-			if (validationEntity.getExcludedPaths().contains(property.getName())) {
-				continue;
-			}
-			
-			Class<?> pathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), false);
-			Class<?> collectionPathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), true);
-			
-			if (rulesContainer.supportsClass(pathClass)) {
-				context.pushNestedPath(property.getName());
-				doValidate(context);
-				context.popNestedPath();
-			} else if (rulesContainer.supportsClass(collectionPathClass) && (List.class.isAssignableFrom(pathClass) || pathClass.isArray())) {
-				Object potentialList = subBeanWrapper.getPropertyValue(property.getName());
-				List<?> list = (List<?>) (pathClass.isArray() && potentialList != null 
+			if (List.class.isAssignableFrom(recursionPath.getValue()) || recursionPath.getValue().isArray()) {
+				Object potentialList = subBeanWrapper.getPropertyValue(recursionPath.getKey());
+				List<?> list = (List<?>) (recursionPath.getValue().isArray() && potentialList != null 
 					? Arrays.asList(potentialList) : potentialList);
 				
 				if (list == null || list.isEmpty()) {
@@ -230,7 +215,7 @@ public class ValidationManager extends CustomValidatorBean {
 				}
 				
 				for (int i = 0; i < list.size(); i++) {
-					String nestedPathSegment = property.getName() + "[" + i + "]";
+					String nestedPathSegment = recursionPath.getKey() + "[" + i + "]";
 					if (log.isDebugEnabled()) {
 						log.debug("Pushing nested path: " + nestedPathSegment);
 					}
@@ -240,8 +225,14 @@ public class ValidationManager extends CustomValidatorBean {
 					context.popNestedPath();
 					log.debug("Done validating nested path: " + nestedPathSegment);
 				}
+				
+			} else {
+				context.pushNestedPath(recursionPath.getKey());
+				doValidate(context);
+				context.popNestedPath();
 			}
 		}
+		
 		if (log.isDebugEnabled()) {
 			String nestedPath = PathUtils.joinPathSegments(context.getNestedPath());
 			log.debug("Done validating recursion path: " + (nestedPath.isEmpty() ? "root object" : nestedPath));

@@ -17,7 +17,9 @@
 package org.springjutsu.validation.rules;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,6 +57,13 @@ public class ValidationEntity extends AbstractRuleHolder {
 	 * A list of paths configured for inclusion into recursive validation.
 	 */
 	private List<String> includedPaths = new ArrayList<String>();
+	
+	/**
+	 * A map of paths of properties to recurse into, to the type of property,
+	 * discovered during container startup, taking the excluded and
+	 * included paths into consideration
+	 */
+	private Map<String, Class<?>> recursivePropertyPaths = new HashMap<String, Class<?>>();
 	
 	/**
 	 * A list of validation templates associated with
@@ -120,4 +129,14 @@ public class ValidationEntity extends AbstractRuleHolder {
 	public void setIncludedPaths(List<String> includedPaths) {
 		this.includedPaths = includedPaths;
 	}
+
+	public Map<String, Class<?>> getRecursivePropertyPaths() {
+		return recursivePropertyPaths;
+	}
+
+	public void setRecursivePropertyPaths(
+			Map<String, Class<?>> recursivePropertyPaths) {
+		this.recursivePropertyPaths = recursivePropertyPaths;
+	}
+
 }

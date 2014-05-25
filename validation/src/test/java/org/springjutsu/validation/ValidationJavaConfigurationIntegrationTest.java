@@ -13,7 +13,6 @@ import org.springjutsu.validation.dsl.Validation;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
-import org.springjutsu.validation.test.entities.Person;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes=ValidationJavaConfigurationIntegrationTestConfig.class)
