@@ -49,18 +49,18 @@ public class ValidationEntity extends AbstractRuleHolder {
 	/**
 	 * A list of paths configured for exclusion from recursive validation.
 	 */
-	private List<String> excludedPaths;
+	private List<String> excludedPaths = new ArrayList<String>();
 	
 	/**
 	 * A list of paths configured for inclusion into recursive validation.
 	 */
-	private List<String> includedPaths;
+	private List<String> includedPaths = new ArrayList<String>();
 	
 	/**
 	 * A list of validation templates associated with
 	 * this entity class.
 	 */
-	private List<ValidationTemplate> validationTemplates;
+	private List<ValidationTemplate> validationTemplates = new ArrayList<ValidationTemplate>();
 	
 	/**
 	 * The class this set of rules was entered for.

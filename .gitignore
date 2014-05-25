@@ -1,1 +1,7 @@
+/.settings
 */target/*
+*/.project
+*/.classpath
+*/.settings
+*/release.properties
+.settings

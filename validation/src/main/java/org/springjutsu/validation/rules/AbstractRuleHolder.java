@@ -16,6 +16,7 @@
 
 package org.springjutsu.validation.rules;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,17 +28,17 @@ public class AbstractRuleHolder implements RuleHolder {
 	/**
 	 * A list of validation rules to evaluate on the model object.
 	 */
-	private List<ValidationRule> rules;
+	private List<ValidationRule> rules = new ArrayList<ValidationRule>();
 	
 	/**
 	 * A list of template references to evaluate on the model object.
 	 */
-	private List<ValidationTemplateReference> templateReferences;
+	private List<ValidationTemplateReference> templateReferences = new ArrayList<ValidationTemplateReference>();
 	
 	/**
 	 * A list of contexts which conditionally apply additional rules.
 	 */
-	private List<ValidationContext> validationContexts;
+	private List<ValidationContext> validationContexts = new ArrayList<ValidationContext>();
 	
 
 	public List<ValidationRule> getRules() {
