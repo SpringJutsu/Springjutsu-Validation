@@ -1,5 +1,6 @@
 package org.springjutsu.validation.dsl;
 
+import org.springjutsu.validation.executors.RuleExecutor;
 import org.springjutsu.validation.rules.CollectionStrategy;
 import org.springjutsu.validation.rules.RuleErrorMode;
 import org.springjutsu.validation.rules.ValidationRule;
@@ -9,7 +10,8 @@ import com.fluentinterface.builder.Builder;
 public interface ValidationRuleBuilder extends Builder<ValidationRule>
 {
 	public ValidationRuleBuilder forPath(String path);
-	public ValidationRuleBuilder usingType(String type);
+	public ValidationRuleBuilder usingHandler(String handlerName);
+	public <M,A> ValidationRuleBuilder usingHandler(RuleExecutor<M, A> handlerImpl);
 	public ValidationRuleBuilder withValue(String value);
 	public ValidationRuleBuilder withErrorPath(String errorPath);
 	public ValidationRuleBuilder withMessage(String message);

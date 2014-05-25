@@ -3,6 +3,8 @@ package org.springjutsu.validation.dsl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springjutsu.validation.dsl.Validation;
+import org.springjutsu.validation.executors.RuleExecutor;
+import org.springjutsu.validation.executors.impl.RequiredRuleExecutor;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.test.entities.Customer;
 import org.springjutsu.validation.test.entities.Person;
@@ -89,6 +91,25 @@ public class ValidationRuleBuilderTest {
 		Assert.assertEquals("notNull", entity.getValidationContexts().get(0).getRules().get(2).getValidationContexts().get(0).getRules().get(0).getType());
 		Assert.assertEquals("p-p-p-pow", entity.getValidationContexts().get(0).getRules().get(2).getValidationContexts().get(0).getRules().get(0).getMessage());	
 	}
+	
+	@Test
+	public void testWithRuleExecutorArgument()
+	{
+		ValidationEntity entity = Validation.forEntity(Person.class)
+				.havingRules(
+						Validation.rule("firstName", "blam yo", new RequiredRuleExecutor())
+						)
+				.build();
+		
+		Assert.assertEquals(Person.class, entity.getValidationClass());
+		Assert.assertEquals("firstName", entity.getRules().get(0).getPath());
+		Assert.assertEquals("blam yo", entity.getRules().get(0).getMessage());
+		Assert.assertNull(entity.getRules().get(0).getType());
+		Assert.assertNotNull(entity.getRules().get(0).getRuleExecutor());
+		Assert.assertTrue(entity.getRules().get(0).getRuleExecutor() instanceof RequiredRuleExecutor);	
+	
+	}
+	
 
 }
 

@@ -10,9 +10,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.validation.Errors;
 import org.springjutsu.validation.dsl.Validation;
+import org.springjutsu.validation.executors.impl.RequiredRuleExecutor;
 import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
+import org.springjutsu.validation.util.ValidationRulesUtils;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes=ValidationJavaConfigurationIntegrationTestConfig.class)
@@ -61,7 +63,7 @@ class ValidationJavaConfigurationIntegrationTestConfig
 	ValidationEntity personValidation()
 	{
 		return Validation.forEntity(Customer.class)
-				.havingRules(Validation.rule("favoriteColor", "required"))
+				.havingRules(Validation.rule("favoriteColor", "required", new RequiredRuleExecutor()))
 				.havingValidationContexts(Validation.context("group", "dave")
 					.havingRules(
 							Validation.rule("firstName", "required").withMessage("blam"),
