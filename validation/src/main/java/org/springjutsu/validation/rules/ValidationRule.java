@@ -177,6 +177,20 @@ public class ValidationRule extends AbstractRuleHolder {
 	public void setRuleExecutor(RuleExecutor<?, ?> ruleExecutor) {
 		this.ruleExecutor = ruleExecutor;
 	}
+	
+	/**
+	 * Delegates to setRuleExecutor, for better builder API semantics
+	 */
+	public void setHandler(RuleExecutor<?, ?> handlerImpl) {
+		setRuleExecutor(handlerImpl);
+	}
+	
+	/**
+	 * Delegates to setType, for better builder API semantics
+	 */
+	public void setHandler(String handlerName) {
+		setType(handlerName);
+	}
 
 	/**
 	 * @return the value / argument
