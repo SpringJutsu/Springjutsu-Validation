@@ -18,7 +18,6 @@ package org.springjutsu.validation.rules;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,12 +25,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
 
@@ -48,18 +46,19 @@ import org.springframework.util.ReflectionUtils;
  * @author Taylor Wicksell
  *
  */
-public class ValidationRulesContainer implements BeanFactoryAware {
+public class ValidationRulesContainer {
 	
 	/**
 	 * Bean factory for initializing validation rules container.
 	 */
-	@Autowired
-	private BeanFactory beanFactory;
-	
+	@Autowired(required=false)
+	private List<ValidationEntity> validationEntities = new ArrayList<ValidationEntity>();
+
 	/**
 	 * Maps class to the validation entity for that class.
 	 */
-	private Map<Class<?>, ValidationEntity> validationEntityMap = null;
+	private Map<Class<?>, ValidationEntity> validationEntityMap = 
+		new HashMap<Class<?>, ValidationEntity>();
 	
 	/**
 	 * Maps template name to template
@@ -78,7 +77,6 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	private List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
 
 	public ValidationEntity getValidationEntity(Class<?> clazz) {
-		initValidationEntityMap();
 		return validationEntityMap.get(clazz);
 	}
 	
@@ -86,24 +84,29 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * Inititalizes the validation entity map by scanning for 
 	 * @link{ValidationEntity} instances within the application context.
 	 * These are registered by class within the map.
-	 * This can be a quite expensive initialization, and by default will
-	 * occur on the first access. 
+	 * This can be a quite expensive initialization, and
+	 * will occur during container startup
+	 */
+	@PostConstruct
+	public void initializeValdationEntities() {
+		initValidationEntityMap();
+		initIncludePaths();
+		initExcludePaths();
+		initInheritance();
+	}
+	
+	/**
+	 * Convert List of entities to a map keyed by the entity's class. 
 	 */
 	protected void initValidationEntityMap() {
-		if (validationEntityMap == null) {
-			validationEntityMap = new HashMap<Class<?>, ValidationEntity>();
-			Collection<ValidationEntity> validationEntities = 
-				((ListableBeanFactory) beanFactory)
-				.getBeansOfType(ValidationEntity.class).values();
-			for (ValidationEntity validationEntity : validationEntities) {
-				validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
-				for (ValidationTemplate template : validationEntity.getValidationTemplates()) {
-					validationTemplateMap.put(template.getName(), template);
-				}
+		if (validationEntities == null) {
+			validationEntities = new ArrayList<ValidationEntity>();
+		}
+		for (ValidationEntity validationEntity : validationEntities) {
+			validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
+			for (ValidationTemplate template : validationEntity.getValidationTemplates()) {
+				validationTemplateMap.put(template.getName(), template);
 			}
-			initIncludePaths();
-			initExcludePaths();
-			initInheritance();
 		}
 	}
 	
@@ -112,7 +115,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * populate exclude paths already parsed from XML.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void initExcludePaths() {
+	protected void initExcludePaths() {
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			// no paths to check on an interface.
 			if (entity.getValidationClass().isInterface()) {
@@ -143,7 +146,7 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * populate include paths already parsed from XML.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void initIncludePaths() {
+	protected void initIncludePaths() {
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			// no paths to check on an interface.
 			if (entity.getValidationClass().isInterface()) {
@@ -221,13 +224,6 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			&& entity.getRules() != null
 			&& !entity.getRules().isEmpty();
 	}
-	
-	/**
-	 * @param beanFactory the beanFactory to set
-	 */
-	public void setBeanFactory(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
-	}
 
 	/**
 	 * @param clazz the class to determine support for.
@@ -238,6 +234,14 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 */
 	public Boolean supportsClass(Class<?> clazz) {
 		return getValidationEntity(clazz) != null;
+	}
+	
+	public List<ValidationEntity> getValidationEntities() {
+		return validationEntities;
+	}
+
+	public void setValidationEntities(List<ValidationEntity> validationEntities) {
+		this.validationEntities = validationEntities;
 	}
 	
 	public List<Class<?>> getExcludeAnnotations() {

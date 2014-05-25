@@ -12,20 +12,13 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Answers;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.ListableBeanFactory;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ValidationRulesContainerTest {
-
-	@Mock(answer=Answers.CALLS_REAL_METHODS)
-	ValidationRulesContainer container;
-	
-	@Mock
-	ListableBeanFactory beanFactory;
 	
 	@Mock
 	ValidationEntity validationEntity;
@@ -33,20 +26,23 @@ public class ValidationRulesContainerTest {
 	@Mock
 	ValidationRule validationRule;
 	
+	@InjectMocks
+	ValidationRulesContainer container = new ValidationRulesContainer();
+	
 	@Before
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void setup()
-	{
-		HashMap<String, ValidationEntity> entities = new HashMap<String, ValidationEntity>();
-		entities.put("mockValidationEntity", validationEntity);
+	public void setup() {
+		List<ValidationEntity> entityList = new ArrayList<ValidationEntity>();
+		
+		entityList.add(validationEntity);
 		ArrayList<ValidationRule> rules = new ArrayList<ValidationRule>();
 		rules.add(validationRule);
 		
 		Mockito.when(validationEntity.getValidationClass()).thenReturn((Class) List.class);
 		Mockito.when(validationEntity.getRules()).thenReturn(rules);
-
-		Mockito.when(beanFactory.getBeansOfType(ValidationEntity.class)).thenReturn(entities);
-		container.setBeanFactory(beanFactory);
+		
+		container.setValidationEntities(entityList);
+		container.initializeValdationEntities();
 	}
 	
 	@Test
