@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.validation.Errors;
+import org.springjutsu.validation.dsl.PathHelper;
 import org.springjutsu.validation.dsl.Validation;
 import org.springjutsu.validation.executors.impl.RequiredRuleExecutor;
 import org.springjutsu.validation.rules.ValidationEntity;
@@ -68,7 +69,7 @@ class ValidationJavaConfigurationIntegrationTestConfig
 							Validation.rule("lastName", "required").withMessage("dizzam"),
 							Validation.rule("address", "required").withMessage("doh")
 							.havingValidationContexts(Validation.group("buster")
-								.havingRules(Validation.rule("address.lineOne", "required").withMessage("p-p-p-pow")))
+								.havingRules(Validation.rule(PathHelper.forEntity(Customer.class).getAddress().getLineOne(), "required").withMessage("p-p-p-pow")))
 							))
 				.build();
 

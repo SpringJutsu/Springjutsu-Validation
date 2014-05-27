@@ -20,6 +20,11 @@ public class Validation {
 				.forPath(path).usingHandler(type).behaviorOnFail(RuleErrorMode.ERROR);
 	}
 	
+	public static ValidationRuleBuilder rule(Object path, String type)
+	{
+		return rule(path.toString(), type);
+	}
+	
 	public static <M,A> ValidationRuleBuilder rule(String path, String message, RuleExecutor<M,A> handlerImpl)
 	{
 		return ReflectionBuilder.implementationFor(ValidationRuleBuilder.class)
@@ -27,6 +32,10 @@ public class Validation {
 				.forPath(path).withMessage(message).usingHandler(handlerImpl).behaviorOnFail(RuleErrorMode.ERROR);
 	}
 	
+	public static <M,A> ValidationRuleBuilder rule(Object path, String message, RuleExecutor<M,A> handlerImpl)
+	{
+		return rule(path.toString(), message, handlerImpl);
+	}
 	public static ValidationContextBuilder context(String type, String... qualifiers)
 	{
 		return ReflectionBuilder.implementationFor(ValidationContextBuilder.class)
