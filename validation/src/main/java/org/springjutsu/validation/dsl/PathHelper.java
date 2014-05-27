@@ -56,7 +56,7 @@ class PathBuildingInvocationHandler extends PathHelper implements InvocationHand
 		if(!path.isEmpty() && parameterizedType == null)
 			path+=".";
 		path+=StringUtils.uncapitalize(method.getName().replace("get", ""));
-		if(method.getReturnType().equals(String.class))
+		if(method.getReturnType().equals(String.class) || method.getReturnType().getClass().isPrimitive())
 			return path;
 		if(Modifier.isFinal(method.getReturnType().getModifiers()))
 			throw new RuntimeException("Cannot help with final or abstract return types: "+method.getReturnType());
