@@ -49,7 +49,7 @@ class PathBuildingInvocationHandler extends PathHelper implements InvocationHand
 			return path;
 		if(Collection.class.isAssignableFrom(method.getReturnType()))
 		{
-			parameterType = Class.forName(((ParameterizedType)method.getGenericReturnType()).getActualTypeArguments()[0].getTypeName());
+			parameterType = (Class) ((ParameterizedType)method.getGenericReturnType()).getActualTypeArguments()[0];
 		}
 	
 		
