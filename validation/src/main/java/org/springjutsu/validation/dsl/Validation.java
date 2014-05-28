@@ -1,6 +1,7 @@
 package org.springjutsu.validation.dsl;
 
 import org.springjutsu.validation.executors.RuleExecutor;
+import org.springjutsu.validation.executors.impl.Rules;
 import org.springjutsu.validation.rules.RuleErrorMode;
 
 import com.fluentinterface.ReflectionBuilder;
@@ -13,11 +14,21 @@ public class Validation {
 				.forValidationClass(entityClass);
 	}
 	
+	public static ValidationRuleBuilder rule(String path, Rules type)
+	{
+		return rule(path, type.name());
+	}
+	
 	public static ValidationRuleBuilder rule(String path, String type)
 	{
 		return ReflectionBuilder.implementationFor(ValidationRuleBuilder.class)
 				.usingAttributeAccessStrategy(new OverloadedPropertyAwareSetterAttributeAccessStrategy()).create()
 				.forPath(path).usingHandler(type).behaviorOnFail(RuleErrorMode.ERROR);
+	}
+	
+	public static ValidationRuleBuilder rule(Object path, Rules type)
+	{
+		return rule(path, type.name());
 	}
 	
 	public static ValidationRuleBuilder rule(Object path, String type)
