@@ -486,7 +486,7 @@ public class ValidationManager extends CustomValidatorBean {
 			Object convertedRuleArg = convertRuleArgument(ruleArg, executor);
 			isValid = executor.validate(ruleModel, convertedRuleArg);
 		} catch (Exception ve) {
-			throw new RuntimeException("Error occured during validation: ", ve);
+			throw new RuntimeException("Error occured during validation of "+ rule.getType() + " for " + rule.getPath() + ": ", ve);
 		}
 		log.debug("Rule executor returned " + isValid);
 		return isValid;
