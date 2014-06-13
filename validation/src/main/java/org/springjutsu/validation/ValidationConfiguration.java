@@ -1,5 +1,6 @@
 package org.springjutsu.validation;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,10 +65,10 @@ public class ValidationConfiguration implements ImportAware {
 		public ValidationRulesContainer validationRulesContainer()
 		{
 			ValidationRulesContainer validationRulesContainer = new ValidationRulesContainer();
-			List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+			List<Class<? extends Annotation>> excludeAnnotations = new ArrayList<Class<? extends Annotation>>();
 			excludeAnnotations.add(RecursiveValidationExclude.class);
 			validationRulesContainer.setExcludeAnnotations(excludeAnnotations);
-			List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
+			List<Class<? extends Annotation>> includeAnnotations = new ArrayList<Class<? extends Annotation>>();
 			includeAnnotations.add(RecursiveValidationInclude.class);
 			validationRulesContainer.setIncludeAnnotations(includeAnnotations);
 			return validationRulesContainer;

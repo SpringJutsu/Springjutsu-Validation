@@ -17,7 +17,10 @@
 package org.springjutsu.validation.rules;
 
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,10 +31,11 @@ import java.util.Stack;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.set.ListOrderedSet;
-import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.ReflectionUtils.FieldCallback;
+import org.springframework.util.ReflectionUtils.FieldFilter;
 import org.springjutsu.validation.util.PathUtils;
 
 /**
@@ -70,12 +74,12 @@ public class ValidationRulesContainer {
 	/**
 	 * Annotation classes which mark a field that should not be validated recursively.
 	 */
-	private List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+	private List<Class<? extends Annotation>> excludeAnnotations = new ArrayList<Class<? extends Annotation>>();
 	
 	/**
 	 * Annotation classes which mark a field that should be validated recursively.
 	 */
-	private List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
+	private List<Class<? extends Annotation>> includeAnnotations = new ArrayList<Class<? extends Annotation>>();
 
 	public ValidationEntity getValidationEntity(Class<?> clazz) {
 		return validationEntityMap.get(clazz);
@@ -116,30 +120,18 @@ public class ValidationRulesContainer {
 	 * Read from exclude annotations to further 
 	 * populate exclude paths already parsed from XML.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected void initExcludePaths() {
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			// no paths to check on an interface.
 			if (entity.getValidationClass().isInterface()) {
 				continue;
 			}
-			BeanWrapper entityWrapper = new BeanWrapperImpl(entity.getValidationClass());
-			for (PropertyDescriptor descriptor : entityWrapper.getPropertyDescriptors()) {
-				if (!entityWrapper.isReadableProperty(descriptor.getName())
-						|| !entityWrapper.isWritableProperty(descriptor.getName())) {
-					continue;
-				}
-				for(Class excludeAnnotation : excludeAnnotations) {
-					try {
-						if (ReflectionUtils.findField(entity.getValidationClass(), descriptor.getName())
-								.getAnnotation(excludeAnnotation) != null) {
-							entity.getExcludedPaths().add(descriptor.getName());
-						}
-					} catch (SecurityException se) {
-						throw new IllegalStateException("Unexpected error while checking for excluded properties", se);
-					}
-				}
-			}
+			
+			NameTakingFieldCallback fieldNameTaker = new NameTakingFieldCallback();
+			ReflectionUtils.doWithFields(
+					entity.getValidationClass(), fieldNameTaker,
+					new AnnotationFieldFilter(excludeAnnotations));
+			entity.getExcludedPaths().addAll(fieldNameTaker.getFieldNames());
 		}
 	}
 	
@@ -147,30 +139,19 @@ public class ValidationRulesContainer {
 	 * Read from include annotations to further 
 	 * populate include paths already parsed from XML.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected void initIncludePaths() {
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			// no paths to check on an interface.
 			if (entity.getValidationClass().isInterface()) {
 				continue;
 			}
-			BeanWrapper entityWrapper = new BeanWrapperImpl(entity.getValidationClass());
-			for (PropertyDescriptor descriptor : entityWrapper.getPropertyDescriptors()) {
-				if (!entityWrapper.isReadableProperty(descriptor.getName())
-						|| !entityWrapper.isWritableProperty(descriptor.getName())) {
-					continue;
-				}
-				for(Class includeAnnotation : includeAnnotations) {
-					try {
-						if (ReflectionUtils.findField(entity.getValidationClass(), descriptor.getName())
-								.getAnnotation(includeAnnotation) != null) {
-							entity.getIncludedPaths().add(descriptor.getName());
-						}
-					} catch (SecurityException se) {
-						throw new IllegalStateException("Unexpected error while checking for included properties", se);
-					}
-				}
-			}
+			
+			NameTakingFieldCallback fieldNameTaker = new NameTakingFieldCallback();
+			ReflectionUtils.doWithFields(
+					entity.getValidationClass(), fieldNameTaker,
+					new AnnotationFieldFilter(includeAnnotations));
+			entity.getIncludedPaths().addAll(fieldNameTaker.getFieldNames());
+			
 		}
 	}
 	
@@ -279,19 +260,19 @@ public class ValidationRulesContainer {
 		this.validationEntities = validationEntities;
 	}
 	
-	public List<Class<?>> getExcludeAnnotations() {
+	public List<Class<? extends Annotation>> getExcludeAnnotations() {
 		return excludeAnnotations;
 	}
 
-	public void setExcludeAnnotations(List<Class<?>> excludeAnnotations) {
+	public void setExcludeAnnotations(List<Class<? extends Annotation>> excludeAnnotations) {
 		this.excludeAnnotations = excludeAnnotations;
 	}
 
-	public List<Class<?>> getIncludeAnnotations() {
+	public List<Class<? extends Annotation>> getIncludeAnnotations() {
 		return includeAnnotations;
 	}
 
-	public void setIncludeAnnotations(List<Class<?>> includeAnnotations) {
+	public void setIncludeAnnotations(List<Class<? extends Annotation>> includeAnnotations) {
 		this.includeAnnotations = includeAnnotations;
 	}
 
@@ -302,5 +283,39 @@ public class ValidationRulesContainer {
 	public void setValidationTemplateMap(
 			Map<String, ValidationTemplate> validationTemplateMap) {
 		this.validationTemplateMap = validationTemplateMap;
+	}
+	
+	public static class AnnotationFieldFilter implements FieldFilter {
+		
+		private Collection<Class<? extends Annotation>> annotationClasses;
+		
+		public AnnotationFieldFilter(Collection<Class<? extends Annotation>> annotationClasses) {
+			this.annotationClasses = annotationClasses;
+		}
+
+		public boolean matches(Field field) {
+			boolean found = false;
+			for (Class<? extends Annotation> annotationClass : annotationClasses) {
+				if (field.getAnnotation(annotationClass) != null) {
+					found = true;
+					break;
+				}
+			}
+			return found;
+		}
+		
+	}
+	
+	public static class NameTakingFieldCallback implements FieldCallback {
+		
+		private List<String> fieldNames = new ArrayList<String>();
+
+		public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+			fieldNames.add(field.getName());
+		}
+		
+		public List<String> getFieldNames() {
+			return fieldNames;
+		}
 	}
 }

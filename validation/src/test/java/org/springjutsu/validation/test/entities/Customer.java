@@ -8,6 +8,7 @@ public class Customer extends Person {
 	private String emailAddress;
 	private Customer referredBy;
 	private Customer copayer;
+	private boolean isHappy;
 
 	public Address getAddress() {
 		return address;
@@ -44,5 +45,11 @@ public class Customer extends Person {
 	}
 	public void setCopayer(Customer copayer) {
 		this.copayer = copayer;
+	}
+	public boolean isHappy() {
+		return isHappy;
+	}
+	public void setHappy(boolean isHappy) {
+		this.isHappy = isHappy;
 	}
 }
