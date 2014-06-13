@@ -31,6 +31,7 @@ import java.util.Stack;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.set.ListOrderedSet;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
@@ -131,7 +132,14 @@ public class ValidationRulesContainer {
 			ReflectionUtils.doWithFields(
 					entity.getValidationClass(), fieldNameTaker,
 					new AnnotationFieldFilter(excludeAnnotations));
-			entity.getExcludedPaths().addAll(fieldNameTaker.getFieldNames());
+			for (String fieldName : fieldNameTaker.getFieldNames()) {
+				if (BeanUtils.getPropertyDescriptor(entity.getValidationClass(), fieldName) != null) {
+					entity.getExcludedPaths().add(fieldName);
+				} else {
+					throw new IllegalArgumentException("Field named " + fieldName + " annotated for validation exclusion," + 
+						" but does not have matching getter / setter property name");
+				}
+			}
 		}
 	}
 	
@@ -150,8 +158,15 @@ public class ValidationRulesContainer {
 			ReflectionUtils.doWithFields(
 					entity.getValidationClass(), fieldNameTaker,
 					new AnnotationFieldFilter(includeAnnotations));
-			entity.getIncludedPaths().addAll(fieldNameTaker.getFieldNames());
 			
+			for (String fieldName : fieldNameTaker.getFieldNames()) {
+				if (BeanUtils.getPropertyDescriptor(entity.getValidationClass(), fieldName) != null) {
+					entity.getIncludedPaths().add(fieldName);
+				} else {
+					throw new IllegalArgumentException("Field named " + fieldName + " annotated for validation inclusion," + 
+						" but does not have matching getter / setter property name");
+				}
+			}			
 		}
 	}
 	

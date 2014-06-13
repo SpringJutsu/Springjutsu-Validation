@@ -4,11 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.validation.Errors;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
+import org.springjutsu.validation.test.entities.ExcludeErrorProducingSkippablePerson;
 import org.springjutsu.validation.test.entities.ExtendedLessSkippablePerson;
 import org.springjutsu.validation.test.entities.ExtendedSkippablePerson;
+import org.springjutsu.validation.test.entities.IncludeErrorProducingSkippablePerson;
 import org.springjutsu.validation.test.entities.LessSkippablePerson;
 import org.springjutsu.validation.test.entities.SkippablePerson;
 
@@ -124,6 +127,16 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		assertEquals("errors.required", errors.getFieldError("dontSkipUs[0].name").getCode());
 		assertEquals("errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
 		assertEquals("errors.required", errors.getFieldError("customDontSkipUs[0].name").getCode());
+	}
+	
+	@Test(expected=BeanCreationException.class)
+	public void testRecursionExclusionPropertyNameMismatch() {
+		doValidate("testRecursionExclusionPropertyNameMismatch.xml", new ExcludeErrorProducingSkippablePerson());
+	}
+	
+	@Test(expected=BeanCreationException.class)
+	public void testRecursionInclusionPropertyNameMismatch() {
+		doValidate("testRecursionInclusionPropertyNameMismatch.xml", new IncludeErrorProducingSkippablePerson());
 	}
 
 }
