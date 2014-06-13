@@ -1,11 +1,12 @@
 package org.springjutsu.validation.test.entities;
 
-public class Person {
+public abstract class Person {
 	
 	private Long id;
 	private String firstName;
 	private String middleName;
 	private String lastName;
+	private Person spouse;
 	
 	public Long getId() {
 		return id;
@@ -37,6 +38,14 @@ public class Person {
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+
+	public Person getSpouse() {
+		return spouse;
+	}
+
+	public void setSpouse(Person spouse) {
+		this.spouse = spouse;
 	}
 
 }

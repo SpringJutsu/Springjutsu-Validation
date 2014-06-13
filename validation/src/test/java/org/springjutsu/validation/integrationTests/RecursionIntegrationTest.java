@@ -129,6 +129,17 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		assertEquals("errors.required", errors.getFieldError("customDontSkipUs[0].name").getCode());
 	}
 	
+	@Test
+	public void testRecursivePropertyOnAbstractClass() {
+		Customer customer = new Customer();
+		customer.setSpouse(new Customer());
+		
+		Errors errors = doValidate("testRecursiveAbstractClass.xml", customer).errors;
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("errors.required", errors.getFieldError("spouse.firstName").getCode());
+	}
+	
 	@Test(expected=BeanCreationException.class)
 	public void testRecursionExclusionPropertyNameMismatch() {
 		doValidate("testRecursionExclusionPropertyNameMismatch.xml", new ExcludeErrorProducingSkippablePerson());

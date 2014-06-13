@@ -32,7 +32,6 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.set.ListOrderedSet;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ReflectionUtils.FieldCallback;
@@ -177,8 +176,7 @@ public class ValidationRulesContainer {
 				continue;
 			}
 			
-			BeanWrapperImpl subBeanWrapper = new BeanWrapperImpl(entity.getValidationClass());
-			PropertyDescriptor[] propertyDescriptors = subBeanWrapper.getPropertyDescriptors();
+			PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(entity.getValidationClass());
 			
 			for (PropertyDescriptor property : propertyDescriptors) {
 				
@@ -191,8 +189,8 @@ public class ValidationRulesContainer {
 					continue;
 				}
 				
-				Class<?> pathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), false);
-				Class<?> collectionPathClass = PathUtils.getClassForPath(subBeanWrapper.getWrappedClass(), property.getName(), true);
+				Class<?> pathClass = PathUtils.getClassForPath(entity.getValidationClass(), property.getName(), false);
+				Class<?> collectionPathClass = PathUtils.getClassForPath(entity.getValidationClass(), property.getName(), true);
 				
 				if (this.supportsClass(pathClass)|| 
 					(this.supportsClass(collectionPathClass) && 
