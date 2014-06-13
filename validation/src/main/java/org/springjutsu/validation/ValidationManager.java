@@ -506,6 +506,8 @@ public class ValidationManager extends CustomValidatorBean {
 		if (ruleArg != null) {
 			Class<?> unwrappedExecutorClass = AopUtils.getTargetClass(executor);
 			Class<?>[] parameterizedTypes = GenericTypeResolver.resolveTypeArguments(unwrappedExecutorClass, RuleExecutor.class);
+			if(parameterizedTypes== null)
+				return convertedRuleArg;
 			convertedRuleArg = getTypeConverter().convertIfNecessary(ruleArg, parameterizedTypes[1]);
 		}
 		return convertedRuleArg;
