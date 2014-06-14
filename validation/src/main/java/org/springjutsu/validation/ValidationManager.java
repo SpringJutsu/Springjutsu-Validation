@@ -33,6 +33,7 @@ import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
@@ -506,9 +507,9 @@ public class ValidationManager extends CustomValidatorBean {
 		if (ruleArg != null) {
 			Class<?> unwrappedExecutorClass = AopUtils.getTargetClass(executor);
 			Class<?>[] parameterizedTypes = GenericTypeResolver.resolveTypeArguments(unwrappedExecutorClass, RuleExecutor.class);
-			if(parameterizedTypes== null)
-				return convertedRuleArg;
-			convertedRuleArg = getTypeConverter().convertIfNecessary(ruleArg, parameterizedTypes[1]);
+			if (parameterizedTypes != null) {
+				convertedRuleArg = getTypeConverter().convertIfNecessary(ruleArg, parameterizedTypes[1]);
+			}
 		}
 		return convertedRuleArg;
 	}
