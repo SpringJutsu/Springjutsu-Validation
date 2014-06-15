@@ -17,7 +17,7 @@ public class MessageLookupIntegrationTest extends ValidationIntegrationTest {
 	
 	@Test
 	public void testMessageLookupGivenRuleNameErrorCodeWithNoPrefix() {
-		Errors errors = doValidate("testMessageLookupGivenRuleNameErrorCodeWIthNoPrefix.xml", new Customer()).errors;
+		Errors errors = doValidate("testMessageLookupGivenRuleNameErrorCodeWithNoPrefix.xml", new Customer()).errors;
 		assertEquals(1, errors.getErrorCount());
 		assertEquals("Got Unprefixed Error Message", errors.getFieldError("firstName").getDefaultMessage());
 		assertEquals("messageOverride.required", errors.getFieldError("firstName").getCode());
