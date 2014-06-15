@@ -37,17 +37,17 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = validationManager.validate(customer, "dave");
 		Assert.assertEquals(4, errors.getErrorCount());
-		Assert.assertEquals("favoriteColor.required", errors.getFieldErrors("favoriteColor").get(0).getCode());
-		Assert.assertEquals("blam", errors.getFieldErrors("firstName").get(0).getCode());
-		Assert.assertEquals("dizzam", errors.getFieldErrors("lastName").get(0).getCode());
-		Assert.assertEquals("doh", errors.getFieldErrors("address").get(0).getCode());
+		Assert.assertEquals("messageOverride.favoriteColor.required", errors.getFieldErrors("favoriteColor").get(0).getCode());
+		Assert.assertEquals("messageOverride.blam", errors.getFieldErrors("firstName").get(0).getCode());
+		Assert.assertEquals("messageOverride.dizzam", errors.getFieldErrors("lastName").get(0).getCode());
+		Assert.assertEquals("messageOverride.doh", errors.getFieldErrors("address").get(0).getCode());
 		Assert.assertTrue(errors.getFieldErrors("address.lineOne").isEmpty());
 		
 		customer.setAddress(new Address());
 		errors = validationManager.validate(customer, "dave", "buster");
 		Assert.assertEquals(4, errors.getErrorCount());
 		Assert.assertFalse(errors.getFieldErrors("address.lineOne").isEmpty());
-		Assert.assertEquals("p-p-p-pow", errors.getFieldErrors("address.lineOne").get(0).getCode());
+		Assert.assertEquals("messageOverride.p-p-p-pow", errors.getFieldErrors("address.lineOne").get(0).getCode());
 
 	}
 

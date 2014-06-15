@@ -19,6 +19,7 @@ package org.springjutsu.validation.spel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.TypeConverter;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -48,12 +49,18 @@ public class SPELResolver {
 	protected Object model;
 	
 	/**
+	 * Type converter loaded with optional Spring conversion service.
+	 */
+	protected TypeConverter typeConverter;
+	
+	/**
 	 * Initialize evaluation context and expression parser.
 	 * Initializes property accessors and contexts.
 	 * @param model the Model for this request 
 	 */
-	public SPELResolver(Object model) {
+	public SPELResolver(Object model, TypeConverter typeConverter) {
 		this.model = model;
+		this.typeConverter = typeConverter;
 		reset();
 	}
 	
@@ -77,8 +84,9 @@ public class SPELResolver {
 	 * @return result of evaluated SPEL expression.
 	 */
 	public Object getBySpel(String spel) {
+		Object spelResult = null;
 		try {
-			return expressionParser.parseExpression(spel).getValue(scopedContext);
+			spelResult = expressionParser.parseExpression(spel).getValue(scopedContext);
 			// TODO: pretty sure we can get around this expensive catch with an always-null property accessor.
 		} catch (SpelEvaluationException see) {
 			if (see.getMessage().contains("cannot be found")) {
@@ -87,6 +95,20 @@ public class SPELResolver {
 				throw see;
 			}
 		}
+		
+		// if SPEL resolves into another SPEL expression,
+		// that looks pretty sketchy, and would get run again,
+		// so de-SPEL to prevent SPEL-injection vulnerability.
+		if (spelResult instanceof String) {
+			Matcher matcher = Pattern.compile(EXPRESSION_MATCHER).matcher((String) spelResult);
+			while (matcher.find()) {
+				String elString = matcher.group();
+				String unSpelledSpel = elString.substring(2, elString.length() - 1);
+				spelResult = ((String) spelResult).replace(elString, unSpelledSpel);
+			}
+		}
+		
+		return spelResult;
 	}
 	
 	/**
@@ -109,11 +131,12 @@ public class SPELResolver {
 			Matcher matcher = Pattern.compile(EXPRESSION_MATCHER).matcher(elResolvable);
 			while (matcher.find()) {
 				String elString = matcher.group();
-				String resolvableElString = elString.substring(2, elString.length() - 1) + "?: null";
+				String resolvableElString = 
+						elString.substring(2, elString.length() - 1) + "?: null";
 				Object elResult = getBySpel(resolvableElString);
-				String resolvedElString = elResult != null ? String.valueOf(elResult) : "";
+				String resolvedElString = elResult != null ? 
+					typeConverter.convertIfNecessary(elResult, String.class) : "";
 				elResolvable = elResolvable.replace(elString, resolvedElString);
-				matcher.reset(elResolvable);
 			}
 			return elResolvable;
 		}

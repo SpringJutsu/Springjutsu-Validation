@@ -21,8 +21,8 @@ public class NestingIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testNestedRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
 		assertNull(errors.getFieldError("firstName"));
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test

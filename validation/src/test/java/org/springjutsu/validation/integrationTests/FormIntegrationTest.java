@@ -29,9 +29,9 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
 	}
 	
 	@Test
@@ -40,8 +40,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -50,8 +50,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -60,8 +60,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -70,7 +70,7 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -81,8 +81,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormRules.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());	
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());	
 	}
 	
 	@Test
@@ -95,8 +95,8 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testSubPathFormRulesIgnored.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
 		assertNull(errors.getFieldError("firstName"));
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -105,10 +105,10 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormContextELEnrichment.xml", customer).errors;
 		assertEquals(4, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("id").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("id").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -119,9 +119,9 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormContextELEnrichment.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -134,9 +134,9 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormContextELEnrichment.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("id").getCode());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("id").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -147,9 +147,9 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormContextELEnrichment.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("id").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("id").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -160,9 +160,9 @@ public class FormIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testFormContextELEnrichment.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("id").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("id").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
 	}
 
 }

@@ -150,11 +150,13 @@ public class ValidationEntityDefinitionParser implements BeanDefinitionParser {
 				String type = rule.getAttribute("type");
 				String value = rule.getAttribute("value");
 				String message = rule.getAttribute("message");
+				String messageText = rule.getAttribute("messageText");
 				String errorPath = rule.getAttribute("errorPath");
 				String collectionStrategy = rule.getAttribute("collectionStrategy");
 				String onFail = rule.getAttribute("onFail");
 				ValidationRule validationRule = new ValidationRule(path, type, value);
 				validationRule.setMessage(message);
+				validationRule.setMessageText(messageText);
 				validationRule.setErrorPath(errorPath);
 				validationRule.setCollectionStrategy(CollectionStrategy.forXmlValue(collectionStrategy));
 				validationRule.setOnFail(RuleErrorMode.forXmlValue(onFail));

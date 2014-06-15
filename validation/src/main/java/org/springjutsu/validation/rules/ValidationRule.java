@@ -57,8 +57,24 @@ public class ValidationRule extends AbstractRuleHolder {
 	 * An optional message code which may be used to 
 	 * resolve a non-default error message (a message 
 	 * other than that which is coded for the rule executor). 
+	 * Instances of ${var} within resolved message are 
+	 * replaced using the current state of the validation SPEL
+	 * resolver; any arguments are converted to String
+	 * using the configured Spring ConversionService.
 	 */
 	protected String message;
+	
+	/**
+	 * An optional String of message text which may
+	 * be used in place of the default error message
+	 * (a string-literal message other than that which
+	 * is coded for the rule executor).
+	 * Instances of ${var} within the string are replaced
+	 * using the current state of the validation SPEL
+	 * resolver; any arguments are converted to String
+	 * using the configured Spring ConversionService. 
+	 */
+	protected String messageText;
 	
 	/**
 	 * The path on which the error should be written 
@@ -128,6 +144,9 @@ public class ValidationRule extends AbstractRuleHolder {
 		}
 		if (message != null && message.length() > 0) {
 			rule += "message=\"" + message + "\" "; 
+		}
+		if (messageText != null && messageText.length() > 0) {
+			rule += "messageText=\"" + messageText + "\" "; 
 		}
 		if (errorPath != null && errorPath.length() > 0) {
 			rule += "errorPath=\"" + errorPath + "\" "; 
@@ -218,6 +237,20 @@ public class ValidationRule extends AbstractRuleHolder {
 	 */
 	public synchronized void setMessage(String message) {
 		this.message = message;
+	}
+
+	/**
+	 * @return the messageText
+	 */
+	public String getMessageText() {
+		return messageText;
+	}
+
+	/**
+	 * @param messageText the messageText to set
+	 */
+	public void setMessageText(String messageText) {
+		this.messageText = messageText;
 	}
 
 	/**

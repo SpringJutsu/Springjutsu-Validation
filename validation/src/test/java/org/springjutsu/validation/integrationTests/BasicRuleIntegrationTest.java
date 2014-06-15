@@ -20,9 +20,9 @@ public class BasicRuleIntegrationTest extends ValidationIntegrationTest {
 	public void testBasicRules() {
 		Errors errors = doValidate("testBasicRules.xml", new Customer()).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("lastName").getCode());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
 	}
 	
 	@Test
@@ -58,7 +58,7 @@ public class BasicRuleIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testRuleWithNoPath.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.alphabetic", errors.getGlobalError().getCode());
+		assertEquals("messageOverride.errors.alphabetic", errors.getGlobalError().getCode());
 	}
 	
 	@Test
@@ -67,7 +67,7 @@ public class BasicRuleIntegrationTest extends ValidationIntegrationTest {
 		customer.setFirstName("123456");
 		Errors errors = doValidate("testProxiedRuleExecutor.xml", customer).errors;
 		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.proxyMe", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.proxyMe", errors.getFieldError("firstName").getCode());
 	}
 
 }

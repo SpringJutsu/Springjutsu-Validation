@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.TypeConverter;
 import org.springframework.validation.Errors;
 import org.springjutsu.validation.exceptions.CircularValidationTemplateReferenceException;
 import org.springjutsu.validation.exceptions.IllegalTemplateReferenceException;
@@ -122,7 +123,7 @@ public class ValidationEvaluationContext {
 	 * @param errors The errors object on which to record errors
 	 * @param validationHints Any JSR-303 validation groups to activate
 	 */
-	public ValidationEvaluationContext(Object model, Errors errors, Object... validationHints) {
+	public ValidationEvaluationContext(Object model, Errors errors, TypeConverter typeConverter, Object... validationHints) {
 		this.modelWrapper = model == null ? null : new BeanWrapperImpl(model);
 		this.errors = errors;
 		this.validationHints = new String[validationHints.length];
@@ -132,7 +133,7 @@ public class ValidationEvaluationContext {
 					((Class<?>) validationHints[i]).getCanonicalName() :
 						String.valueOf(validationHints[i]);
 		}
-		this.spelResolver = new SPELResolver(model);
+		this.spelResolver = new SPELResolver(model, typeConverter);
 		this.spelResolver.getScopedContext().addPropertyAccessor(new CurrentModelPropertyAccessor());
 		this.spelResolver.getScopedContext().addContext("currentModel", this.new CurrentModelAccessor());
 		this.nestedPath = new Stack<String>();

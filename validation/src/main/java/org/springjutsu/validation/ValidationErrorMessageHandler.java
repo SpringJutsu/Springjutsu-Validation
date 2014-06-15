@@ -90,11 +90,14 @@ public class ValidationErrorMessageHandler {
 	protected void logError(ValidationEvaluationContext context, ValidationRule rule) {
 		String localizedRulePath = context.localizePath(rule.getPath());
 		String errorMessageKey = rule.getMessage();
-        if (errorMessageKey == null || errorMessageKey.isEmpty()) {
-                errorMessageKey = (errorMessagePrefix != null  && !errorMessagePrefix.isEmpty() ? errorMessagePrefix + "." : "") + rule.getType();
+		String errorMessageText = rule.getMessageText();
+		
+		if (StringUtils.isNotBlank(errorMessageText)) {
+			errorMessageKey = "errorMessageTextProvided";
+		} else if (StringUtils.isBlank(errorMessageKey)) {
+        	errorMessageKey = (StringUtils.isNotBlank(errorMessagePrefix) ? errorMessagePrefix + "." : "") + rule.getType();
         }
-        
-		String defaultError = rule.getMessage() != null && !rule.getMessage().isEmpty() ? rule.getMessage() : localizedRulePath + " " + rule.getType();
+		
 		String modelMessageKey = getMessageResolver(context, rule, true);
         String ruleArg = getMessageResolver(context, rule, false);
 		
@@ -105,7 +108,7 @@ public class ValidationErrorMessageHandler {
 		
 		// get the local path to error, in case errors object is on nested path.
 		String errorMessagePath = rule.getErrorPath();
-        if (errorMessagePath != null && !errorMessagePath.isEmpty()) {
+        if (StringUtils.isNotBlank(errorMessagePath)) {
         	errorMessagePath = context.localizePath(errorMessagePath);
         } else {
         	errorMessagePath = localizedRulePath;
@@ -114,9 +117,22 @@ public class ValidationErrorMessageHandler {
 		if (PathUtils.containsEL(errorMessagePath)) {
 			throw new IllegalStateException("Could not log error for rule: " + rule.toString() + ". Rules with EL path should specify the errorPath attribute.");
 		}
-
-		context.getErrors().rejectValue(errorMessagePath, errorMessageKey, 
-				new Object[] {modelMessageResolvable, argumentMessageResolvable}, defaultError);
+		
+		String defaultError = 
+				StringUtils.isNotBlank(errorMessageText) ? errorMessageText :
+				StringUtils.isNotBlank(rule.getMessage()) ? rule.getMessage() :
+				errorMessagePath + " " + rule.getType();
+		
+		MessageSourceAccessor messageAccessor = new MessageSourceAccessor(messageSource);
+		String resolvedMessage = messageAccessor.getMessage(
+			errorMessageKey, new Object[] {modelMessageResolvable, 
+			argumentMessageResolvable}, defaultError);
+		
+		resolvedMessage = (String) context.getSpelResolver().resolveSPELString(resolvedMessage);
+		context.getErrors().rejectValue(errorMessagePath, 
+			PathUtils.appendPath("messageOverride", errorMessageKey), 
+			new Object[] {modelMessageResolvable, argumentMessageResolvable},
+			resolvedMessage);
 	}
 	
 	/**	
@@ -162,7 +178,7 @@ public class ValidationErrorMessageHandler {
 				// It's not a model object, so we don't need the label message key.
 				// Instead, use the value of the expression as a label.
 				// If the expression fails, just use the expression itself.
-				return String.valueOf(context.resolveRuleModel(rule));
+				return String.valueOf(resolveAsModel ? context.resolveRuleModel(rule) : context.resolveRuleArgument(rule));
 			}
 		} else {
 			if (resolveAsModel) {

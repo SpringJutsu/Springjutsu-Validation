@@ -33,7 +33,6 @@ import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
@@ -159,7 +158,7 @@ public class ValidationManager extends CustomValidatorBean {
 	 */
 	@Override
 	public void validate(Object target, Errors errors, Object... validationHints) {
-		doValidate(new ValidationEvaluationContext(target, errors, validationHints));
+		doValidate(new ValidationEvaluationContext(target, errors, getTypeConverter(), validationHints));
 	}
 	
 	/**
