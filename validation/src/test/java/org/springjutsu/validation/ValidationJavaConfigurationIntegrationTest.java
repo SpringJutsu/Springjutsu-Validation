@@ -28,7 +28,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = validationManager.validate(customer);
 		Assert.assertEquals(1, errors.getErrorCount());
-		Assert.assertEquals("favoriteColor.required", errors.getFieldErrors("favoriteColor").get(0).getDefaultMessage());
+		Assert.assertEquals("favorite color is required", errors.getFieldErrors("favoriteColor").get(0).getDefaultMessage());
 	}
 	
 	@Test
@@ -37,7 +37,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = validationManager.validate(customer, "dave");
 		Assert.assertEquals(4, errors.getErrorCount());
-		Assert.assertEquals("messageOverride.favoriteColor.required", errors.getFieldErrors("favoriteColor").get(0).getCode());
+		Assert.assertEquals("favorite color is required", errors.getFieldErrors("favoriteColor").get(0).getDefaultMessage());
 		Assert.assertEquals("messageOverride.blam", errors.getFieldErrors("firstName").get(0).getCode());
 		Assert.assertEquals("messageOverride.dizzam", errors.getFieldErrors("lastName").get(0).getCode());
 		Assert.assertEquals("messageOverride.doh", errors.getFieldErrors("address").get(0).getCode());
@@ -62,14 +62,14 @@ class ValidationJavaConfigurationIntegrationTestConfig
 	ValidationEntity personValidation()
 	{
 		return Validation.forEntity(Customer.class)
-				.havingRules(Validation.rule("favoriteColor", "favoriteColor.required", new RequiredRuleExecutor()))
+				.havingRules(Validation.rule("favoriteColor", "favorite color is required", new RequiredRuleExecutor()))
 				.havingValidationContexts(Validation.context("group", "dave")
 					.havingRules(
-							Validation.rule("firstName", "required").withMessage("blam"),
-							Validation.rule("lastName", "required").withMessage("dizzam"),
-							Validation.rule("address", "required").withMessage("doh")
+							Validation.rule("firstName", "required").withMessageCode("blam"),
+							Validation.rule("lastName", "required").withMessageCode("dizzam"),
+							Validation.rule("address", "required").withMessageCode("doh")
 							.havingValidationContexts(Validation.group("buster")
-								.havingRules(Validation.rule(PathHelper.forEntity(Customer.class).getAddress().getLineOne(), "required").withMessage("p-p-p-pow")))
+								.havingRules(Validation.rule(PathHelper.forEntity(Customer.class).getAddress().getLineOne(), "required").withMessageCode("p-p-p-pow")))
 							))
 				.build();
 

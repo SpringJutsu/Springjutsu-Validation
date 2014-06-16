@@ -16,8 +16,8 @@ public class ValidationRuleBuilderTest {
 	{
 		ValidationEntity entity = Validation.forEntity(Person.class)
 				.havingRules(
-						Validation.rule("firstName", "notNull").withMessage("blam yo"),
-						Validation.rule("lastName", "notNull").withMessage("dizzam")
+						Validation.rule("firstName", "notNull").withMessageCode("blam yo"),
+						Validation.rule("lastName", "notNull").withMessageCode("dizzam")
 						)
 				.build();
 		
@@ -35,10 +35,10 @@ public class ValidationRuleBuilderTest {
 	{
 		ValidationEntity entity = Validation.forEntity(Customer.class)
 				.havingRules(
-						Validation.rule("firstName", "notNull").withMessage("blam yo"),
-						Validation.rule("lastName", "notNull").withMessage("dizzam"),
-						Validation.rule("address", "notNull").withMessage("doh").havingRules(
-							Validation.rule("lineOne", "notNull").withMessage("p-p-p-pow")
+						Validation.rule("firstName", "notNull").withMessageCode("blam yo"),
+						Validation.rule("lastName", "notNull").withMessageCode("dizzam"),
+						Validation.rule("address", "notNull").withMessageCode("doh").havingRules(
+							Validation.rule("lineOne", "notNull").withMessageCode("p-p-p-pow")
 								)
 						)
 				.build();
@@ -64,11 +64,11 @@ public class ValidationRuleBuilderTest {
 		ValidationEntity entity = Validation.forEntity(Customer.class)
 				.havingValidationContexts(Validation.context("group", "dave")
 				.havingRules(
-						Validation.rule("firstName", "notNull").withMessage("blam yo"),
-						Validation.rule("lastName", "notNull").withMessage("dizzam"),
-						Validation.rule("address", "notNull").withMessage("doh")
+						Validation.rule("firstName", "notNull").withMessageCode("blam yo"),
+						Validation.rule("lastName", "notNull").withMessageCode("dizzam"),
+						Validation.rule("address", "notNull").withMessageCode("doh")
 						.havingValidationContexts(Validation.group("buster")
-							.havingRules(Validation.rule("lineOne", "notNull").withMessage("p-p-p-pow")))
+							.havingRules(Validation.rule("lineOne", "notNull").withMessageCode("p-p-p-pow")))
 						))
 				.build();
 
@@ -103,7 +103,7 @@ public class ValidationRuleBuilderTest {
 		
 		Assert.assertEquals(Person.class, entity.getValidationClass());
 		Assert.assertEquals("firstName", entity.getRules().get(0).getPath());
-		Assert.assertEquals("blam yo", entity.getRules().get(0).getMessage());
+		Assert.assertEquals("blam yo", entity.getRules().get(0).getMessageText());
 		Assert.assertNull(entity.getRules().get(0).getType());
 		Assert.assertNotNull(entity.getRules().get(0).getRuleExecutor());
 		Assert.assertTrue(entity.getRules().get(0).getRuleExecutor() instanceof RequiredRuleExecutor);	

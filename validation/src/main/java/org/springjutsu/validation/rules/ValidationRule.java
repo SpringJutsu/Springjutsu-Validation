@@ -226,6 +226,15 @@ public class ValidationRule extends AbstractRuleHolder {
 	}
 	
 	/**
+	 * @param value the value / argument to set
+	 */
+	public void setArgument(String value) {
+		this.value = value;
+	}
+	
+	
+	
+	/**
 	 * @return the message
 	 */
 	public synchronized String getMessage() {
@@ -236,6 +245,13 @@ public class ValidationRule extends AbstractRuleHolder {
 	 * @param message the message to set
 	 */
 	public synchronized void setMessage(String message) {
+		this.message = message;
+	}
+	
+	/**
+	 * @param message the message to set
+	 */
+	public synchronized void setMessageCode(String message) {
 		this.message = message;
 	}
 

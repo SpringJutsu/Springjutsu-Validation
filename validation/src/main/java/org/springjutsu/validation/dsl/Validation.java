@@ -36,11 +36,11 @@ public class Validation {
 		return rule(path.toString(), type);
 	}
 	
-	public static <M,A> ValidationRuleBuilder rule(String path, String message, RuleExecutor<M,A> handlerImpl)
+	public static <M,A> ValidationRuleBuilder rule(String path, String messageText, RuleExecutor<M,A> handlerImpl)
 	{
 		return ReflectionBuilder.implementationFor(ValidationRuleBuilder.class)
 				.usingAttributeAccessStrategy(new OverloadedPropertyAwareSetterAttributeAccessStrategy()).create()
-				.forPath(path).withMessage(message).usingHandler(handlerImpl).behaviorOnFail(RuleErrorMode.ERROR);
+				.forPath(path).withMessageText(messageText).usingHandler(handlerImpl).behaviorOnFail(RuleErrorMode.ERROR);
 	}
 	
 	public static <M,A> ValidationRuleBuilder rule(Object path, String message, RuleExecutor<M,A> handlerImpl)
