@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springjutsu.validation.test.entities.Customer;
 import org.springjutsu.validation.test.entities.Person;
 
 public class RequestUtilsTest {
@@ -221,7 +222,7 @@ public class RequestUtilsTest {
 	@Test
 	public void testReplacePathVariablesFromNestedModelPath() {
 		Map<String, Object> model = new HashMap<String, Object>();
-		Person person = new Person();
+		Person person = new Customer();
 		person.setId(4L);
 		model.put("person", person);
 		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();
@@ -241,7 +242,7 @@ public class RequestUtilsTest {
 	@Test(expected=IllegalArgumentException.class)
 	public void testReplacePathVariablesMissingVariableOnNestedPath() {
 		Map<String, Object> model = new HashMap<String, Object>();
-		Person person = new Person();
+		Person person = new Customer();
 		model.put("person", person);
 		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 		RequestUtils.replaceRestPathVariables("/person/{person.id}", model, request);
@@ -250,7 +251,7 @@ public class RequestUtilsTest {
 	@Test
 	public void testReplacePathVariablesMultipleTimes() {
 		Map<String, Object> model = new HashMap<String, Object>();
-		Person person = new Person();
+		Person person = new Customer();
 		person.setId(4L);
 		model.put("person", person);
 		Map<String, Object> uriTemplateVariables = new HashMap<String, Object>();

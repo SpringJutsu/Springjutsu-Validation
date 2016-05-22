@@ -73,6 +73,13 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 		
 		// Parse rules configuration...
 		Element rulesConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "rules-config").item(0);
+		
+		List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+		excludeAnnotations.add(RecursiveValidationExclude.class);
+		
+		List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
+		includeAnnotations.add(RecursiveValidationInclude.class);
+		
 		if (rulesConfig != null) {
 			boolean addDefaultRules = Boolean.valueOf(rulesConfig.getAttribute("addDefaultRuleExecutors"));
 			ruleExecutorContainerBuilder.addPropertyValue("addDefaultRuleExecutors", addDefaultRules);
@@ -88,9 +95,6 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 			}
 			ruleExecutorContainerBuilder.addPropertyValue("ruleExecutorBeanRegistrants", ruleExecutors);
 			
-			List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
-			excludeAnnotations.add(RecursiveValidationExclude.class);
-			
 			NodeList excludeAnnotationNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "recursion-exclude-annotation");
 			for (int excludeNbr = 0; excludeNbr < excludeAnnotationNodes.getLength(); excludeNbr++) {
 				Element excludeNode = (Element) excludeAnnotationNodes.item(excludeNbr);
@@ -101,10 +105,6 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 					throw new IllegalArgumentException("Invalid exclude annotation class: " + excludeAnnotationClass, cnfe);
 				}
 			}
-			validationRulesContainerBuilder.addPropertyValue("excludeAnnotations", excludeAnnotations);
-			
-			List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
-			includeAnnotations.add(RecursiveValidationInclude.class);
 			
 			NodeList includeAnnotationNodes = rulesConfig.getElementsByTagNameNS(rulesConfig.getNamespaceURI(), "recursion-include-annotation");
 			for (int includeNbr = 0; includeNbr < includeAnnotationNodes.getLength(); includeNbr++) {
@@ -116,8 +116,10 @@ public class ValidationConfigurationDefinitionParser implements BeanDefinitionPa
 					throw new IllegalArgumentException("Invalid include annotation class: " + includeAnnotationClass, cnfe);
 				}
 			}
-			validationRulesContainerBuilder.addPropertyValue("includeAnnotations", includeAnnotations);
 		}
+		
+		validationRulesContainerBuilder.addPropertyValue("excludeAnnotations", excludeAnnotations);
+		validationRulesContainerBuilder.addPropertyValue("includeAnnotations", includeAnnotations);
 		
 		// Parse context configuration...
 		Element contextConfig = (Element) configNode.getElementsByTagNameNS(configNode.getNamespaceURI(), "context-config").item(0);

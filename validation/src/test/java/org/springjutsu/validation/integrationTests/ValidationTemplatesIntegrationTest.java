@@ -23,9 +23,9 @@ public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTes
 		Customer customer = new Customer();
 		Errors errors = doValidate("testValidationTemplates.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("address.lineOne").getCode());
-		assertEquals("errors.required", errors.getFieldError("address.city").getCode());
-		assertEquals("errors.required", errors.getFieldError("secondaryAddress.city").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("address.lineOne").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("address.city").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("secondaryAddress.city").getCode());
 	}
 	
 	@Test(expected=CircularValidationTemplateReferenceException.class)
@@ -57,8 +57,8 @@ public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTes
 		customer.getSecondaryAddress().setLineTwo("also not an empty line two.");
 		Errors errors = doValidate("testValidationTemplatesWithNestedRulesInTemplate.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("address.lineOne").getCode());
-		assertEquals("errors.required", errors.getFieldError("secondaryAddress.lineOne").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("address.lineOne").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("secondaryAddress.lineOne").getCode());
 	}
 	
 	@Test
@@ -91,10 +91,10 @@ public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTes
 		
 		Errors errors = doValidate("testValidationTemplatesWithRuleNestedTemplateUse.xml", customer).errors;
 		assertEquals(4, errors.getErrorCount());
-		assertEquals("errors.exactLength", errors.getFieldError("secondaryAddress.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("copayer.secondaryAddress.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("address.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("referredBy.secondaryAddress.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("secondaryAddress.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("copayer.secondaryAddress.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("address.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("referredBy.secondaryAddress.zipCode").getCode());
 	}
 	
 	@Test
@@ -108,8 +108,8 @@ public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTes
 		
 		Errors errors = doValidate("testValidationTemplatesWithSimpleTemplateUse.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.exactLength", errors.getFieldError("address.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("secondaryAddress.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("address.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("secondaryAddress.zipCode").getCode());
 	}
 	
 	@Test
@@ -138,9 +138,9 @@ public class ValidationTemplatesIntegrationTest extends ValidationIntegrationTes
 		
 		Errors errors = doValidate("testValidationTemplatesWithTemplateNestedTemplateUse.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.exactLength", errors.getFieldError("address.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("referredBy.secondaryAddress.zipCode").getCode());
-		assertEquals("errors.exactLength", errors.getFieldError("copayer.secondaryAddress.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("address.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("referredBy.secondaryAddress.zipCode").getCode());
+		assertEquals("messageOverride.errors.exactLength", errors.getFieldError("copayer.secondaryAddress.zipCode").getCode());
 	}
 	
 	@Test(expected=IllegalTemplateReferenceException.class)

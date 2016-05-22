@@ -476,6 +476,13 @@
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name="messageText" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						A string literal error message which will override the default message code lookup.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
 			<xsd:attribute name="errorPath" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation>

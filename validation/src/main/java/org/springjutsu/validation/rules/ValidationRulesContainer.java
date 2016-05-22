@@ -17,6 +17,8 @@
 package org.springjutsu.validation.rules;
 
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,14 +28,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.collections.set.ListOrderedSet;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.ReflectionUtils.FieldCallback;
+import org.springframework.util.ReflectionUtils.FieldFilter;
+import org.springjutsu.validation.util.PathUtils;
 
 /**
  * This serves as a container for all parsed validation rules.
@@ -48,18 +51,19 @@ import org.springframework.util.ReflectionUtils;
  * @author Taylor Wicksell
  *
  */
-public class ValidationRulesContainer implements BeanFactoryAware {
+public class ValidationRulesContainer {
 	
 	/**
 	 * Bean factory for initializing validation rules container.
 	 */
-	@Autowired
-	private BeanFactory beanFactory;
-	
+	@Autowired(required=false)
+	private List<ValidationEntity> validationEntities = new ArrayList<ValidationEntity>();
+
 	/**
 	 * Maps class to the validation entity for that class.
 	 */
-	private Map<Class<?>, ValidationEntity> validationEntityMap = null;
+	private Map<Class<?>, ValidationEntity> validationEntityMap = 
+		new HashMap<Class<?>, ValidationEntity>();
 	
 	/**
 	 * Maps template name to template
@@ -70,15 +74,14 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	/**
 	 * Annotation classes which mark a field that should not be validated recursively.
 	 */
-	private List<Class<?>> excludeAnnotations = new ArrayList<Class<?>>();
+	private List<Class<? extends Annotation>> excludeAnnotations = new ArrayList<Class<? extends Annotation>>();
 	
 	/**
 	 * Annotation classes which mark a field that should be validated recursively.
 	 */
-	private List<Class<?>> includeAnnotations = new ArrayList<Class<?>>();
+	private List<Class<? extends Annotation>> includeAnnotations = new ArrayList<Class<? extends Annotation>>();
 
 	public ValidationEntity getValidationEntity(Class<?> clazz) {
-		initValidationEntityMap();
 		return validationEntityMap.get(clazz);
 	}
 	
@@ -86,24 +89,30 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * Inititalizes the validation entity map by scanning for 
 	 * @link{ValidationEntity} instances within the application context.
 	 * These are registered by class within the map.
-	 * This can be a quite expensive initialization, and by default will
-	 * occur on the first access. 
+	 * This can be a quite expensive initialization, and
+	 * will occur during container startup
+	 */
+	@PostConstruct
+	public void initializeValdationEntities() {
+		initValidationEntityMap();
+		initIncludePaths();
+		initExcludePaths();
+		initInheritance();
+		initRecursivePropertyPaths();
+	}
+	
+	/**
+	 * Convert List of entities to a map keyed by the entity's class. 
 	 */
 	protected void initValidationEntityMap() {
-		if (validationEntityMap == null) {
-			validationEntityMap = new HashMap<Class<?>, ValidationEntity>();
-			Collection<ValidationEntity> validationEntities = 
-				((ListableBeanFactory) beanFactory)
-				.getBeansOfType(ValidationEntity.class).values();
-			for (ValidationEntity validationEntity : validationEntities) {
-				validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
-				for (ValidationTemplate template : validationEntity.getValidationTemplates()) {
-					validationTemplateMap.put(template.getName(), template);
-				}
+		if (validationEntities == null) {
+			validationEntities = new ArrayList<ValidationEntity>();
+		}
+		for (ValidationEntity validationEntity : validationEntities) {
+			validationEntityMap.put(validationEntity.getValidationClass(), validationEntity);
+			for (ValidationTemplate template : validationEntity.getValidationTemplates()) {
+				validationTemplateMap.put(template.getName(), template);
 			}
-			initIncludePaths();
-			initExcludePaths();
-			initInheritance();
 		}
 	}
 	
@@ -111,28 +120,23 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * Read from exclude annotations to further 
 	 * populate exclude paths already parsed from XML.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void initExcludePaths() {
+	protected void initExcludePaths() {
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			// no paths to check on an interface.
 			if (entity.getValidationClass().isInterface()) {
 				continue;
 			}
-			BeanWrapper entityWrapper = new BeanWrapperImpl(entity.getValidationClass());
-			for (PropertyDescriptor descriptor : entityWrapper.getPropertyDescriptors()) {
-				if (!entityWrapper.isReadableProperty(descriptor.getName())
-						|| !entityWrapper.isWritableProperty(descriptor.getName())) {
-					continue;
-				}
-				for(Class excludeAnnotation : excludeAnnotations) {
-					try {
-						if (ReflectionUtils.findField(entity.getValidationClass(), descriptor.getName())
-								.getAnnotation(excludeAnnotation) != null) {
-							entity.getExcludedPaths().add(descriptor.getName());
-						}
-					} catch (SecurityException se) {
-						throw new IllegalStateException("Unexpected error while checking for excluded properties", se);
-					}
+			
+			NameTakingFieldCallback fieldNameTaker = new NameTakingFieldCallback();
+			ReflectionUtils.doWithFields(
+					entity.getValidationClass(), fieldNameTaker,
+					new AnnotationFieldFilter(excludeAnnotations));
+			for (String fieldName : fieldNameTaker.getFieldNames()) {
+				if (BeanUtils.getPropertyDescriptor(entity.getValidationClass(), fieldName) != null) {
+					entity.getExcludedPaths().add(fieldName);
+				} else {
+					throw new IllegalArgumentException("Field named " + fieldName + " annotated for validation exclusion," + 
+						" but does not have matching getter / setter property name");
 				}
 			}
 		}
@@ -142,28 +146,56 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	 * Read from include annotations to further 
 	 * populate include paths already parsed from XML.
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void initIncludePaths() {
+	protected void initIncludePaths() {
 		for (ValidationEntity entity : validationEntityMap.values()) {
 			// no paths to check on an interface.
 			if (entity.getValidationClass().isInterface()) {
 				continue;
 			}
-			BeanWrapper entityWrapper = new BeanWrapperImpl(entity.getValidationClass());
-			for (PropertyDescriptor descriptor : entityWrapper.getPropertyDescriptors()) {
-				if (!entityWrapper.isReadableProperty(descriptor.getName())
-						|| !entityWrapper.isWritableProperty(descriptor.getName())) {
+			
+			NameTakingFieldCallback fieldNameTaker = new NameTakingFieldCallback();
+			ReflectionUtils.doWithFields(
+					entity.getValidationClass(), fieldNameTaker,
+					new AnnotationFieldFilter(includeAnnotations));
+			
+			for (String fieldName : fieldNameTaker.getFieldNames()) {
+				if (BeanUtils.getPropertyDescriptor(entity.getValidationClass(), fieldName) != null) {
+					entity.getIncludedPaths().add(fieldName);
+				} else {
+					throw new IllegalArgumentException("Field named " + fieldName + " annotated for validation inclusion," + 
+						" but does not have matching getter / setter property name");
+				}
+			}			
+		}
+	}
+	
+	protected void initRecursivePropertyPaths() {
+		for (ValidationEntity entity : validationEntityMap.values()) {
+			
+			if (entity.getValidationClass().isInterface()) {
+				continue;
+			}
+			
+			PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(entity.getValidationClass());
+			
+			for (PropertyDescriptor property : propertyDescriptors) {
+				
+				if (!entity.getIncludedPaths().isEmpty() 
+						&& !entity.getIncludedPaths().contains(property.getName())) {
 					continue;
 				}
-				for(Class includeAnnotation : includeAnnotations) {
-					try {
-						if (ReflectionUtils.findField(entity.getValidationClass(), descriptor.getName())
-								.getAnnotation(includeAnnotation) != null) {
-							entity.getIncludedPaths().add(descriptor.getName());
-						}
-					} catch (SecurityException se) {
-						throw new IllegalStateException("Unexpected error while checking for included properties", se);
-					}
+				
+				if (entity.getExcludedPaths().contains(property.getName())) {
+					continue;
+				}
+				
+				Class<?> pathClass = PathUtils.getClassForPath(entity.getValidationClass(), property.getName(), false);
+				Class<?> collectionPathClass = PathUtils.getClassForPath(entity.getValidationClass(), property.getName(), true);
+				
+				if (this.supportsClass(pathClass)|| 
+					(this.supportsClass(collectionPathClass) && 
+						(List.class.isAssignableFrom(pathClass) || pathClass.isArray()))) {
+					entity.getRecursivePropertyPaths().put(property.getName(), pathClass);
 				}
 			}
 		}
@@ -221,13 +253,6 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 			&& entity.getRules() != null
 			&& !entity.getRules().isEmpty();
 	}
-	
-	/**
-	 * @param beanFactory the beanFactory to set
-	 */
-	public void setBeanFactory(BeanFactory beanFactory) {
-		this.beanFactory = beanFactory;
-	}
 
 	/**
 	 * @param clazz the class to determine support for.
@@ -240,19 +265,27 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 		return getValidationEntity(clazz) != null;
 	}
 	
-	public List<Class<?>> getExcludeAnnotations() {
+	public List<ValidationEntity> getValidationEntities() {
+		return validationEntities;
+	}
+
+	public void setValidationEntities(List<ValidationEntity> validationEntities) {
+		this.validationEntities = validationEntities;
+	}
+	
+	public List<Class<? extends Annotation>> getExcludeAnnotations() {
 		return excludeAnnotations;
 	}
 
-	public void setExcludeAnnotations(List<Class<?>> excludeAnnotations) {
+	public void setExcludeAnnotations(List<Class<? extends Annotation>> excludeAnnotations) {
 		this.excludeAnnotations = excludeAnnotations;
 	}
 
-	public List<Class<?>> getIncludeAnnotations() {
+	public List<Class<? extends Annotation>> getIncludeAnnotations() {
 		return includeAnnotations;
 	}
 
-	public void setIncludeAnnotations(List<Class<?>> includeAnnotations) {
+	public void setIncludeAnnotations(List<Class<? extends Annotation>> includeAnnotations) {
 		this.includeAnnotations = includeAnnotations;
 	}
 
@@ -263,5 +296,39 @@ public class ValidationRulesContainer implements BeanFactoryAware {
 	public void setValidationTemplateMap(
 			Map<String, ValidationTemplate> validationTemplateMap) {
 		this.validationTemplateMap = validationTemplateMap;
+	}
+	
+	public static class AnnotationFieldFilter implements FieldFilter {
+		
+		private Collection<Class<? extends Annotation>> annotationClasses;
+		
+		public AnnotationFieldFilter(Collection<Class<? extends Annotation>> annotationClasses) {
+			this.annotationClasses = annotationClasses;
+		}
+
+		public boolean matches(Field field) {
+			boolean found = false;
+			for (Class<? extends Annotation> annotationClass : annotationClasses) {
+				if (field.getAnnotation(annotationClass) != null) {
+					found = true;
+					break;
+				}
+			}
+			return found;
+		}
+		
+	}
+	
+	public static class NameTakingFieldCallback implements FieldCallback {
+		
+		private List<String> fieldNames = new ArrayList<String>();
+
+		public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+			fieldNames.add(field.getName());
+		}
+		
+		public List<String> getFieldNames() {
+			return fieldNames;
+		}
 	}
 }

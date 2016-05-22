@@ -18,8 +18,8 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testCustomContextRuleEvaluation.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -27,8 +27,8 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testCustomContextTemplateEvaluation.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -36,8 +36,8 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testCustomContextELEnrichment.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.matches", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.matches", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("lastName").getCode());
 	}
 	
 	@Test
@@ -49,8 +49,8 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 		customer.setCopayer(new Customer());
 		Errors errors = doValidate("testCustomContextActivationDuringRecursiveValidation.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("copayer.emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("copayer.lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("copayer.emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("copayer.lastName").getCode());
 	}
 	
 	@Test
@@ -58,8 +58,8 @@ public class ContextIntegrationTest extends ValidationIntegrationTest {
 		Customer customer = new Customer();
 		Errors errors = doValidate("testAnnotationConfiguredCustomContextActivation.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	public static class AlwaysActiveTestNameContextHandler extends TestNameContextHandler {

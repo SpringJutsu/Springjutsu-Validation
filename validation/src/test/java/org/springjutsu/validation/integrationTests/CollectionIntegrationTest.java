@@ -27,11 +27,11 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCollectionRules.xml", company).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("name").getCode());
 		assertNull(errors.getFieldError("customers[0].firstName"));
-		assertEquals("errors.required", errors.getFieldError("customers[1].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customers[1].firstName").getCode());
 		assertEquals("customer.firstName", ((DefaultMessageSourceResolvable) errors.getFieldError("customers[1].firstName").getArguments()[0]).getCode());
-		assertEquals("errors.required", errors.getFieldError("customers[2].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customers[2].firstName").getCode());
 		assertEquals("customer.firstName", ((DefaultMessageSourceResolvable) errors.getFieldError("customers[2].firstName").getArguments()[0]).getCode());
 	}
 	
@@ -45,9 +45,9 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCollectionRules.xml", company).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.maxLength", errors.getFieldError("slogans[1]").getCode());
+		assertEquals("messageOverride.errors.maxLength", errors.getFieldError("slogans[1]").getCode());
 		assertEquals("company.slogans", ((DefaultMessageSourceResolvable) errors.getFieldError("slogans[1]").getArguments()[0]).getCode());
-		assertEquals("errors.maxLength", errors.getFieldError("slogans[2]").getCode());
+		assertEquals("messageOverride.errors.maxLength", errors.getFieldError("slogans[2]").getCode());
 		assertEquals("company.slogans", ((DefaultMessageSourceResolvable) errors.getFieldError("slogans[2]").getArguments()[0]).getCode());
 	}
 	
@@ -62,10 +62,10 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCollectionRulePathFromModel.xml", company).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("name").getCode());
 		assertNull(errors.getFieldError("customers[0].firstName"));
-		assertEquals("errors.required", errors.getFieldError("customers[1].firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("customers[2].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customers[1].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customers[2].firstName").getCode());
 	}
 	
 	@Test
@@ -83,10 +83,10 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testCollectionRulePathFromCollectionNestedModel.xml", company).errors;
 		assertEquals(3, errors.getErrorCount());
 		
-		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[0].firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[0].customers[0].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[0].customers[1].firstName").getCode());
 		assertNull(errors.getFieldError("acquisitions[1].customers[0].firstName"));
-		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
 	}
 	
 	@Test
@@ -104,10 +104,10 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testNestedCollectionRulePathFromModel.xml", company).errors;
 		assertEquals(3, errors.getErrorCount());
 		
-		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[0].firstName").getCode());
-		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[0].customers[0].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[0].customers[1].firstName").getCode());
 		assertNull(errors.getFieldError("acquisitions[1].customers[0].firstName"));
-		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[1].customers[1].firstName").getCode());
 	}
 	
 	@Test
@@ -127,8 +127,8 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", company).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("customers[1].lastName").getCode());
-		assertEquals("emailRequired", errors.getFieldError("customers[1]").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customers[1].lastName").getCode());
+		assertEquals("messageOverride.emailRequired", errors.getFieldError("customers[1]").getCode());
 	}
 	
 	@Test
@@ -157,10 +157,10 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testNestedCollectionRulesAdaptedToMembers.xml", parentCompany).errors;
 		assertEquals(4, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("acquisitions[0].customers[1].lastName").getCode());
-		assertEquals("emailRequired", errors.getFieldError("acquisitions[0].customers[1]").getCode());
-		assertEquals("errors.required", errors.getFieldError("acquisitions[0].acquisitions[0].customers[1].lastName").getCode());
-		assertEquals("emailRequired", errors.getFieldError("acquisitions[0].acquisitions[0].customers[1]").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[0].customers[1].lastName").getCode());
+		assertEquals("messageOverride.emailRequired", errors.getFieldError("acquisitions[0].customers[1]").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[0].acquisitions[0].customers[1].lastName").getCode());
+		assertEquals("messageOverride.emailRequired", errors.getFieldError("acquisitions[0].acquisitions[0].customers[1]").getCode());
 	}
 	
 	@Test
@@ -191,9 +191,9 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testSubCollectionRulesAdaptedToMembers.xml", parentCompany).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("acquisitions[1].customers[0].lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[1].customers[0].lastName").getCode());
 		assertEquals("customer.lastName", ((DefaultMessageSourceResolvable) errors.getFieldError("acquisitions[1].customers[0].lastName").getArguments()[0]).getCode());
-		assertEquals("errors.required", errors.getFieldError("acquisitions[1].acquisitions[0].customers[0].lastName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions[1].acquisitions[0].customers[0].lastName").getCode());
 		assertEquals("customer.lastName", ((DefaultMessageSourceResolvable) errors.getFieldError("acquisitions[1].acquisitions[0].customers[0].lastName").getArguments()[0]).getCode());
 		
 	}
@@ -206,7 +206,7 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
 		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.maxLength", errors.getFieldError("slogans[1]").getCode());
+		assertEquals("messageOverride.errors.maxLength", errors.getFieldError("slogans[1]").getCode());
 	}
 	
 	@Test
@@ -217,7 +217,7 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
 		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.maxLength", errors.getFieldError("websites[1]").getCode());
+		assertEquals("messageOverride.errors.maxLength", errors.getFieldError("websites[1]").getCode());
 	}
 	
 	@Test
@@ -227,7 +227,7 @@ public class CollectionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCollectionStrategyAttribute.xml", company).errors;
 		assertEquals(1, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("acquisitions").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("acquisitions").getCode());
 	}
 
 }

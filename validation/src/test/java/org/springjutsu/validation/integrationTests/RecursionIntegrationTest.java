@@ -4,11 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.validation.Errors;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
+import org.springjutsu.validation.test.entities.ExcludeErrorProducingSkippablePerson;
 import org.springjutsu.validation.test.entities.ExtendedLessSkippablePerson;
 import org.springjutsu.validation.test.entities.ExtendedSkippablePerson;
+import org.springjutsu.validation.test.entities.IncludeErrorProducingSkippablePerson;
 import org.springjutsu.validation.test.entities.LessSkippablePerson;
 import org.springjutsu.validation.test.entities.SkippablePerson;
 
@@ -30,11 +33,11 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testPreventRuleRecursion.xml", customer).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 		assertNull(errors.getFieldError("referredBy.firstName"));
-		assertEquals("errors.required", errors.getFieldError("address.city").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("address.city").getCode());
 		assertNull(errors.getFieldError("address.customer.firstName"));
-		assertEquals("errors.required", errors.getFieldError("secondaryAddress.state").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("secondaryAddress.state").getCode());
 		assertNull(errors.getFieldError("secondaryAddress.customer.firstName"));
 	}
 	
@@ -51,9 +54,9 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testRecursionExclusions.xml", skippablePerson).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
 	}
 	
 	@Test
@@ -69,9 +72,9 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testPolymorphicRecursionExclusions.xml", skippablePerson).errors;
 		assertEquals(3, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
 	}
 	
 	@Test
@@ -91,13 +94,13 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testRecursionInclusions.xml", lessSkippablePerson).errors;
 		assertEquals(7, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipMe.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("customDontSkipMe.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipUs[0].name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
-		assertEquals("errors.required", errors.getFieldError("customDontSkipUs[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipMe.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customDontSkipMe.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipUs[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customDontSkipUs[0].name").getCode());
 	}
 	
 	@Test
@@ -117,13 +120,34 @@ public class RecursionIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testPolymorphicRecursionInclusions.xml", lessSkippablePerson).errors;
 		assertEquals(7, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipMe.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("customDontSkipMe.name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipUs[0].name").getCode());
-		assertEquals("errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
-		assertEquals("errors.required", errors.getFieldError("customDontSkipUs[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipMe.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipMeFromXml.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customDontSkipMe.name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipUs[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("dontSkipUsFromXml[0].name").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("customDontSkipUs[0].name").getCode());
+	}
+	
+	@Test
+	public void testRecursivePropertyOnAbstractClass() {
+		Customer customer = new Customer();
+		customer.setSpouse(new Customer());
+		
+		Errors errors = doValidate("testRecursiveAbstractClass.xml", customer).errors;
+		assertEquals(2, errors.getErrorCount());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("spouse.firstName").getCode());
+	}
+	
+	@Test(expected=BeanCreationException.class)
+	public void testRecursionExclusionPropertyNameMismatch() {
+		doValidate("testRecursionExclusionPropertyNameMismatch.xml", new ExcludeErrorProducingSkippablePerson());
+	}
+	
+	@Test(expected=BeanCreationException.class)
+	public void testRecursionInclusionPropertyNameMismatch() {
+		doValidate("testRecursionInclusionPropertyNameMismatch.xml", new IncludeErrorProducingSkippablePerson());
 	}
 
 }

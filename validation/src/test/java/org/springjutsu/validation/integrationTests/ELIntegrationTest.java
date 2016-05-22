@@ -21,8 +21,8 @@ public class ELIntegrationTest extends ValidationIntegrationTest {
 		customer.setLastName("notBob");
 		Errors errors = doValidate("testSPELvsModelBean.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.matches", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.matches", errors.getFieldError("lastName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("lastName").getCode());
 	}
 	
 	@Test(expected=IllegalStateException.class)
@@ -49,8 +49,8 @@ public class ELIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testELPathsNotMutated.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.matches", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.firstName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.firstName").getCode());
 	}
 	
 	/**
@@ -69,8 +69,8 @@ public class ELIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testELPathsNotMutatedInTemplates.xml", customer).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.matches", errors.getFieldError("firstName").getCode());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.firstName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.firstName").getCode());
 	}
 	
 	@Test
@@ -92,11 +92,11 @@ public class ELIntegrationTest extends ValidationIntegrationTest {
 		
 		Errors errors = doValidate("testCurrentModelAccess.xml", customer).errors;
 		assertEquals(5, errors.getErrorCount());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.emailAddress").getCode());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.firstName").getCode());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.middleName").getCode());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.lastName").getCode());
-		assertEquals("errors.matches", errors.getFieldError("referredBy.favoriteColor").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.emailAddress").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.firstName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.middleName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.lastName").getCode());
+		assertEquals("messageOverride.errors.matches", errors.getFieldError("referredBy.favoriteColor").getCode());
 	}
 
 }

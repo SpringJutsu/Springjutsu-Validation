@@ -1,0 +1,14 @@
+/classes
+/bin
+/build
+/ant
+/.settings
+/.classpath
+/.project
+/.gradle
+.DS_Store
+/target
+/.extract
+/.ivy2.cache
+/.springBeans
+

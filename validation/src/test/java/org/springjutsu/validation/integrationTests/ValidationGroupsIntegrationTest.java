@@ -20,8 +20,8 @@ public class ValidationGroupsIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testGroupActivationByString.xml", customer, 
 				new String[] {"matchingGroupName"}).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -30,8 +30,8 @@ public class ValidationGroupsIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testGroupActivationByClass.xml", customer, 
 				new Object[]{ValuedCustomer.class}).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 	
 	@Test
@@ -40,8 +40,8 @@ public class ValidationGroupsIntegrationTest extends ValidationIntegrationTest {
 		Errors errors = doValidate("testGroupActivationWithMultipleQualifiers.xml", customer, 
 				new String[] {"matchingGroupName"}).errors;
 		assertEquals(2, errors.getErrorCount());
-		assertEquals("errors.required", errors.getFieldError("emailAddress").getCode());
-		assertEquals("errors.required", errors.getFieldError("firstName").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("emailAddress").getCode());
+		assertEquals("messageOverride.errors.required", errors.getFieldError("firstName").getCode());
 	}
 
 }
