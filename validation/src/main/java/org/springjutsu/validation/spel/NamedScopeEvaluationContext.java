@@ -138,7 +138,7 @@ public class NamedScopeEvaluationContext extends StandardEvaluationContext {
 			} else if (this.containsKey(key)) {
 				ExpressionState expressionState = getReadableState(key);
 				PropertyOrFieldReference propRef = 
-					new PropertyOrFieldReference(true, key.toString(), 1);
+          new PropertyOrFieldReference(true, key.toString(), 1, key.toString().length());
 				return unwrapExpressionState(propRef.getValue(expressionState));
 			} else {
 				return null;
