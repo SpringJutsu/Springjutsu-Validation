@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.validation.Errors;
 import org.springjutsu.validation.dsl.PathHelper;
 import org.springjutsu.validation.dsl.Validation;
@@ -16,13 +16,13 @@ import org.springjutsu.validation.rules.ValidationEntity;
 import org.springjutsu.validation.test.entities.Address;
 import org.springjutsu.validation.test.entities.Customer;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration(classes=ValidationJavaConfigurationIntegrationTestConfig.class)
 public class ValidationJavaConfigurationIntegrationTest {
 
 	@Autowired
 	ValidationManager validationManager;
-	
+
 	@Test
 	public void testSimpleCase() {
 		Customer customer = new Customer();
@@ -30,7 +30,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Assert.assertEquals(1, errors.getErrorCount());
 		Assert.assertEquals("favorite color is required", errors.getFieldErrors("favoriteColor").get(0).getDefaultMessage());
 	}
-	
+
 	@Test
 	public void testWithContext()
 	{
@@ -42,7 +42,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 		Assert.assertEquals("messageOverride.dizzam", errors.getFieldErrors("lastName").get(0).getCode());
 		Assert.assertEquals("messageOverride.doh", errors.getFieldErrors("address").get(0).getCode());
 		Assert.assertTrue(errors.getFieldErrors("address.lineOne").isEmpty());
-		
+
 		customer.setAddress(new Address());
 		errors = validationManager.validate(customer, "dave", "buster");
 		Assert.assertEquals(4, errors.getErrorCount());
@@ -57,7 +57,7 @@ public class ValidationJavaConfigurationIntegrationTest {
 @EnableValidation
 class ValidationJavaConfigurationIntegrationTestConfig
 {
-	
+
 	@Bean
 	ValidationEntity personValidation()
 	{
